@@ -1,0 +1,29 @@
+#ifndef COMMON_H
+#define COMMON_H
+
+#define HEADER_SIZE 208
+#define HASH_SIZE 32
+#define NONCE_SIZE 16
+#define POW_MESSAGE_SIZE 48
+#define BUF_SIZE 32768 /* 32 KB */
+
+/* basic error code */
+#define OK 0
+#define ERROR_INTERNAL_ERROR -1
+#define ERROR_ARGS_NUMBER -2
+#define ERROR_SYSCALL -4
+#define ERROR_ENCODING -5
+#define ERROR_INVALID_CELL_DATA -6
+
+/* verification error code */
+#define ERROR_INVALID_BLOCK_NUMBER -10
+#define ERROR_INVALID_PARENT_HASH -11
+#define ERROR_INVALID_COMPACT -12
+#define ERROR_INVALID_POW -13
+#define ERROR_INVALID_EPOCH -14
+#define ERROR_INVALID_SHARE_CELLBASE_LOCK -15
+#define ERROR_INVALID_MERKLE_PROOF -16
+#define ERROR_MERKLE_PROOF -17
+#define ERROR_TOO_MANY_SHARES -20
+
+#endif /* COMMON_H */

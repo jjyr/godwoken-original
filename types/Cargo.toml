@@ -1,0 +1,10 @@
+[package]
+name = "godwoken-types"
+version = "0.1.0-pre"
+authors = ["Jiang Jinyang <jjyruby@gmail.com>"]
+edition = "2018"
+license = "MIT"
+
+[dependencies]
+molecule = "=0.4.0"
+ckb-types = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }

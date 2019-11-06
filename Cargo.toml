@@ -1,0 +1,23 @@
+[package]
+name = "godwoken"
+version = "0.1.0"
+authors = ["jjy <jjyruby@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dev-dependencies]
+lazy_static = "1.4"
+rand = "0.7"
+hex = "0.4"
+godwoken-types = { path = "types" }
+ckb-types = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
+ckb-error = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
+ckb-script = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
+ckb-hash = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

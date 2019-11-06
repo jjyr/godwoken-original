@@ -1,0 +1,8 @@
+import blockchain;
+
+/* contract types */
+
+struct GlobalState {
+    address_root: Byte32,
+    balance_root: Byte32,
+}
