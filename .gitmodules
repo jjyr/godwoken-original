@@ -1,0 +1,3 @@
+[submodule "contract/ckb-c-stdlib"]
+	path = contract/ckb-c-stdlib
+	url = https://github.com/nervosnetwork/ckb-c-stdlib.git

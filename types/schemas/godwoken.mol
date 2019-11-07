@@ -2,7 +2,27 @@ import blockchain;
 
 /* contract types */
 
+array Byte20 [byte; 20];
+
 struct GlobalState {
     address_root: Byte32,
     balance_root: Byte32,
+}
+
+/* contract allowed actions */
+
+union Action {
+    Register,
+    Deposit,
+}
+
+table Register {
+    pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
+    address_index: Uint32, // user adderss index
+    pre_proof: Byte32Vec, // merkle proof of exists address root
+    post_proof: Byte32Vec, // merkle proof of new address root
+}
+
+struct Deposit {
+    dummy: Uint32,
 }

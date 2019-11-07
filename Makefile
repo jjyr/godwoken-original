@@ -2,7 +2,7 @@
 C_TARGET := riscv64-unknown-elf
 CC := $(C_TARGET)-gcc
 LD := $(C_TARGET)-gcc
-CFLAGS := -O3 -Ideps/molecule -I contract -I contract/deps -I contract/deps/molecule -I contract/deps/types -I build -Wall -Werror -Wno-nonnull-compare -Wno-unused-function
+CFLAGS := -O3 -Ideps/molecule -I contract/deps -I contract/deps/molecule -I contract/deps/types -I contract/ckb-c-stdlib -Wall -Werror -Wno-nonnull-compare -Wno-unused-function
 LDFLAGS := -Wl,-static -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s
 # molecule
 MOLC := moleculec
@@ -21,7 +21,7 @@ ${GEN_MOL_OUT_DIR_C}/blockchain.h: ${GEN_MOL_IN_DIR}/blockchain.mol
 ${GEN_MOL_OUT_DIR_C}/godwoken.h: ${GEN_MOL_IN_DIR}/godwoken.mol
 	${MOLC} --language c --schema-file $< > $@
 
-contracts: contract/binary/dummy_lock contract/binary/host_state
+contracts: contract/binary/dummy_lock contract/binary/main
 
 contracts-via-docker: install-tools ${GEN_MOL_C_FILES}
 	docker run --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make contracts"
@@ -29,7 +29,7 @@ contracts-via-docker: install-tools ${GEN_MOL_C_FILES}
 contract/binary/dummy_lock: contract/dummy_lock.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-contract/binary/host_state: contract/host_state.c ${GEN_MOL_C_FILES}
+contract/binary/main: contract/main.c ${GEN_MOL_C_FILES}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 ##@ Generates Schema

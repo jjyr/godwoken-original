@@ -11,5 +11,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install rust components
       run: rustup component add rustfmt && rustup component add clippy
+    - name: Update submodules
+      run: git submodule update --init
     - name: Run CI checks
       run: make ci

@@ -1,4 +1,4 @@
-mod host_state;
+mod test_main;
 
 use ckb_script::DataLoader;
 use ckb_types::{
@@ -12,8 +12,8 @@ use std::collections::HashMap;
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
         Bytes::from(&include_bytes!("../../contract/binary/dummy_lock")[..]);
-    pub static ref HOST_STATE_BIN: Bytes =
-        Bytes::from(&include_bytes!("../../contract/binary/host_state")[..]);
+    pub static ref MAIN_CONTRACT_BIN: Bytes =
+        Bytes::from(&include_bytes!("../../contract/binary/main")[..]);
 }
 
 #[derive(Default)]

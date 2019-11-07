@@ -1,4 +1,4 @@
-use super::{DummyDataLoader, DUMMY_LOCK_BIN, HOST_STATE_BIN};
+use super::{DummyDataLoader, DUMMY_LOCK_BIN, MAIN_CONTRACT_BIN};
 use ckb_script::TransactionScriptsVerifier;
 use ckb_types::{
     bytes::Bytes,
@@ -151,12 +151,12 @@ fn test_dummy_lock() {
 }
 
 #[test]
-fn test_host_state() {
+fn test_main() {
     let mut data_loader = DummyDataLoader::new();
     let tx = gen_tx(
         &mut data_loader,
         DUMMY_LOCK_BIN.clone(),
-        Some(HOST_STATE_BIN.clone()),
+        Some(MAIN_CONTRACT_BIN.clone()),
     );
     let resolved_tx = build_resolved_tx(&data_loader, &tx);
     let mut verifier = TransactionScriptsVerifier::new(&resolved_tx, &data_loader);
