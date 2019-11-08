@@ -6,9 +6,10 @@ use ckb_types::{
         cell::{CellMetaBuilder, ResolvedTransaction},
         Capacity, DepType, ScriptHashType, TransactionBuilder, TransactionView,
     },
-    packed::{CellDep, CellInput, CellOutput, OutPoint, Script},
+    packed::{CellDep, CellInput, CellOutput, OutPoint, Script, WitnessArgs},
     prelude::*,
 };
+use godwoken_types::packed::Action;
 use rand::{thread_rng, Rng};
 
 const MAX_CYCLES: u64 = std::u64::MAX;
@@ -158,6 +159,16 @@ fn test_main() {
         DUMMY_LOCK_BIN.clone(),
         Some(MAIN_CONTRACT_BIN.clone()),
     );
+    let action = Action::new_builder().build();
+    let witness = WitnessArgs::new_builder()
+        .output_type(Some(action.as_bytes()).pack())
+        .build();
+    let tx = tx
+        .data()
+        .as_builder()
+        .witnesses(vec![witness.as_bytes().pack()].pack())
+        .build()
+        .into_view();
     let resolved_tx = build_resolved_tx(&data_loader, &tx);
     let mut verifier = TransactionScriptsVerifier::new(&resolved_tx, &data_loader);
     verifier.set_debug_printer(|id, msg| {
