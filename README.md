@@ -2,7 +2,7 @@
 
 An optimistic rollup solution for Nervos CKB.
 
-We can foresee this project would be under WIP for a long time.
+We can foresee this project will be under WIP for a long time(if not eternal).
 
 ## LICENSE
 

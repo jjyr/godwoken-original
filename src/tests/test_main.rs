@@ -14,7 +14,7 @@ use godwoken_types::packed::{Action, AddressEntry, GlobalState, Register};
 use rand::{thread_rng, Rng};
 
 const MAX_CYCLES: u64 = std::u64::MAX;
-const DUMMY_LOCK_CYCLES: u64 = 1705;
+const DUMMY_LOCK_CYCLES: u64 = 2108;
 
 fn build_resolved_tx(data_loader: &DummyDataLoader, tx: &TransactionView) -> ResolvedTransaction {
     let previous_out_point = tx
