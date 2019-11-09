@@ -1,4 +1,5 @@
 use super::{DummyDataLoader, DUMMY_LOCK_BIN, MAIN_CONTRACT_BIN};
+use ckb_hash::new_blake2b;
 use ckb_script::TransactionScriptsVerifier;
 use ckb_types::{
     bytes::Bytes,
@@ -9,11 +10,11 @@ use ckb_types::{
     packed::{CellDep, CellInput, CellOutput, OutPoint, Script, WitnessArgs},
     prelude::*,
 };
-use godwoken_types::packed::Action;
+use godwoken_types::packed::{Action, AddressEntry, GlobalState, Register};
 use rand::{thread_rng, Rng};
 
 const MAX_CYCLES: u64 = std::u64::MAX;
-const DUMMY_LOCK_CYCLES: u64 = 2108;
+const DUMMY_LOCK_CYCLES: u64 = 1705;
 
 fn build_resolved_tx(data_loader: &DummyDataLoader, tx: &TransactionView) -> ResolvedTransaction {
     let previous_out_point = tx
@@ -50,6 +51,7 @@ fn gen_tx(
     dummy: &mut DummyDataLoader,
     lock_bin: Bytes,
     type_bin: Option<Bytes>,
+    previous_output_data: Bytes,
 ) -> TransactionView {
     let mut rng = thread_rng();
     let previous_tx_hash = {
@@ -116,9 +118,10 @@ fn gen_tx(
             .type_(Some(type_script).pack())
             .build();
     }
-    dummy
-        .cells
-        .insert(previous_out_point.clone(), (cell_to_spent, Bytes::new()));
+    dummy.cells.insert(
+        previous_out_point.clone(),
+        (cell_to_spent, previous_output_data),
+    );
     let mut tx_builder = TransactionBuilder::default()
         .input(CellInput::new(previous_out_point.clone(), 0))
         .cell_dep(
@@ -143,7 +146,7 @@ fn gen_tx(
 #[test]
 fn test_dummy_lock() {
     let mut data_loader = DummyDataLoader::new();
-    let tx = gen_tx(&mut data_loader, DUMMY_LOCK_BIN.clone(), None);
+    let tx = gen_tx(&mut data_loader, DUMMY_LOCK_BIN.clone(), None, Bytes::new());
     let resolved_tx = build_resolved_tx(&data_loader, &tx);
     let verify_result =
         TransactionScriptsVerifier::new(&resolved_tx, &data_loader).verify(MAX_CYCLES);
@@ -154,21 +157,42 @@ fn test_dummy_lock() {
 #[test]
 fn test_main() {
     let mut data_loader = DummyDataLoader::new();
+    let global_state = GlobalState::new_builder().build();
     let tx = gen_tx(
         &mut data_loader,
         DUMMY_LOCK_BIN.clone(),
         Some(MAIN_CONTRACT_BIN.clone()),
+        global_state.as_bytes(),
     );
-    let action = Action::new_builder().build();
+    let address_entry = AddressEntry::new_builder().build();
+    let register = Register::new_builder()
+        .address_entry(address_entry.clone())
+        .build();
+    let action = Action::new_builder().set(register).build();
+    let new_global_state = {
+        let mut address_entry_root = [0u8; 32];
+        let mut hasher = new_blake2b();
+        hasher.update(address_entry.as_slice());
+        hasher.finalize(&mut address_entry_root);
+        let mut address_root = [0u8; 32];
+        let mut hasher = new_blake2b();
+        let mut entries_count: u32 = address_entry.index().unpack();
+        entries_count += 1;
+        hasher.update(&entries_count.to_le_bytes());
+        hasher.update(&address_entry_root);
+        hasher.finalize(&mut address_root);
+        GlobalState::new_builder()
+            .address_root(address_root.pack())
+            .build()
+    };
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
     let tx = tx
-        .data()
-        .as_builder()
+        .as_advanced_builder()
         .witnesses(vec![witness.as_bytes().pack()].pack())
-        .build()
-        .into_view();
+        .set_outputs_data(vec![new_global_state.as_bytes().pack()])
+        .build();
     let resolved_tx = build_resolved_tx(&data_loader, &tx);
     let mut verifier = TransactionScriptsVerifier::new(&resolved_tx, &data_loader);
     verifier.set_debug_printer(|id, msg| {

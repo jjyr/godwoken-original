@@ -15,9 +15,3 @@ ckb-types = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" 
 ckb-error = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
 ckb-script = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
 ckb-hash = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"

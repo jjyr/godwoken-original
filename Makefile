@@ -2,7 +2,7 @@
 C_TARGET := riscv64-unknown-elf
 CC := $(C_TARGET)-gcc
 LD := $(C_TARGET)-gcc
-CFLAGS := -O3 -Ideps/molecule -I contract/deps -I contract/deps/molecule -I contract/deps/types -I contract/ckb-c-stdlib -Wall -Werror -Wno-nonnull-compare -Wno-unused-function
+CFLAGS := -O3 -Ideps/molecule -Icontract/utils -Icontract/deps -Icontract/deps/molecule -Icontract/deps/types -Icontract/ckb-c-stdlib -Wall -Werror -Wno-nonnull -Wno-unused-function
 LDFLAGS := -Wl,-static -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s
 # molecule
 MOLC := moleculec

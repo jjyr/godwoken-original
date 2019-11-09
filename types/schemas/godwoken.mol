@@ -4,9 +4,20 @@ import blockchain;
 
 array Byte20 [byte; 20];
 
+/* Global state
+ * We use single Byte32 to digest global state.
+ * For the purpose of dynamic accumulate and easy to verify, 
+ * Mountain merkle range(MMR) is chosen as our accumulator.
+ * Reference implementation: https://github.com/nervosnetwork/merkle-mountain-range
+ */
 struct GlobalState {
-    address_root: Byte32,
+    address_root: Byte32, // H(count | merkle root of address entries)
     balance_root: Byte32,
+}
+
+struct AddressEntry {
+    index: Uint32, // address index
+    pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
 }
 
 /* contract allowed actions */
@@ -17,10 +28,10 @@ union Action {
 }
 
 table Register {
-    pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
-    address_index: Uint32, // user adderss index
-    pre_proof: Byte32Vec, // merkle proof of exists address root
-    post_proof: Byte32Vec, // merkle proof of new address root
+    address_entry: AddressEntry,
+    last_address_entry_hash: Byte32, // used for merkle proof
+    mmr_size: Uint64, // MMR size
+    proof: Byte32Vec, // merkle proof of old state address entry
 }
 
 struct Deposit {

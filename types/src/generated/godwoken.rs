@@ -585,6 +585,171 @@ impl molecule::prelude::Builder for GlobalStateBuilder {
     }
 }
 #[derive(Clone)]
+pub struct AddressEntry(molecule::bytes::Bytes);
+impl ::std::fmt::LowerHex for AddressEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        use molecule::faster_hex::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()).unwrap())
+    }
+}
+impl ::std::fmt::Debug for AddressEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::std::fmt::Display for AddressEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "index", self.index())?;
+        write!(f, ", {}: {}", "pubkey_hash", self.pubkey_hash())?;
+        write!(f, " }}")
+    }
+}
+impl ::std::default::Default for AddressEntry {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        AddressEntry::new_unchecked(v.into())
+    }
+}
+impl AddressEntry {
+    pub const TOTAL_SIZE: usize = 24;
+    pub const FIELD_SIZE: [usize; 2] = [4, 20];
+    pub const FIELD_COUNT: usize = 2;
+    pub fn index(&self) -> Uint32 {
+        Uint32::new_unchecked(self.0.slice(0, 4))
+    }
+    pub fn pubkey_hash(&self) -> Byte20 {
+        Byte20::new_unchecked(self.0.slice(4, 24))
+    }
+    pub fn as_reader<'r>(&'r self) -> AddressEntryReader<'r> {
+        AddressEntryReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for AddressEntry {
+    type Builder = AddressEntryBuilder;
+    const NAME: &'static str = "AddressEntry";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        AddressEntry(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        AddressEntryReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        AddressEntryReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::std::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .index(self.index())
+            .pubkey_hash(self.pubkey_hash())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct AddressEntryReader<'r>(&'r [u8]);
+impl<'r> ::std::fmt::LowerHex for AddressEntryReader<'r> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        use molecule::faster_hex::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()).unwrap())
+    }
+}
+impl<'r> ::std::fmt::Debug for AddressEntryReader<'r> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::std::fmt::Display for AddressEntryReader<'r> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "index", self.index())?;
+        write!(f, ", {}: {}", "pubkey_hash", self.pubkey_hash())?;
+        write!(f, " }}")
+    }
+}
+impl<'r> AddressEntryReader<'r> {
+    pub const TOTAL_SIZE: usize = 24;
+    pub const FIELD_SIZE: [usize; 2] = [4, 20];
+    pub const FIELD_COUNT: usize = 2;
+    pub fn index(&self) -> Uint32Reader<'r> {
+        Uint32Reader::new_unchecked(&self.as_slice()[0..4])
+    }
+    pub fn pubkey_hash(&self) -> Byte20Reader<'r> {
+        Byte20Reader::new_unchecked(&self.as_slice()[4..24])
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for AddressEntryReader<'r> {
+    type Entity = AddressEntry;
+    const NAME: &'static str = "AddressEntryReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        AddressEntryReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], _compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len != Self::TOTAL_SIZE {
+            return ve!(Self, TotalSizeNotMatch, Self::TOTAL_SIZE, slice_len);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct AddressEntryBuilder {
+    pub(crate) index: Uint32,
+    pub(crate) pubkey_hash: Byte20,
+}
+impl AddressEntryBuilder {
+    pub const TOTAL_SIZE: usize = 24;
+    pub const FIELD_SIZE: [usize; 2] = [4, 20];
+    pub const FIELD_COUNT: usize = 2;
+    pub fn index(mut self, v: Uint32) -> Self {
+        self.index = v;
+        self
+    }
+    pub fn pubkey_hash(mut self, v: Byte20) -> Self {
+        self.pubkey_hash = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for AddressEntryBuilder {
+    type Entity = AddressEntry;
+    const NAME: &'static str = "AddressEntryBuilder";
+    fn expected_length(&self) -> usize {
+        Self::TOTAL_SIZE
+    }
+    fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
+        writer.write_all(self.index.as_slice())?;
+        writer.write_all(self.pubkey_hash.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        AddressEntry::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
 pub struct Action(molecule::bytes::Bytes);
 impl ::std::fmt::LowerHex for Action {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -610,8 +775,10 @@ impl ::std::fmt::Display for Action {
 impl ::std::default::Default for Action {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            0, 0, 0, 0, 52, 0, 0, 0, 20, 0, 0, 0, 40, 0, 0, 0, 44, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 88, 0, 0, 0, 20, 0, 0, 0, 44, 0, 0, 0, 76, 0, 0, 0, 84, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
         ];
         Action::new_unchecked(v.into())
     }
@@ -900,10 +1067,15 @@ impl ::std::fmt::Debug for Register {
 impl ::std::fmt::Display for Register {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "pubkey_hash", self.pubkey_hash())?;
-        write!(f, ", {}: {}", "address_index", self.address_index())?;
-        write!(f, ", {}: {}", "pre_proof", self.pre_proof())?;
-        write!(f, ", {}: {}", "post_proof", self.post_proof())?;
+        write!(f, "{}: {}", "address_entry", self.address_entry())?;
+        write!(
+            f,
+            ", {}: {}",
+            "last_address_entry_hash",
+            self.last_address_entry_hash()
+        )?;
+        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
+        write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -914,8 +1086,10 @@ impl ::std::fmt::Display for Register {
 impl ::std::default::Default for Register {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            52, 0, 0, 0, 20, 0, 0, 0, 40, 0, 0, 0, 44, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            88, 0, 0, 0, 20, 0, 0, 0, 44, 0, 0, 0, 76, 0, 0, 0, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
         ];
         Register::new_unchecked(v.into())
     }
@@ -941,25 +1115,25 @@ impl Register {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn pubkey_hash(&self) -> Byte20 {
+    pub fn address_entry(&self) -> AddressEntry {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        Byte20::new_unchecked(self.0.slice(start, end))
+        AddressEntry::new_unchecked(self.0.slice(start, end))
     }
-    pub fn address_index(&self) -> Uint32 {
+    pub fn last_address_entry_hash(&self) -> Byte32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
-        Uint32::new_unchecked(self.0.slice(start, end))
+        Byte32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn pre_proof(&self) -> Byte32Vec {
+    pub fn mmr_size(&self) -> Uint64 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Byte32Vec::new_unchecked(self.0.slice(start, end))
+        Uint64::new_unchecked(self.0.slice(start, end))
     }
-    pub fn post_proof(&self) -> Byte32Vec {
+    pub fn proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
         if self.has_extra_fields() {
@@ -996,10 +1170,10 @@ impl molecule::prelude::Entity for Register {
     }
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
-            .pubkey_hash(self.pubkey_hash())
-            .address_index(self.address_index())
-            .pre_proof(self.pre_proof())
-            .post_proof(self.post_proof())
+            .address_entry(self.address_entry())
+            .last_address_entry_hash(self.last_address_entry_hash())
+            .mmr_size(self.mmr_size())
+            .proof(self.proof())
     }
 }
 #[derive(Clone, Copy)]
@@ -1021,10 +1195,15 @@ impl<'r> ::std::fmt::Debug for RegisterReader<'r> {
 impl<'r> ::std::fmt::Display for RegisterReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "pubkey_hash", self.pubkey_hash())?;
-        write!(f, ", {}: {}", "address_index", self.address_index())?;
-        write!(f, ", {}: {}", "pre_proof", self.pre_proof())?;
-        write!(f, ", {}: {}", "post_proof", self.post_proof())?;
+        write!(f, "{}: {}", "address_entry", self.address_entry())?;
+        write!(
+            f,
+            ", {}: {}",
+            "last_address_entry_hash",
+            self.last_address_entry_hash()
+        )?;
+        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
+        write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -1053,25 +1232,25 @@ impl<'r> RegisterReader<'r> {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn pubkey_hash(&self) -> Byte20Reader<'r> {
+    pub fn address_entry(&self) -> AddressEntryReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        Byte20Reader::new_unchecked(&self.as_slice()[start..end])
+        AddressEntryReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn address_index(&self) -> Uint32Reader<'r> {
+    pub fn last_address_entry_hash(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
-        Uint32Reader::new_unchecked(&self.as_slice()[start..end])
+        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn pre_proof(&self) -> Byte32VecReader<'r> {
+    pub fn mmr_size(&self) -> Uint64Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
+        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn post_proof(&self) -> Byte32VecReader<'r> {
+    pub fn proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
         if self.has_extra_fields() {
@@ -1133,36 +1312,36 @@ impl<'r> molecule::prelude::Reader<'r> for RegisterReader<'r> {
         if offsets.windows(2).any(|i| i[0] > i[1]) {
             return ve!(Self, OffsetsNotMatch);
         }
-        Byte20Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        AddressEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        Byte32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
 pub struct RegisterBuilder {
-    pub(crate) pubkey_hash: Byte20,
-    pub(crate) address_index: Uint32,
-    pub(crate) pre_proof: Byte32Vec,
-    pub(crate) post_proof: Byte32Vec,
+    pub(crate) address_entry: AddressEntry,
+    pub(crate) last_address_entry_hash: Byte32,
+    pub(crate) mmr_size: Uint64,
+    pub(crate) proof: Byte32Vec,
 }
 impl RegisterBuilder {
     pub const FIELD_COUNT: usize = 4;
-    pub fn pubkey_hash(mut self, v: Byte20) -> Self {
-        self.pubkey_hash = v;
+    pub fn address_entry(mut self, v: AddressEntry) -> Self {
+        self.address_entry = v;
         self
     }
-    pub fn address_index(mut self, v: Uint32) -> Self {
-        self.address_index = v;
+    pub fn last_address_entry_hash(mut self, v: Byte32) -> Self {
+        self.last_address_entry_hash = v;
         self
     }
-    pub fn pre_proof(mut self, v: Byte32Vec) -> Self {
-        self.pre_proof = v;
+    pub fn mmr_size(mut self, v: Uint64) -> Self {
+        self.mmr_size = v;
         self
     }
-    pub fn post_proof(mut self, v: Byte32Vec) -> Self {
-        self.post_proof = v;
+    pub fn proof(mut self, v: Byte32Vec) -> Self {
+        self.proof = v;
         self
     }
 }
@@ -1171,30 +1350,30 @@ impl molecule::prelude::Builder for RegisterBuilder {
     const NAME: &'static str = "RegisterBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
-            + self.pubkey_hash.as_slice().len()
-            + self.address_index.as_slice().len()
-            + self.pre_proof.as_slice().len()
-            + self.post_proof.as_slice().len()
+            + self.address_entry.as_slice().len()
+            + self.last_address_entry_hash.as_slice().len()
+            + self.mmr_size.as_slice().len()
+            + self.proof.as_slice().len()
     }
     fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
         let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
         let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
         offsets.push(total_size);
-        total_size += self.pubkey_hash.as_slice().len();
+        total_size += self.address_entry.as_slice().len();
         offsets.push(total_size);
-        total_size += self.address_index.as_slice().len();
+        total_size += self.last_address_entry_hash.as_slice().len();
         offsets.push(total_size);
-        total_size += self.pre_proof.as_slice().len();
+        total_size += self.mmr_size.as_slice().len();
         offsets.push(total_size);
-        total_size += self.post_proof.as_slice().len();
+        total_size += self.proof.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
-        writer.write_all(self.pubkey_hash.as_slice())?;
-        writer.write_all(self.address_index.as_slice())?;
-        writer.write_all(self.pre_proof.as_slice())?;
-        writer.write_all(self.post_proof.as_slice())?;
+        writer.write_all(self.address_entry.as_slice())?;
+        writer.write_all(self.last_address_entry_hash.as_slice())?;
+        writer.write_all(self.mmr_size.as_slice())?;
+        writer.write_all(self.proof.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
