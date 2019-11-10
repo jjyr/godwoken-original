@@ -1,6 +1,7 @@
 mod test_main;
+pub mod utils;
 
-use ckb_script::DataLoader;
+use ckb_script::{DataLoader, TransactionScriptsVerifier};
 use ckb_types::{
     bytes::Bytes,
     core::{cell::CellMeta, BlockExt, EpochExt, HeaderView},
@@ -8,6 +9,7 @@ use ckb_types::{
 };
 use lazy_static::lazy_static;
 use std::collections::HashMap;
+use utils::{build_resolved_tx, gen_tx};
 
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
@@ -15,6 +17,8 @@ lazy_static! {
     pub static ref MAIN_CONTRACT_BIN: Bytes =
         Bytes::from(&include_bytes!("../../contract/binary/main")[..]);
 }
+
+pub const MAX_CYCLES: u64 = std::u64::MAX;
 
 #[derive(Default)]
 pub struct DummyDataLoader {
@@ -52,4 +56,16 @@ impl DataLoader for DummyDataLoader {
     fn get_block_epoch(&self, block_hash: &Byte32) -> Option<EpochExt> {
         self.epoches.get(block_hash).cloned()
     }
+}
+
+#[test]
+fn test_dummy_lock() {
+    const DUMMY_LOCK_CYCLES: u64 = 2108;
+    let mut data_loader = DummyDataLoader::new();
+    let tx = gen_tx(&mut data_loader, DUMMY_LOCK_BIN.clone(), None, Bytes::new());
+    let resolved_tx = build_resolved_tx(&data_loader, &tx);
+    let verify_result =
+        TransactionScriptsVerifier::new(&resolved_tx, &data_loader).verify(MAX_CYCLES);
+    let cycles = verify_result.expect("pass verification");
+    assert_eq!(cycles, DUMMY_LOCK_CYCLES);
 }
