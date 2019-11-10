@@ -14,6 +14,7 @@ BUILDER_DOCKER := nervos/ckb-riscv-gnu-toolchain@sha256:7b168b4b109a0f741078a71b
 default: ci
 
 ##@ Contracts
+CONTRACT_DEP_FILES := contract/utils/mmr.h
 GEN_MOL_OUT_DIR_C := contract/deps/types
 GEN_MOL_C_FILES := ${GEN_MOL_OUT_DIR_C}/blockchain.h ${GEN_MOL_OUT_DIR_C}/godwoken.h
 ${GEN_MOL_OUT_DIR_C}/blockchain.h: ${GEN_MOL_IN_DIR}/blockchain.mol
@@ -29,7 +30,7 @@ contracts-via-docker: install-tools ${GEN_MOL_C_FILES}
 contract/binary/dummy_lock: contract/dummy_lock.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-contract/binary/main: contract/main.c ${GEN_MOL_C_FILES}
+contract/binary/main: contract/main.c ${CONTRACT_DEP_FILES} ${GEN_MOL_C_FILES}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 ##@ Generates Schema

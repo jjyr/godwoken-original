@@ -9,9 +9,10 @@
 #ifndef MMR_H
 #define HHR_H
 
+#include "assert.h"
 #include "blake2b.h"
-#include "string.h"
 #include "stddef.h"
+#include "string.h"
 
 #define HASH_SIZE 32
 
@@ -46,7 +47,7 @@ HeightPos get_right_peak(uint32_t height, uint64_t pos, uint64_t mmr_size) {
     pos -= parent_offset(height - 1);
     height -= 1;
   }
-  HeightPos peak = {height ,pos};
+  HeightPos peak = {height, pos};
   return peak;
 }
 
@@ -89,11 +90,15 @@ Peaks get_peaks(uint64_t mmr_size) {
   return peaks;
 }
 
-
 /* binary search, arr must be a sorted array
  * return -1 if binary search failed, otherwise return index
  */
 int binary_search(uint64_t *arr, size_t len, uint64_t target) {
+  if (len == 0) {
+    return -1;
+  } else if (len == 1 && arr[0] == target) {
+    return 0;
+  }
   int b = 0;
   int e = len - 1;
   while (b != e) {
@@ -113,8 +118,8 @@ int binary_search(uint64_t *arr, size_t len, uint64_t target) {
 size_t count_zeros(uint64_t n, int only_count_leading) {
   size_t num_zeros = 0;
 
-  for (size_t i = sizeof(n) - 1; i >= 0; --i) {
-    if ((n & (1 << i)) == 0) {
+  for (int i = 63; i >= 0; --i) {
+    if ((n & ((uint64_t)1 << (uint64_t)i)) == 0) {
       ++num_zeros;
     } else if (only_count_leading) {
       break;
@@ -150,6 +155,44 @@ void merge_hash(blake2b_state *blake2b_ctx, uint8_t dst[HASH_SIZE],
   blake2b_update(blake2b_ctx, right_hash, HASH_SIZE);
   blake2b_final(blake2b_ctx, dst, HASH_SIZE);
   return;
+}
+
+static uint64_t simple_log2(uint64_t n) {
+  unsigned int res = 0;
+  while (n >>= 1)
+    res++;
+  return res;
+}
+
+uint64_t leaf_index_to_pos(uint64_t index) {
+  if (index == 0) {
+    return 0;
+  }
+  // leaf_count
+  uint64_t leaves = index + 1;
+  uint64_t tree_node_count = 0;
+  uint32_t height = 0;
+  while (leaves > 1) {
+    // get heighest peak height
+    height = simple_log2(leaves);
+    // calculate leaves in peak
+    uint64_t peak_leaves = (uint32_t)1 << height;
+    // heighest positon
+    uint64_t sub_tree_node_count = peak_pos_by_height(height) + 1;
+    tree_node_count += sub_tree_node_count;
+    leaves -= peak_leaves;
+  }
+  // two leaves can construct a new peak, the only valid number of leaves is 0
+  // or 1.
+  assert(leaves == 0 || leaves == 1);
+  if (leaves == 1) {
+    // add one pos for remain leaf
+    // equals to `tree_node_count - 1 + 1`
+    return tree_node_count;
+  } else {
+    uint64_t pos = tree_node_count - 1;
+    return pos - height;
+  }
 }
 
 /* MMR API */

@@ -18,7 +18,7 @@ lazy_static! {
         Bytes::from(&include_bytes!("../../contract/binary/main")[..]);
 }
 
-pub const MAX_CYCLES: u64 = std::u64::MAX;
+pub const MAX_CYCLES: u64 = 500_000;
 
 #[derive(Default)]
 pub struct DummyDataLoader {

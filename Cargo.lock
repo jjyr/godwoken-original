@@ -266,7 +266,7 @@ dependencies = [
 [[package]]
 name = "ckb-merkle-mountain-range"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/nervosnetwork/merkle-mountain-range#c18c09923497e940701526c32ebf536a64145989"
 dependencies = [
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -713,7 +713,7 @@ version = "0.1.0"
 dependencies = [
  "ckb-error 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)",
  "ckb-hash 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)",
- "ckb-merkle-mountain-range 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range)",
  "ckb-script 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)",
  "ckb-types 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)",
  "godwoken-types 0.1.0-pre",
@@ -2261,7 +2261,7 @@ dependencies = [
 "checksum ckb-hash 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)" = "<none>"
 "checksum ckb-jsonrpc-types 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)" = "<none>"
 "checksum ckb-logger 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)" = "<none>"
-"checksum ckb-merkle-mountain-range 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "582a42f1ddf05083276b06cc35c6624c9c379ce2b05f828e654a377c69ebae5b"
+"checksum ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range)" = "<none>"
 "checksum ckb-occupied-capacity 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)" = "<none>"
 "checksum ckb-occupied-capacity-core 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)" = "<none>"
 "checksum ckb-occupied-capacity-macros 0.24.0 (git+https://github.com/nervosnetwork/ckb.git?rev=v0.24.0)" = "<none>"

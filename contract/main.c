@@ -168,7 +168,8 @@ int verify_register(mol_seg_t *old_global_state_seg,
   }
 
   /* calculate address entries merkle root */
-  compute_proof_root(root_hash, mmr_size, leaf_hash_seg.ptr, new_index - 1,
+  uint64_t last_entry_pos = leaf_index_to_pos(new_index - 1);
+  compute_proof_root(root_hash, mmr_size, leaf_hash_seg.ptr, last_entry_pos,
                      proof, proof_len);
   /* calculate old address_root: H(count | address entries root) */
   blake2b_init(&blake2b_ctx, HASH_SIZE);
