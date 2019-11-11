@@ -1,3 +1,6 @@
 [submodule "contract/ckb-c-stdlib"]
 	path = contract/ckb-c-stdlib
 	url = https://github.com/nervosnetwork/ckb-c-stdlib.git
+[submodule "contract/deps/mmr-c"]
+	path = contract/deps/mmr-c
+	url = https://github.com/jjyr/mmr-c.git

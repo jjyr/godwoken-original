@@ -14,6 +14,7 @@
    4. Send Tx
 */
 
+#include "blake2b.h"
 #include "blockchain.h"
 #include "ckb_syscalls.h"
 #include "godwoken.h"
@@ -32,6 +33,7 @@
 #define ERROR_INVALID_GLOBAL_STATE -13
 #define ERROR_LOAD_GLOBAL_STATE -14
 #define ERROR_INVALID_MERKLE_PROOF -15
+#define ERROR_INVALID_NEW_ROOT -16
 
 enum ActionItem {
   Register,
@@ -96,6 +98,16 @@ int load_global_state(mol_seg_t *global_state_seg,
   global_state_seg->ptr = buf;
   global_state_seg->size = len;
   return OK;
+}
+
+/* merge function for MMR proof */
+void merge_hash(uint8_t dst[HASH_SIZE], uint8_t left_hash[HASH_SIZE],
+                uint8_t right_hash[HASH_SIZE]) {
+  blake2b_state blake2b_ctx;
+  blake2b_init(&blake2b_ctx, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, left_hash, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, right_hash, HASH_SIZE);
+  blake2b_final(&blake2b_ctx, dst, HASH_SIZE);
 }
 
 /* actions verification */
@@ -168,9 +180,11 @@ int verify_register(mol_seg_t *old_global_state_seg,
   }
 
   /* calculate address entries merkle root */
-  uint64_t last_entry_pos = leaf_index_to_pos(new_index - 1);
-  compute_proof_root(root_hash, mmr_size, leaf_hash_seg.ptr, last_entry_pos,
-                     proof, proof_len);
+  VerifyContext ctx;
+  initialize_verify_context(&ctx, merge_hash);
+  MMRSizePos last_entry_pos = compute_pos_by_leaf_index(new_index - 1);
+  compute_proof_root(&ctx, root_hash, mmr_size, leaf_hash_seg.ptr,
+                     last_entry_pos.pos, proof, proof_len);
   /* calculate old address_root: H(count | address entries root) */
   blake2b_init(&blake2b_ctx, HASH_SIZE);
   blake2b_update(&blake2b_ctx, &new_index, sizeof(uint32_t));
@@ -182,6 +196,27 @@ int verify_register(mol_seg_t *old_global_state_seg,
     return ERROR_INVALID_MERKLE_PROOF;
   }
   /* TODO verify new global state */
+  uint8_t new_leaf_hash[HASH_SIZE];
+  blake2b_init(&blake2b_ctx, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, address_entry_seg.ptr, address_entry_seg.size);
+  blake2b_final(&blake2b_ctx, new_leaf_hash, HASH_SIZE);
+  MMRSizePos new_entry_pos = compute_pos_by_leaf_index(new_index);
+  compute_new_root_from_last_leaf_proof(
+      &ctx, root_hash, mmr_size, leaf_hash_seg.ptr, last_entry_pos.pos, proof,
+      proof_len, new_leaf_hash, new_entry_pos);
+  uint32_t new_count = new_index + 1;
+  blake2b_init(&blake2b_ctx, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, &new_count, sizeof(uint32_t));
+  blake2b_update(&blake2b_ctx, root_hash, HASH_SIZE);
+  blake2b_final(&blake2b_ctx, root_hash, HASH_SIZE);
+  ret = memcmp(root_hash, address_root_seg.ptr, HASH_SIZE);
+  memcpy(address_root_seg.ptr, root_hash, HASH_SIZE);
+  /* compare global state transition */
+  ret = memcmp(old_global_state_seg->ptr, new_global_state_seg->ptr,
+               GLOBAL_STATE_SIZE);
+  if (ret != OK) {
+    return ERROR_INVALID_NEW_ROOT;
+  }
   return OK;
 }
 
