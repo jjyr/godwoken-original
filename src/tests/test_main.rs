@@ -17,14 +17,11 @@ struct HashMerge;
 impl Merge for HashMerge {
     type Item = [u8; 32];
     fn merge(left: &Self::Item, right: &Self::Item) -> Self::Item {
-        println!("merge left {:?}", left.pack());
-        println!("merge right {:?}", right.pack());
         let mut merge_result = [0u8; 32];
         let mut hasher = new_blake2b();
         hasher.update(left);
         hasher.update(right);
         hasher.finalize(&mut merge_result);
-        println!("result {}\n", merge_result.pack());
         merge_result
     }
 }
@@ -162,23 +159,4 @@ fn test_registration() {
         last_address_entry = address_entry;
         global_state = new_global_state;
     }
-}
-
-#[test]
-fn test_merkle() {
-    let mut mmr = HashMMR::new(0, Default::default());
-    for i in 0u32..=7u32 {
-        let mut buf = [0u8; 32];
-        buf[0..4].clone_from_slice(&i.to_le_bytes());
-        mmr.push(buf).unwrap();
-    }
-    let i = 7u32;
-    let mut buf = [0u8; 32];
-    buf[0..4].clone_from_slice(&i.to_le_bytes());
-    let proof = mmr.gen_proof(leaf_index_to_pos(i.into())).unwrap();
-    let root = mmr.get_root().unwrap();
-    let result = proof
-        .verify(root, leaf_index_to_pos(i.into()), buf)
-        .unwrap();
-    assert!(result);
 }
