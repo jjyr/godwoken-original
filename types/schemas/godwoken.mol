@@ -35,6 +35,10 @@ table Register {
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 
-struct Deposit {
-    entry: AddressEntry, // AddressEntry that contains new state.
+table Deposit {
+    old_entry: AddressEntry, // AddressEntry contains old state.
+    new_entry: AddressEntry, // AddressEntry contains new state.
+    count: Uint32, // count of entries, do not includes new_entry
+    mmr_size: Uint64, // MMR size
+    proof: Byte32Vec, // merkle proof of old state address entry
 }
