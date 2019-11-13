@@ -27,12 +27,16 @@
 
 /* error codes */
 #define OK 0
-#define ERROR_INVALID_OUTPUT_TYPE_HASH -10
+#define ERROR_SYSCALL -4
+/* contract state errors */
+#define ERROR_INVALID_NEW_ROOT -5
+#define ERROR_INVALID_OUTPUT_TYPE_HASH -6
+#define ERROR_INCORRECT_CAPACITY -7
+/* other errors */
 #define ERROR_INVALID_WITNESS -11
 #define ERROR_UNKNOWN_ACTION -12
 #define ERROR_LOAD_GLOBAL_STATE -13
 #define ERROR_INVALID_MERKLE_PROOF -14
-#define ERROR_INVALID_NEW_ROOT -15
 
 enum ActionItem {
   Register,
@@ -52,6 +56,22 @@ int check_output_type(uint8_t type_hash[HASH_SIZE]) {
   ret = memcmp(type_hash, output_type_hash, HASH_SIZE);
   if (ret != OK) {
     return ERROR_INVALID_OUTPUT_TYPE_HASH;
+  }
+  return OK;
+}
+
+/* fetch old capacity and new capacity */
+int fetch_contract_capacities(uint64_t *old_capacity, uint64_t *new_capacity) {
+  uint64_t len = sizeof(uint64_t);
+  int ret = ckb_checked_load_cell_by_field(
+      old_capacity, &len, 0, 0, CKB_SOURCE_INPUT, CKB_CELL_FIELD_CAPACITY);
+  if (ret != CKB_SUCCESS || len != sizeof(uint64_t)) {
+    return ERROR_SYSCALL;
+  }
+  ret = ckb_checked_load_cell_by_field(
+      new_capacity, &len, 0, 0, CKB_SOURCE_OUTPUT, CKB_CELL_FIELD_CAPACITY);
+  if (ret != CKB_SUCCESS || len != sizeof(uint64_t)) {
+    return ERROR_SYSCALL;
   }
   return OK;
 }
@@ -118,6 +138,14 @@ void merge_hash(uint8_t dst[HASH_SIZE], uint8_t left_hash[HASH_SIZE],
  */
 int verify_register(mol_seg_t *old_global_state_seg,
                     mol_seg_t *new_global_state_seg, mol_seg_t *register_seg) {
+  uint64_t old_capacity, new_capacity;
+  int ret = fetch_contract_capacities(&old_capacity, &new_capacity);
+  if (ret != OK) {
+    return ret;
+  }
+  if (old_capacity != new_capacity) {
+    return ERROR_INCORRECT_CAPACITY;
+  }
   mol_seg_t mmr_size_seg = MolReader_Register_get_mmr_size(register_seg);
   uint64_t mmr_size = *(uint64_t *)mmr_size_seg.ptr;
   mol_seg_t new_entry_seg = MolReader_Register_get_address_entry(register_seg);
@@ -143,7 +171,6 @@ int verify_register(mol_seg_t *old_global_state_seg,
 
   /* verify merkle proof for last address entry */
   uint8_t root_hash[HASH_SIZE];
-  int ret;
   MMRSizePos last_entry_pos = {0, 0};
   blake2b_state blake2b_ctx;
   VerifyContext proof_ctx;
