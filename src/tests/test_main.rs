@@ -89,9 +89,7 @@ fn test_registration() {
         global_state.as_bytes(),
     );
     let address_entry = AddressEntry::new_builder().build();
-    let register = Register::new_builder()
-        .address_entry(address_entry.clone())
-        .build();
+    let register = Register::new_builder().entry(address_entry.clone()).build();
     let action = Action::new_builder().set(register).build();
     global_state_context.add_address_entry(address_entry.clone());
     let new_global_state = global_state_context.get_global_state();
@@ -130,8 +128,8 @@ fn test_registration() {
             let (mmr_size, proof) =
                 global_state_context.gen_address_merkle_proof(last_address_entry.index().unpack());
             Register::new_builder()
-                .address_entry(address_entry.clone())
-                .last_address_entry_hash(blake2b_256(last_address_entry.as_slice()).pack())
+                .entry(address_entry.clone())
+                .last_entry_hash(blake2b_256(last_address_entry.as_slice()).pack())
                 .mmr_size(mmr_size.pack())
                 .proof(
                     proof

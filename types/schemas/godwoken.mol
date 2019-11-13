@@ -29,12 +29,12 @@ union Action {
 }
 
 table Register {
-    address_entry: AddressEntry,
-    last_address_entry_hash: Byte32, // used for merkle proof
+    entry: AddressEntry,
+    last_entry_hash: Byte32, // used for merkle proof
     mmr_size: Uint64, // MMR size
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 
 struct Deposit {
-    dummy: Uint32,
+    entry: AddressEntry, // AddressEntry that contains new state.
 }

@@ -148,11 +148,11 @@ int verify_register(mol_seg_t *old_global_state_seg,
   }
   mol_seg_t mmr_size_seg = MolReader_Register_get_mmr_size(register_seg);
   uint64_t mmr_size = *(uint64_t *)mmr_size_seg.ptr;
-  mol_seg_t new_entry_seg = MolReader_Register_get_address_entry(register_seg);
+  mol_seg_t new_entry_seg = MolReader_Register_get_entry(register_seg);
   mol_seg_t new_index_seg = MolReader_AddressEntry_get_index(&new_entry_seg);
   uint32_t new_index = *(uint32_t *)new_index_seg.ptr;
   mol_seg_t leaf_hash_seg =
-      MolReader_Register_get_last_address_entry_hash(register_seg);
+      MolReader_Register_get_last_entry_hash(register_seg);
 
   mol_seg_t old_address_root_seg =
       MolReader_GlobalState_get_address_root(old_global_state_seg);

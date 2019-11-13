@@ -51,12 +51,12 @@ mol_errno       MolReader_Action_verify                         (const mol_seg_t
 mol_errno       MolReader_Register_verify                       (const mol_seg_t*, bool);
 #define         MolReader_Register_actual_field_count(s)        mol_table_actual_field_count(s)
 #define         MolReader_Register_has_extra_fields(s)          mol_table_has_extra_fields(s, 4)
-#define         MolReader_Register_get_address_entry(s)         mol_table_slice_by_index(s, 0)
-#define         MolReader_Register_get_last_address_entry_hash(s) mol_table_slice_by_index(s, 1)
+#define         MolReader_Register_get_entry(s)                 mol_table_slice_by_index(s, 0)
+#define         MolReader_Register_get_last_entry_hash(s)       mol_table_slice_by_index(s, 1)
 #define         MolReader_Register_get_mmr_size(s)              mol_table_slice_by_index(s, 2)
 #define         MolReader_Register_get_proof(s)                 mol_table_slice_by_index(s, 3)
-#define         MolReader_Deposit_verify(s, c)                  mol_verify_fixed_size(s, 4)
-#define         MolReader_Deposit_get_dummy(s)                  mol_slice_by_offset(s, 0, 4)
+#define         MolReader_Deposit_verify(s, c)                  mol_verify_fixed_size(s, 36)
+#define         MolReader_Deposit_get_entry(s)                  mol_slice_by_offset(s, 0, 36)
 
 /*
  * Builder APIs
@@ -102,14 +102,14 @@ mol_errno       MolReader_Register_verify                       (const mol_seg_t
 #define         MolBuilder_Action_build(b)                      mol_builder_finalize_simple(b)
 #define         MolBuilder_Action_clear(b)                      mol_builder_discard(b)
 #define         MolBuilder_Register_init(b)                     mol_table_builder_initialize(b, 512, 4)
-#define         MolBuilder_Register_set_address_entry(b, p, l)  mol_table_builder_add(b, 0, p, l)
-#define         MolBuilder_Register_set_last_address_entry_hash(b, p, l) mol_table_builder_add(b, 1, p, l)
+#define         MolBuilder_Register_set_entry(b, p, l)          mol_table_builder_add(b, 0, p, l)
+#define         MolBuilder_Register_set_last_entry_hash(b, p, l) mol_table_builder_add(b, 1, p, l)
 #define         MolBuilder_Register_set_mmr_size(b, p, l)       mol_table_builder_add(b, 2, p, l)
 #define         MolBuilder_Register_set_proof(b, p, l)          mol_table_builder_add(b, 3, p, l)
 mol_seg_res_t   MolBuilder_Register_build                       (mol_builder_t);
 #define         MolBuilder_Register_clear(b)                    mol_builder_discard(b)
-#define         MolBuilder_Deposit_init(b)                      mol_builder_initialize_fixed_size(b, 4)
-#define         MolBuilder_Deposit_set_dummy(b, p)              mol_builder_set_by_offset(b, 0, p, 4)
+#define         MolBuilder_Deposit_init(b)                      mol_builder_initialize_fixed_size(b, 36)
+#define         MolBuilder_Deposit_set_entry(b, p)              mol_builder_set_by_offset(b, 0, p, 36)
 #define         MolBuilder_Deposit_build(b)                     mol_builder_finalize_simple(b)
 #define         MolBuilder_Deposit_clear(b)                     mol_builder_discard(b)
 
@@ -155,7 +155,11 @@ const uint8_t MolDefault_Register[100]                           =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____,
 };
-const uint8_t MolDefault_Deposit[4]                              =  {____, ____, ____, ____};
+const uint8_t MolDefault_Deposit[36]                             =  {
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+};
 
 #undef ____
 

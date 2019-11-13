@@ -1081,13 +1081,8 @@ impl ::std::fmt::Debug for Register {
 impl ::std::fmt::Display for Register {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "address_entry", self.address_entry())?;
-        write!(
-            f,
-            ", {}: {}",
-            "last_address_entry_hash",
-            self.last_address_entry_hash()
-        )?;
+        write!(f, "{}: {}", "entry", self.entry())?;
+        write!(f, ", {}: {}", "last_entry_hash", self.last_entry_hash())?;
         write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
         write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
@@ -1129,13 +1124,13 @@ impl Register {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn address_entry(&self) -> AddressEntry {
+    pub fn entry(&self) -> AddressEntry {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
         AddressEntry::new_unchecked(self.0.slice(start, end))
     }
-    pub fn last_address_entry_hash(&self) -> Byte32 {
+    pub fn last_entry_hash(&self) -> Byte32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
@@ -1184,8 +1179,8 @@ impl molecule::prelude::Entity for Register {
     }
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
-            .address_entry(self.address_entry())
-            .last_address_entry_hash(self.last_address_entry_hash())
+            .entry(self.entry())
+            .last_entry_hash(self.last_entry_hash())
             .mmr_size(self.mmr_size())
             .proof(self.proof())
     }
@@ -1209,13 +1204,8 @@ impl<'r> ::std::fmt::Debug for RegisterReader<'r> {
 impl<'r> ::std::fmt::Display for RegisterReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "address_entry", self.address_entry())?;
-        write!(
-            f,
-            ", {}: {}",
-            "last_address_entry_hash",
-            self.last_address_entry_hash()
-        )?;
+        write!(f, "{}: {}", "entry", self.entry())?;
+        write!(f, ", {}: {}", "last_entry_hash", self.last_entry_hash())?;
         write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
         write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
@@ -1246,13 +1236,13 @@ impl<'r> RegisterReader<'r> {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn address_entry(&self) -> AddressEntryReader<'r> {
+    pub fn entry(&self) -> AddressEntryReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
         AddressEntryReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn last_address_entry_hash(&self) -> Byte32Reader<'r> {
+    pub fn last_entry_hash(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
@@ -1335,19 +1325,19 @@ impl<'r> molecule::prelude::Reader<'r> for RegisterReader<'r> {
 }
 #[derive(Debug, Default)]
 pub struct RegisterBuilder {
-    pub(crate) address_entry: AddressEntry,
-    pub(crate) last_address_entry_hash: Byte32,
+    pub(crate) entry: AddressEntry,
+    pub(crate) last_entry_hash: Byte32,
     pub(crate) mmr_size: Uint64,
     pub(crate) proof: Byte32Vec,
 }
 impl RegisterBuilder {
     pub const FIELD_COUNT: usize = 4;
-    pub fn address_entry(mut self, v: AddressEntry) -> Self {
-        self.address_entry = v;
+    pub fn entry(mut self, v: AddressEntry) -> Self {
+        self.entry = v;
         self
     }
-    pub fn last_address_entry_hash(mut self, v: Byte32) -> Self {
-        self.last_address_entry_hash = v;
+    pub fn last_entry_hash(mut self, v: Byte32) -> Self {
+        self.last_entry_hash = v;
         self
     }
     pub fn mmr_size(mut self, v: Uint64) -> Self {
@@ -1364,8 +1354,8 @@ impl molecule::prelude::Builder for RegisterBuilder {
     const NAME: &'static str = "RegisterBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
-            + self.address_entry.as_slice().len()
-            + self.last_address_entry_hash.as_slice().len()
+            + self.entry.as_slice().len()
+            + self.last_entry_hash.as_slice().len()
             + self.mmr_size.as_slice().len()
             + self.proof.as_slice().len()
     }
@@ -1373,9 +1363,9 @@ impl molecule::prelude::Builder for RegisterBuilder {
         let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
         let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
         offsets.push(total_size);
-        total_size += self.address_entry.as_slice().len();
+        total_size += self.entry.as_slice().len();
         offsets.push(total_size);
-        total_size += self.last_address_entry_hash.as_slice().len();
+        total_size += self.last_entry_hash.as_slice().len();
         offsets.push(total_size);
         total_size += self.mmr_size.as_slice().len();
         offsets.push(total_size);
@@ -1384,8 +1374,8 @@ impl molecule::prelude::Builder for RegisterBuilder {
         for offset in offsets.into_iter() {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
-        writer.write_all(self.address_entry.as_slice())?;
-        writer.write_all(self.last_address_entry_hash.as_slice())?;
+        writer.write_all(self.entry.as_slice())?;
+        writer.write_all(self.last_entry_hash.as_slice())?;
         writer.write_all(self.mmr_size.as_slice())?;
         writer.write_all(self.proof.as_slice())?;
         Ok(())
@@ -1416,22 +1406,25 @@ impl ::std::fmt::Debug for Deposit {
 impl ::std::fmt::Display for Deposit {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "dummy", self.dummy())?;
+        write!(f, "{}: {}", "entry", self.entry())?;
         write!(f, " }}")
     }
 }
 impl ::std::default::Default for Deposit {
     fn default() -> Self {
-        let v: Vec<u8> = vec![0, 0, 0, 0];
+        let v: Vec<u8> = vec![
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+        ];
         Deposit::new_unchecked(v.into())
     }
 }
 impl Deposit {
-    pub const TOTAL_SIZE: usize = 4;
-    pub const FIELD_SIZE: [usize; 1] = [4];
+    pub const TOTAL_SIZE: usize = 36;
+    pub const FIELD_SIZE: [usize; 1] = [36];
     pub const FIELD_COUNT: usize = 1;
-    pub fn dummy(&self) -> Uint32 {
-        Uint32::new_unchecked(self.0.slice(0, 4))
+    pub fn entry(&self) -> AddressEntry {
+        AddressEntry::new_unchecked(self.0.slice(0, 36))
     }
     pub fn as_reader<'r>(&'r self) -> DepositReader<'r> {
         DepositReader::new_unchecked(self.as_slice())
@@ -1459,7 +1452,7 @@ impl molecule::prelude::Entity for Deposit {
         ::std::default::Default::default()
     }
     fn as_builder(self) -> Self::Builder {
-        Self::new_builder().dummy(self.dummy())
+        Self::new_builder().entry(self.entry())
     }
 }
 #[derive(Clone, Copy)]
@@ -1481,16 +1474,16 @@ impl<'r> ::std::fmt::Debug for DepositReader<'r> {
 impl<'r> ::std::fmt::Display for DepositReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "dummy", self.dummy())?;
+        write!(f, "{}: {}", "entry", self.entry())?;
         write!(f, " }}")
     }
 }
 impl<'r> DepositReader<'r> {
-    pub const TOTAL_SIZE: usize = 4;
-    pub const FIELD_SIZE: [usize; 1] = [4];
+    pub const TOTAL_SIZE: usize = 36;
+    pub const FIELD_SIZE: [usize; 1] = [36];
     pub const FIELD_COUNT: usize = 1;
-    pub fn dummy(&self) -> Uint32Reader<'r> {
-        Uint32Reader::new_unchecked(&self.as_slice()[0..4])
+    pub fn entry(&self) -> AddressEntryReader<'r> {
+        AddressEntryReader::new_unchecked(&self.as_slice()[0..36])
     }
 }
 impl<'r> molecule::prelude::Reader<'r> for DepositReader<'r> {
@@ -1516,14 +1509,14 @@ impl<'r> molecule::prelude::Reader<'r> for DepositReader<'r> {
 }
 #[derive(Debug, Default)]
 pub struct DepositBuilder {
-    pub(crate) dummy: Uint32,
+    pub(crate) entry: AddressEntry,
 }
 impl DepositBuilder {
-    pub const TOTAL_SIZE: usize = 4;
-    pub const FIELD_SIZE: [usize; 1] = [4];
+    pub const TOTAL_SIZE: usize = 36;
+    pub const FIELD_SIZE: [usize; 1] = [36];
     pub const FIELD_COUNT: usize = 1;
-    pub fn dummy(mut self, v: Uint32) -> Self {
-        self.dummy = v;
+    pub fn entry(mut self, v: AddressEntry) -> Self {
+        self.entry = v;
         self
     }
 }
@@ -1534,7 +1527,7 @@ impl molecule::prelude::Builder for DepositBuilder {
         Self::TOTAL_SIZE
     }
     fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
-        writer.write_all(self.dummy.as_slice())?;
+        writer.write_all(self.entry.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
