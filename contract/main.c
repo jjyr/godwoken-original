@@ -23,7 +23,7 @@
 #define HASH_SIZE 32
 #define MAX_WITNESS_SIZE 32768
 #define BUF_SIZE 32768
-#define GLOBAL_STATE_SIZE 64
+#define GLOBAL_STATE_SIZE 32
 
 /* error codes */
 #define OK 0

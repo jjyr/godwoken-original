@@ -31,7 +31,6 @@ type HashMMR = MemMMR<[u8; 32], HashMerge>;
 #[derive(Default)]
 struct GlobalStateContext {
     address_root: [u8; 32],
-    balance_root: [u8; 32],
     address_mmr: HashMMR,
 }
 
@@ -43,7 +42,6 @@ impl GlobalStateContext {
     fn get_global_state(&self) -> GlobalState {
         GlobalState::new_builder()
             .address_root(self.address_root.pack())
-            .balance_root(self.balance_root.pack())
             .build()
     }
 

@@ -12,12 +12,13 @@ array Byte20 [byte; 20];
  */
 struct GlobalState {
     address_root: Byte32, // H(count | merkle root of address entries)
-    balance_root: Byte32,
 }
 
 struct AddressEntry {
     index: Uint32, // address index
     pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
+    nonce: Uint32, // nonce
+    balance: Uint64, // balance
 }
 
 /* contract allowed actions */

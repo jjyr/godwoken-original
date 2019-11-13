@@ -437,7 +437,6 @@ impl ::std::fmt::Display for GlobalState {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "address_root", self.address_root())?;
-        write!(f, ", {}: {}", "balance_root", self.balance_root())?;
         write!(f, " }}")
     }
 }
@@ -445,21 +444,17 @@ impl ::std::default::Default for GlobalState {
     fn default() -> Self {
         let v: Vec<u8> = vec![
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0,
+            0, 0, 0,
         ];
         GlobalState::new_unchecked(v.into())
     }
 }
 impl GlobalState {
-    pub const TOTAL_SIZE: usize = 64;
-    pub const FIELD_SIZE: [usize; 2] = [32, 32];
-    pub const FIELD_COUNT: usize = 2;
+    pub const TOTAL_SIZE: usize = 32;
+    pub const FIELD_SIZE: [usize; 1] = [32];
+    pub const FIELD_COUNT: usize = 1;
     pub fn address_root(&self) -> Byte32 {
         Byte32::new_unchecked(self.0.slice(0, 32))
-    }
-    pub fn balance_root(&self) -> Byte32 {
-        Byte32::new_unchecked(self.0.slice(32, 64))
     }
     pub fn as_reader<'r>(&'r self) -> GlobalStateReader<'r> {
         GlobalStateReader::new_unchecked(self.as_slice())
@@ -487,9 +482,7 @@ impl molecule::prelude::Entity for GlobalState {
         ::std::default::Default::default()
     }
     fn as_builder(self) -> Self::Builder {
-        Self::new_builder()
-            .address_root(self.address_root())
-            .balance_root(self.balance_root())
+        Self::new_builder().address_root(self.address_root())
     }
 }
 #[derive(Clone, Copy)]
@@ -512,19 +505,15 @@ impl<'r> ::std::fmt::Display for GlobalStateReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "address_root", self.address_root())?;
-        write!(f, ", {}: {}", "balance_root", self.balance_root())?;
         write!(f, " }}")
     }
 }
 impl<'r> GlobalStateReader<'r> {
-    pub const TOTAL_SIZE: usize = 64;
-    pub const FIELD_SIZE: [usize; 2] = [32, 32];
-    pub const FIELD_COUNT: usize = 2;
+    pub const TOTAL_SIZE: usize = 32;
+    pub const FIELD_SIZE: [usize; 1] = [32];
+    pub const FIELD_COUNT: usize = 1;
     pub fn address_root(&self) -> Byte32Reader<'r> {
         Byte32Reader::new_unchecked(&self.as_slice()[0..32])
-    }
-    pub fn balance_root(&self) -> Byte32Reader<'r> {
-        Byte32Reader::new_unchecked(&self.as_slice()[32..64])
     }
 }
 impl<'r> molecule::prelude::Reader<'r> for GlobalStateReader<'r> {
@@ -551,18 +540,13 @@ impl<'r> molecule::prelude::Reader<'r> for GlobalStateReader<'r> {
 #[derive(Debug, Default)]
 pub struct GlobalStateBuilder {
     pub(crate) address_root: Byte32,
-    pub(crate) balance_root: Byte32,
 }
 impl GlobalStateBuilder {
-    pub const TOTAL_SIZE: usize = 64;
-    pub const FIELD_SIZE: [usize; 2] = [32, 32];
-    pub const FIELD_COUNT: usize = 2;
+    pub const TOTAL_SIZE: usize = 32;
+    pub const FIELD_SIZE: [usize; 1] = [32];
+    pub const FIELD_COUNT: usize = 1;
     pub fn address_root(mut self, v: Byte32) -> Self {
         self.address_root = v;
-        self
-    }
-    pub fn balance_root(mut self, v: Byte32) -> Self {
-        self.balance_root = v;
         self
     }
 }
@@ -574,7 +558,6 @@ impl molecule::prelude::Builder for GlobalStateBuilder {
     }
     fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
         writer.write_all(self.address_root.as_slice())?;
-        writer.write_all(self.balance_root.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
@@ -605,26 +588,35 @@ impl ::std::fmt::Display for AddressEntry {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "index", self.index())?;
         write!(f, ", {}: {}", "pubkey_hash", self.pubkey_hash())?;
+        write!(f, ", {}: {}", "nonce", self.nonce())?;
+        write!(f, ", {}: {}", "balance", self.balance())?;
         write!(f, " }}")
     }
 }
 impl ::std::default::Default for AddressEntry {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
         ];
         AddressEntry::new_unchecked(v.into())
     }
 }
 impl AddressEntry {
-    pub const TOTAL_SIZE: usize = 24;
-    pub const FIELD_SIZE: [usize; 2] = [4, 20];
-    pub const FIELD_COUNT: usize = 2;
+    pub const TOTAL_SIZE: usize = 36;
+    pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
+    pub const FIELD_COUNT: usize = 4;
     pub fn index(&self) -> Uint32 {
         Uint32::new_unchecked(self.0.slice(0, 4))
     }
     pub fn pubkey_hash(&self) -> Byte20 {
         Byte20::new_unchecked(self.0.slice(4, 24))
+    }
+    pub fn nonce(&self) -> Uint32 {
+        Uint32::new_unchecked(self.0.slice(24, 28))
+    }
+    pub fn balance(&self) -> Uint64 {
+        Uint64::new_unchecked(self.0.slice(28, 36))
     }
     pub fn as_reader<'r>(&'r self) -> AddressEntryReader<'r> {
         AddressEntryReader::new_unchecked(self.as_slice())
@@ -655,6 +647,8 @@ impl molecule::prelude::Entity for AddressEntry {
         Self::new_builder()
             .index(self.index())
             .pubkey_hash(self.pubkey_hash())
+            .nonce(self.nonce())
+            .balance(self.balance())
     }
 }
 #[derive(Clone, Copy)]
@@ -678,18 +672,26 @@ impl<'r> ::std::fmt::Display for AddressEntryReader<'r> {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "index", self.index())?;
         write!(f, ", {}: {}", "pubkey_hash", self.pubkey_hash())?;
+        write!(f, ", {}: {}", "nonce", self.nonce())?;
+        write!(f, ", {}: {}", "balance", self.balance())?;
         write!(f, " }}")
     }
 }
 impl<'r> AddressEntryReader<'r> {
-    pub const TOTAL_SIZE: usize = 24;
-    pub const FIELD_SIZE: [usize; 2] = [4, 20];
-    pub const FIELD_COUNT: usize = 2;
+    pub const TOTAL_SIZE: usize = 36;
+    pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
+    pub const FIELD_COUNT: usize = 4;
     pub fn index(&self) -> Uint32Reader<'r> {
         Uint32Reader::new_unchecked(&self.as_slice()[0..4])
     }
     pub fn pubkey_hash(&self) -> Byte20Reader<'r> {
         Byte20Reader::new_unchecked(&self.as_slice()[4..24])
+    }
+    pub fn nonce(&self) -> Uint32Reader<'r> {
+        Uint32Reader::new_unchecked(&self.as_slice()[24..28])
+    }
+    pub fn balance(&self) -> Uint64Reader<'r> {
+        Uint64Reader::new_unchecked(&self.as_slice()[28..36])
     }
 }
 impl<'r> molecule::prelude::Reader<'r> for AddressEntryReader<'r> {
@@ -717,17 +719,27 @@ impl<'r> molecule::prelude::Reader<'r> for AddressEntryReader<'r> {
 pub struct AddressEntryBuilder {
     pub(crate) index: Uint32,
     pub(crate) pubkey_hash: Byte20,
+    pub(crate) nonce: Uint32,
+    pub(crate) balance: Uint64,
 }
 impl AddressEntryBuilder {
-    pub const TOTAL_SIZE: usize = 24;
-    pub const FIELD_SIZE: [usize; 2] = [4, 20];
-    pub const FIELD_COUNT: usize = 2;
+    pub const TOTAL_SIZE: usize = 36;
+    pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
+    pub const FIELD_COUNT: usize = 4;
     pub fn index(mut self, v: Uint32) -> Self {
         self.index = v;
         self
     }
     pub fn pubkey_hash(mut self, v: Byte20) -> Self {
         self.pubkey_hash = v;
+        self
+    }
+    pub fn nonce(mut self, v: Uint32) -> Self {
+        self.nonce = v;
+        self
+    }
+    pub fn balance(mut self, v: Uint64) -> Self {
+        self.balance = v;
         self
     }
 }
@@ -740,6 +752,8 @@ impl molecule::prelude::Builder for AddressEntryBuilder {
     fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
         writer.write_all(self.index.as_slice())?;
         writer.write_all(self.pubkey_hash.as_slice())?;
+        writer.write_all(self.nonce.as_slice())?;
+        writer.write_all(self.balance.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
@@ -775,10 +789,10 @@ impl ::std::fmt::Display for Action {
 impl ::std::default::Default for Action {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            0, 0, 0, 0, 88, 0, 0, 0, 20, 0, 0, 0, 44, 0, 0, 0, 76, 0, 0, 0, 84, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 100, 0, 0, 0, 20, 0, 0, 0, 56, 0, 0, 0, 88, 0, 0, 0, 96, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         Action::new_unchecked(v.into())
     }
@@ -1086,10 +1100,10 @@ impl ::std::fmt::Display for Register {
 impl ::std::default::Default for Register {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            88, 0, 0, 0, 20, 0, 0, 0, 44, 0, 0, 0, 76, 0, 0, 0, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            100, 0, 0, 0, 20, 0, 0, 0, 56, 0, 0, 0, 88, 0, 0, 0, 96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         Register::new_unchecked(v.into())
     }
