@@ -14,22 +14,24 @@ BUILDER_DOCKER := nervos/ckb-riscv-gnu-toolchain@sha256:7b168b4b109a0f741078a71b
 default: ci
 
 ##@ Contracts
-GEN_MOL_OUT_DIR_C := contract/deps/types
+C := contract
+CONTRACT_HEADERS := $C/common.h $C/registration.c $C/deposit.c
+GEN_MOL_OUT_DIR_C := $C/deps/types
 GEN_MOL_C_FILES := ${GEN_MOL_OUT_DIR_C}/blockchain.h ${GEN_MOL_OUT_DIR_C}/godwoken.h
 ${GEN_MOL_OUT_DIR_C}/blockchain.h: ${GEN_MOL_IN_DIR}/blockchain.mol
 	${MOLC} --language c --schema-file $< > $@
 ${GEN_MOL_OUT_DIR_C}/godwoken.h: ${GEN_MOL_IN_DIR}/godwoken.mol
 	${MOLC} --language c --schema-file $< > $@
 
-contracts: contract/binary/dummy_lock contract/binary/main
+contracts: $C/binary/dummy_lock $C/binary/main
 
 contracts-via-docker: install-tools ${GEN_MOL_C_FILES}
 	docker run --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make contracts"
 
-contract/binary/dummy_lock: contract/dummy_lock.c
+contract/binary/dummy_lock: $C/dummy_lock.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-contract/binary/main: contract/main.c ${GEN_MOL_C_FILES}
+contract/binary/main: $C/main.c ${CONTRACT_HEADERS} ${GEN_MOL_C_FILES}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 ##@ Generates Schema
