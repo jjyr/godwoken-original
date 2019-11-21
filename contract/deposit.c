@@ -41,7 +41,7 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   mol_seg_t new_nonce_seg = MolReader_AddressEntry_get_nonce(&new_entry_seg);
   uint32_t old_nonce = *(uint32_t *)old_nonce_seg.ptr;
   uint32_t new_nonce = *(uint32_t *)new_nonce_seg.ptr;
-  if (old_nonce + 1 != new_nonce)
+  if (old_nonce != new_nonce)
     return ERROR_INVALID_ENTRY_STATE_TRANSITION;
 
   mol_seg_t old_balance_seg =

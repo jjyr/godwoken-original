@@ -9,7 +9,7 @@ use ckb_types::{
 };
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use utils::{build_resolved_tx, gen_tx};
+use utils::{build_resolved_tx, TxBuilder};
 
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
@@ -62,7 +62,9 @@ impl DataLoader for DummyDataLoader {
 fn test_dummy_lock() {
     const DUMMY_LOCK_CYCLES: u64 = 2108;
     let mut data_loader = DummyDataLoader::new();
-    let tx = gen_tx(&mut data_loader, DUMMY_LOCK_BIN.clone(), None, Bytes::new());
+    let tx = TxBuilder::default()
+        .lock_bin(DUMMY_LOCK_BIN.clone())
+        .build(&mut data_loader);
     let resolved_tx = build_resolved_tx(&data_loader, &tx);
     let verify_result =
         TransactionScriptsVerifier::new(&resolved_tx, &data_loader).verify(MAX_CYCLES);
