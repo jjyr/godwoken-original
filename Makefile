@@ -22,6 +22,8 @@ ${GEN_MOL_OUT_DIR_C}/blockchain.h: ${GEN_MOL_IN_DIR}/blockchain.mol
 	${MOLC} --language c --schema-file $< > $@
 ${GEN_MOL_OUT_DIR_C}/godwoken.h: ${GEN_MOL_IN_DIR}/godwoken.mol
 	${MOLC} --language c --schema-file $< > $@
+# deps
+MMR_C := contract/deps/mmr-c
 
 contracts: $C/binary/dummy_lock $C/binary/main
 
@@ -31,8 +33,14 @@ contracts-via-docker: install-tools ${GEN_MOL_C_FILES}
 contract/binary/dummy_lock: $C/dummy_lock.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-contract/binary/main: $C/main.c ${CONTRACT_HEADERS} ${GEN_MOL_C_FILES}
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+contract/binary/main: $C/main.c ${MMR_C}/mmr.o ${CONTRACT_HEADERS} ${GEN_MOL_C_FILES}
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< ${MMR_C}/mmr.o
+
+${MMR_C}/mmr.o: ${MMR_C}/mmr.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
+
+clean-contracts:
+	rm $C/binary/dummy_lock $C/binary/main
 
 ##@ Generates Schema
 .PHONY: gen
@@ -69,5 +77,7 @@ fmt:
 
 check:
 	cargo check --all --all-targets
+
+clean: clean-contracts
 
 # .PHONY:

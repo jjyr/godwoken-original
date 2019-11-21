@@ -42,8 +42,8 @@ int verify_register(mol_seg_t *old_global_state_seg,
   uint8_t root_hash[HASH_SIZE];
   MMRSizePos last_entry_pos = {0, 0};
   blake2b_state blake2b_ctx;
-  VerifyContext proof_ctx;
-  initialize_verify_context(&proof_ctx, merge_hash);
+  MMRVerifyContext proof_ctx;
+  mmr_initialize_verify_context(&proof_ctx, merge_hash);
 
   /* verify old global state address root */
   if (new_index == 0) {
@@ -55,9 +55,9 @@ int verify_register(mol_seg_t *old_global_state_seg,
     }
   } else {
     /* calculate address entries merkle root */
-    last_entry_pos = compute_pos_by_leaf_index(new_index - 1);
-    compute_proof_root(&proof_ctx, root_hash, mmr_size, leaf_hash_seg.ptr,
-                       last_entry_pos.pos, proof, proof_len);
+    last_entry_pos = mmr_compute_pos_by_leaf_index(new_index - 1);
+    mmr_compute_proof_root(&proof_ctx, root_hash, mmr_size, leaf_hash_seg.ptr,
+                           last_entry_pos.pos, proof, proof_len);
     /* calculate old address_root: H(count | address entries root) */
     uint32_t count = new_index;
     blake2b_init(&blake2b_ctx, HASH_SIZE);
@@ -86,8 +86,8 @@ int verify_register(mol_seg_t *old_global_state_seg,
     blake2b_init(&blake2b_ctx, HASH_SIZE);
     blake2b_update(&blake2b_ctx, new_entry_seg.ptr, new_entry_seg.size);
     blake2b_final(&blake2b_ctx, new_leaf_hash, HASH_SIZE);
-    MMRSizePos new_entry_pos = compute_pos_by_leaf_index(new_index);
-    compute_new_root_from_last_leaf_proof(
+    MMRSizePos new_entry_pos = mmr_compute_pos_by_leaf_index(new_index);
+    mmr_compute_new_root_from_last_leaf_proof(
         &proof_ctx, root_hash, mmr_size, leaf_hash_seg.ptr, last_entry_pos.pos,
         proof, proof_len, new_leaf_hash, new_entry_pos);
   }

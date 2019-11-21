@@ -78,17 +78,17 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   mol_seg_t count_seg = MolReader_Deposit_get_count(deposit_seg);
   uint8_t root_hash[HASH_SIZE];
   blake2b_state blake2b_ctx;
-  VerifyContext proof_ctx;
-  initialize_verify_context(&proof_ctx, merge_hash);
+  MMRVerifyContext proof_ctx;
+  mmr_initialize_verify_context(&proof_ctx, merge_hash);
 
   blake2b_init(&blake2b_ctx, HASH_SIZE);
   blake2b_update(&blake2b_ctx, old_entry_seg.ptr, old_entry_seg.size);
   blake2b_final(&blake2b_ctx, root_hash, HASH_SIZE);
   MMRSizePos entry_pos =
-      compute_pos_by_leaf_index(*(uint64_t *)old_index_seg.ptr);
+      mmr_compute_pos_by_leaf_index(*(uint64_t *)old_index_seg.ptr);
   /* verify old global state address root */
-  compute_proof_root(&proof_ctx, root_hash, mmr_size, root_hash, entry_pos.pos,
-                     proof, proof_len);
+  mmr_compute_proof_root(&proof_ctx, root_hash, mmr_size, root_hash,
+                         entry_pos.pos, proof, proof_len);
   /* calculate old address_root: H(count | address entries root) */
   uint32_t count = *(uint32_t *)count_seg.ptr;
   blake2b_init(&blake2b_ctx, HASH_SIZE);
@@ -106,8 +106,8 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   blake2b_init(&blake2b_ctx, HASH_SIZE);
   blake2b_update(&blake2b_ctx, new_entry_seg.ptr, new_entry_seg.size);
   blake2b_final(&blake2b_ctx, root_hash, HASH_SIZE);
-  compute_proof_root(&proof_ctx, root_hash, mmr_size, root_hash, entry_pos.pos,
-                     proof, proof_len);
+  mmr_compute_proof_root(&proof_ctx, root_hash, mmr_size, root_hash,
+                         entry_pos.pos, proof, proof_len);
 
   /* calculate new global state address root */
   blake2b_init(&blake2b_ctx, HASH_SIZE);
