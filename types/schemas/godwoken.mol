@@ -3,6 +3,7 @@ import blockchain;
 /* contract types */
 
 array Byte20 [byte; 20];
+array Byte65 [byte; 65];
 
 /* Global state
  * We use single Byte32 to digest global state.
@@ -12,6 +13,7 @@ array Byte20 [byte; 20];
  */
 struct GlobalState {
     address_root: Byte32, // H(count | merkle root of address entries)
+    block_root: Byte32, // merkle root of godwoken blocks
 }
 
 struct AddressEntry {
@@ -21,13 +23,26 @@ struct AddressEntry {
     balance: Uint64, // balance
 }
 
+struct Tx {
+    from_index: Uint32,
+    to_index: Uint32,
+    amount: Uint64, // amount of shannons
+    fee: Uint64, // tx fee
+    nonce: Uint32, // nonce
+    signature: Byte65, // user signature
+}
+
+vector Txs <Tx>;
+
 /* contract allowed actions */
 
 union Action {
     Register,
     Deposit,
+    SendBlock,
 }
 
+/* Register a new entry */
 table Register {
     entry: AddressEntry,
     last_entry_hash: Byte32, // used for merkle proof
@@ -35,10 +50,19 @@ table Register {
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 
+/* Deposit coins */
 table Deposit {
     old_entry: AddressEntry, // AddressEntry contains old state.
     new_entry: AddressEntry, // AddressEntry contains new state.
     count: Uint32, // count of entries, do not includes new_entry
     mmr_size: Uint64, // MMR size
     proof: Byte32Vec, // merkle proof of old state address entry
+}
+
+/* Send txs in godwoken block */
+table SendBlock {
+    txs: Txs,
+    tx_root: Byte32,
+    mmr_size: Uint64, // MMR size
+    proof: Byte32Vec, // merkle proof of block_root
 }

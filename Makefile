@@ -63,7 +63,7 @@ install-tools:
 .PHONY: ci
 ci: contracts-via-docker fmt clippy test bench-test
 
-test:
+test: ${GEN_MOL_OUT_DIR}/godwoken.rs
 	cargo test --all --all-features
 
 bench-test:

@@ -1,10 +1,11 @@
-#include "common.h"
-
 /* register action
  * 1. verify merkle proof of last address
  * 2. verify new entry's index is last index plus one
  * 3. verify new global state
  */
+
+#include "common.h"
+
 int verify_register(mol_seg_t *old_global_state_seg,
                     mol_seg_t *new_global_state_seg, mol_seg_t *register_seg) {
   uint64_t old_capacity, new_capacity;

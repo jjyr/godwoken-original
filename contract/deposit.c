@@ -1,10 +1,11 @@
-#include "common.h"
-
 /* deposit action
  * 1. verify new entry's state
  * 2. verify merkle proof of old global state
  * 3. verify new global state
  */
+
+#include "common.h"
+
 int verify_deposit(mol_seg_t *old_global_state_seg,
                    mol_seg_t *new_global_state_seg, mol_seg_t *deposit_seg) {
   uint64_t old_capacity, new_capacity;
@@ -116,7 +117,10 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   blake2b_update(&blake2b_ctx, root_hash, HASH_SIZE);
   blake2b_final(&blake2b_ctx, root_hash, HASH_SIZE);
   /* compare global state transition */
-  ret = memcmp(root_hash, new_global_state_seg->ptr, GLOBAL_STATE_SIZE);
+  memcpy(old_address_root_seg.ptr, root_hash, HASH_SIZE);
+  /* compare global state transition */
+  ret = memcmp(old_global_state_seg->ptr, new_global_state_seg->ptr,
+               GLOBAL_STATE_SIZE);
   if (ret != OK) {
     return ERROR_INVALID_NEW_ROOT;
   }

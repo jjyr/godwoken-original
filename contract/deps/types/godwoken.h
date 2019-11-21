@@ -39,13 +39,90 @@ _CPP_BEGIN
 #define         MolReader_Byte20_get_nth17(s)                   mol_slice_by_offset(s, 17, 1)
 #define         MolReader_Byte20_get_nth18(s)                   mol_slice_by_offset(s, 18, 1)
 #define         MolReader_Byte20_get_nth19(s)                   mol_slice_by_offset(s, 19, 1)
-#define         MolReader_GlobalState_verify(s, c)              mol_verify_fixed_size(s, 32)
+#define         MolReader_Byte65_verify(s, c)                   mol_verify_fixed_size(s, 65)
+#define         MolReader_Byte65_get_nth0(s)                    mol_slice_by_offset(s, 0, 1)
+#define         MolReader_Byte65_get_nth1(s)                    mol_slice_by_offset(s, 1, 1)
+#define         MolReader_Byte65_get_nth2(s)                    mol_slice_by_offset(s, 2, 1)
+#define         MolReader_Byte65_get_nth3(s)                    mol_slice_by_offset(s, 3, 1)
+#define         MolReader_Byte65_get_nth4(s)                    mol_slice_by_offset(s, 4, 1)
+#define         MolReader_Byte65_get_nth5(s)                    mol_slice_by_offset(s, 5, 1)
+#define         MolReader_Byte65_get_nth6(s)                    mol_slice_by_offset(s, 6, 1)
+#define         MolReader_Byte65_get_nth7(s)                    mol_slice_by_offset(s, 7, 1)
+#define         MolReader_Byte65_get_nth8(s)                    mol_slice_by_offset(s, 8, 1)
+#define         MolReader_Byte65_get_nth9(s)                    mol_slice_by_offset(s, 9, 1)
+#define         MolReader_Byte65_get_nth10(s)                   mol_slice_by_offset(s, 10, 1)
+#define         MolReader_Byte65_get_nth11(s)                   mol_slice_by_offset(s, 11, 1)
+#define         MolReader_Byte65_get_nth12(s)                   mol_slice_by_offset(s, 12, 1)
+#define         MolReader_Byte65_get_nth13(s)                   mol_slice_by_offset(s, 13, 1)
+#define         MolReader_Byte65_get_nth14(s)                   mol_slice_by_offset(s, 14, 1)
+#define         MolReader_Byte65_get_nth15(s)                   mol_slice_by_offset(s, 15, 1)
+#define         MolReader_Byte65_get_nth16(s)                   mol_slice_by_offset(s, 16, 1)
+#define         MolReader_Byte65_get_nth17(s)                   mol_slice_by_offset(s, 17, 1)
+#define         MolReader_Byte65_get_nth18(s)                   mol_slice_by_offset(s, 18, 1)
+#define         MolReader_Byte65_get_nth19(s)                   mol_slice_by_offset(s, 19, 1)
+#define         MolReader_Byte65_get_nth20(s)                   mol_slice_by_offset(s, 20, 1)
+#define         MolReader_Byte65_get_nth21(s)                   mol_slice_by_offset(s, 21, 1)
+#define         MolReader_Byte65_get_nth22(s)                   mol_slice_by_offset(s, 22, 1)
+#define         MolReader_Byte65_get_nth23(s)                   mol_slice_by_offset(s, 23, 1)
+#define         MolReader_Byte65_get_nth24(s)                   mol_slice_by_offset(s, 24, 1)
+#define         MolReader_Byte65_get_nth25(s)                   mol_slice_by_offset(s, 25, 1)
+#define         MolReader_Byte65_get_nth26(s)                   mol_slice_by_offset(s, 26, 1)
+#define         MolReader_Byte65_get_nth27(s)                   mol_slice_by_offset(s, 27, 1)
+#define         MolReader_Byte65_get_nth28(s)                   mol_slice_by_offset(s, 28, 1)
+#define         MolReader_Byte65_get_nth29(s)                   mol_slice_by_offset(s, 29, 1)
+#define         MolReader_Byte65_get_nth30(s)                   mol_slice_by_offset(s, 30, 1)
+#define         MolReader_Byte65_get_nth31(s)                   mol_slice_by_offset(s, 31, 1)
+#define         MolReader_Byte65_get_nth32(s)                   mol_slice_by_offset(s, 32, 1)
+#define         MolReader_Byte65_get_nth33(s)                   mol_slice_by_offset(s, 33, 1)
+#define         MolReader_Byte65_get_nth34(s)                   mol_slice_by_offset(s, 34, 1)
+#define         MolReader_Byte65_get_nth35(s)                   mol_slice_by_offset(s, 35, 1)
+#define         MolReader_Byte65_get_nth36(s)                   mol_slice_by_offset(s, 36, 1)
+#define         MolReader_Byte65_get_nth37(s)                   mol_slice_by_offset(s, 37, 1)
+#define         MolReader_Byte65_get_nth38(s)                   mol_slice_by_offset(s, 38, 1)
+#define         MolReader_Byte65_get_nth39(s)                   mol_slice_by_offset(s, 39, 1)
+#define         MolReader_Byte65_get_nth40(s)                   mol_slice_by_offset(s, 40, 1)
+#define         MolReader_Byte65_get_nth41(s)                   mol_slice_by_offset(s, 41, 1)
+#define         MolReader_Byte65_get_nth42(s)                   mol_slice_by_offset(s, 42, 1)
+#define         MolReader_Byte65_get_nth43(s)                   mol_slice_by_offset(s, 43, 1)
+#define         MolReader_Byte65_get_nth44(s)                   mol_slice_by_offset(s, 44, 1)
+#define         MolReader_Byte65_get_nth45(s)                   mol_slice_by_offset(s, 45, 1)
+#define         MolReader_Byte65_get_nth46(s)                   mol_slice_by_offset(s, 46, 1)
+#define         MolReader_Byte65_get_nth47(s)                   mol_slice_by_offset(s, 47, 1)
+#define         MolReader_Byte65_get_nth48(s)                   mol_slice_by_offset(s, 48, 1)
+#define         MolReader_Byte65_get_nth49(s)                   mol_slice_by_offset(s, 49, 1)
+#define         MolReader_Byte65_get_nth50(s)                   mol_slice_by_offset(s, 50, 1)
+#define         MolReader_Byte65_get_nth51(s)                   mol_slice_by_offset(s, 51, 1)
+#define         MolReader_Byte65_get_nth52(s)                   mol_slice_by_offset(s, 52, 1)
+#define         MolReader_Byte65_get_nth53(s)                   mol_slice_by_offset(s, 53, 1)
+#define         MolReader_Byte65_get_nth54(s)                   mol_slice_by_offset(s, 54, 1)
+#define         MolReader_Byte65_get_nth55(s)                   mol_slice_by_offset(s, 55, 1)
+#define         MolReader_Byte65_get_nth56(s)                   mol_slice_by_offset(s, 56, 1)
+#define         MolReader_Byte65_get_nth57(s)                   mol_slice_by_offset(s, 57, 1)
+#define         MolReader_Byte65_get_nth58(s)                   mol_slice_by_offset(s, 58, 1)
+#define         MolReader_Byte65_get_nth59(s)                   mol_slice_by_offset(s, 59, 1)
+#define         MolReader_Byte65_get_nth60(s)                   mol_slice_by_offset(s, 60, 1)
+#define         MolReader_Byte65_get_nth61(s)                   mol_slice_by_offset(s, 61, 1)
+#define         MolReader_Byte65_get_nth62(s)                   mol_slice_by_offset(s, 62, 1)
+#define         MolReader_Byte65_get_nth63(s)                   mol_slice_by_offset(s, 63, 1)
+#define         MolReader_Byte65_get_nth64(s)                   mol_slice_by_offset(s, 64, 1)
+#define         MolReader_GlobalState_verify(s, c)              mol_verify_fixed_size(s, 64)
 #define         MolReader_GlobalState_get_address_root(s)       mol_slice_by_offset(s, 0, 32)
+#define         MolReader_GlobalState_get_block_root(s)         mol_slice_by_offset(s, 32, 32)
 #define         MolReader_AddressEntry_verify(s, c)             mol_verify_fixed_size(s, 36)
 #define         MolReader_AddressEntry_get_index(s)             mol_slice_by_offset(s, 0, 4)
 #define         MolReader_AddressEntry_get_pubkey_hash(s)       mol_slice_by_offset(s, 4, 20)
 #define         MolReader_AddressEntry_get_nonce(s)             mol_slice_by_offset(s, 24, 4)
 #define         MolReader_AddressEntry_get_balance(s)           mol_slice_by_offset(s, 28, 8)
+#define         MolReader_Tx_verify(s, c)                       mol_verify_fixed_size(s, 93)
+#define         MolReader_Tx_get_from_index(s)                  mol_slice_by_offset(s, 0, 4)
+#define         MolReader_Tx_get_to_index(s)                    mol_slice_by_offset(s, 4, 4)
+#define         MolReader_Tx_get_amount(s)                      mol_slice_by_offset(s, 8, 8)
+#define         MolReader_Tx_get_fee(s)                         mol_slice_by_offset(s, 16, 8)
+#define         MolReader_Tx_get_nonce(s)                       mol_slice_by_offset(s, 24, 4)
+#define         MolReader_Tx_get_signature(s)                   mol_slice_by_offset(s, 28, 65)
+#define         MolReader_Txs_verify(s, c)                      mol_fixvec_verify(s, 93)
+#define         MolReader_Txs_length(s)                         mol_fixvec_length(s)
+#define         MolReader_Txs_get(s, i)                         mol_fixvec_slice_by_index(s, 93, i)
 mol_errno       MolReader_Action_verify                         (const mol_seg_t*, bool);
 #define         MolReader_Action_unpack(s)                      mol_union_unpack(s)
 mol_errno       MolReader_Register_verify                       (const mol_seg_t*, bool);
@@ -63,6 +140,13 @@ mol_errno       MolReader_Deposit_verify                        (const mol_seg_t
 #define         MolReader_Deposit_get_count(s)                  mol_table_slice_by_index(s, 2)
 #define         MolReader_Deposit_get_mmr_size(s)               mol_table_slice_by_index(s, 3)
 #define         MolReader_Deposit_get_proof(s)                  mol_table_slice_by_index(s, 4)
+mol_errno       MolReader_SendBlock_verify                      (const mol_seg_t*, bool);
+#define         MolReader_SendBlock_actual_field_count(s)       mol_table_actual_field_count(s)
+#define         MolReader_SendBlock_has_extra_fields(s)         mol_table_has_extra_fields(s, 4)
+#define         MolReader_SendBlock_get_txs(s)                  mol_table_slice_by_index(s, 0)
+#define         MolReader_SendBlock_get_tx_root(s)              mol_table_slice_by_index(s, 1)
+#define         MolReader_SendBlock_get_mmr_size(s)             mol_table_slice_by_index(s, 2)
+#define         MolReader_SendBlock_get_proof(s)                mol_table_slice_by_index(s, 3)
 
 /*
  * Builder APIs
@@ -91,8 +175,77 @@ mol_errno       MolReader_Deposit_verify                        (const mol_seg_t
 #define         MolBuilder_Byte20_set_nth19(b, p)               mol_builder_set_byte_by_offset(b, 19, p)
 #define         MolBuilder_Byte20_build(b)                      mol_builder_finalize_simple(b)
 #define         MolBuilder_Byte20_clear(b)                      mol_builder_discard(b)
-#define         MolBuilder_GlobalState_init(b)                  mol_builder_initialize_fixed_size(b, 32)
+#define         MolBuilder_Byte65_init(b)                       mol_builder_initialize_fixed_size(b, 65)
+#define         MolBuilder_Byte65_set_nth0(b, p)                mol_builder_set_byte_by_offset(b, 0, p)
+#define         MolBuilder_Byte65_set_nth1(b, p)                mol_builder_set_byte_by_offset(b, 1, p)
+#define         MolBuilder_Byte65_set_nth2(b, p)                mol_builder_set_byte_by_offset(b, 2, p)
+#define         MolBuilder_Byte65_set_nth3(b, p)                mol_builder_set_byte_by_offset(b, 3, p)
+#define         MolBuilder_Byte65_set_nth4(b, p)                mol_builder_set_byte_by_offset(b, 4, p)
+#define         MolBuilder_Byte65_set_nth5(b, p)                mol_builder_set_byte_by_offset(b, 5, p)
+#define         MolBuilder_Byte65_set_nth6(b, p)                mol_builder_set_byte_by_offset(b, 6, p)
+#define         MolBuilder_Byte65_set_nth7(b, p)                mol_builder_set_byte_by_offset(b, 7, p)
+#define         MolBuilder_Byte65_set_nth8(b, p)                mol_builder_set_byte_by_offset(b, 8, p)
+#define         MolBuilder_Byte65_set_nth9(b, p)                mol_builder_set_byte_by_offset(b, 9, p)
+#define         MolBuilder_Byte65_set_nth10(b, p)               mol_builder_set_byte_by_offset(b, 10, p)
+#define         MolBuilder_Byte65_set_nth11(b, p)               mol_builder_set_byte_by_offset(b, 11, p)
+#define         MolBuilder_Byte65_set_nth12(b, p)               mol_builder_set_byte_by_offset(b, 12, p)
+#define         MolBuilder_Byte65_set_nth13(b, p)               mol_builder_set_byte_by_offset(b, 13, p)
+#define         MolBuilder_Byte65_set_nth14(b, p)               mol_builder_set_byte_by_offset(b, 14, p)
+#define         MolBuilder_Byte65_set_nth15(b, p)               mol_builder_set_byte_by_offset(b, 15, p)
+#define         MolBuilder_Byte65_set_nth16(b, p)               mol_builder_set_byte_by_offset(b, 16, p)
+#define         MolBuilder_Byte65_set_nth17(b, p)               mol_builder_set_byte_by_offset(b, 17, p)
+#define         MolBuilder_Byte65_set_nth18(b, p)               mol_builder_set_byte_by_offset(b, 18, p)
+#define         MolBuilder_Byte65_set_nth19(b, p)               mol_builder_set_byte_by_offset(b, 19, p)
+#define         MolBuilder_Byte65_set_nth20(b, p)               mol_builder_set_byte_by_offset(b, 20, p)
+#define         MolBuilder_Byte65_set_nth21(b, p)               mol_builder_set_byte_by_offset(b, 21, p)
+#define         MolBuilder_Byte65_set_nth22(b, p)               mol_builder_set_byte_by_offset(b, 22, p)
+#define         MolBuilder_Byte65_set_nth23(b, p)               mol_builder_set_byte_by_offset(b, 23, p)
+#define         MolBuilder_Byte65_set_nth24(b, p)               mol_builder_set_byte_by_offset(b, 24, p)
+#define         MolBuilder_Byte65_set_nth25(b, p)               mol_builder_set_byte_by_offset(b, 25, p)
+#define         MolBuilder_Byte65_set_nth26(b, p)               mol_builder_set_byte_by_offset(b, 26, p)
+#define         MolBuilder_Byte65_set_nth27(b, p)               mol_builder_set_byte_by_offset(b, 27, p)
+#define         MolBuilder_Byte65_set_nth28(b, p)               mol_builder_set_byte_by_offset(b, 28, p)
+#define         MolBuilder_Byte65_set_nth29(b, p)               mol_builder_set_byte_by_offset(b, 29, p)
+#define         MolBuilder_Byte65_set_nth30(b, p)               mol_builder_set_byte_by_offset(b, 30, p)
+#define         MolBuilder_Byte65_set_nth31(b, p)               mol_builder_set_byte_by_offset(b, 31, p)
+#define         MolBuilder_Byte65_set_nth32(b, p)               mol_builder_set_byte_by_offset(b, 32, p)
+#define         MolBuilder_Byte65_set_nth33(b, p)               mol_builder_set_byte_by_offset(b, 33, p)
+#define         MolBuilder_Byte65_set_nth34(b, p)               mol_builder_set_byte_by_offset(b, 34, p)
+#define         MolBuilder_Byte65_set_nth35(b, p)               mol_builder_set_byte_by_offset(b, 35, p)
+#define         MolBuilder_Byte65_set_nth36(b, p)               mol_builder_set_byte_by_offset(b, 36, p)
+#define         MolBuilder_Byte65_set_nth37(b, p)               mol_builder_set_byte_by_offset(b, 37, p)
+#define         MolBuilder_Byte65_set_nth38(b, p)               mol_builder_set_byte_by_offset(b, 38, p)
+#define         MolBuilder_Byte65_set_nth39(b, p)               mol_builder_set_byte_by_offset(b, 39, p)
+#define         MolBuilder_Byte65_set_nth40(b, p)               mol_builder_set_byte_by_offset(b, 40, p)
+#define         MolBuilder_Byte65_set_nth41(b, p)               mol_builder_set_byte_by_offset(b, 41, p)
+#define         MolBuilder_Byte65_set_nth42(b, p)               mol_builder_set_byte_by_offset(b, 42, p)
+#define         MolBuilder_Byte65_set_nth43(b, p)               mol_builder_set_byte_by_offset(b, 43, p)
+#define         MolBuilder_Byte65_set_nth44(b, p)               mol_builder_set_byte_by_offset(b, 44, p)
+#define         MolBuilder_Byte65_set_nth45(b, p)               mol_builder_set_byte_by_offset(b, 45, p)
+#define         MolBuilder_Byte65_set_nth46(b, p)               mol_builder_set_byte_by_offset(b, 46, p)
+#define         MolBuilder_Byte65_set_nth47(b, p)               mol_builder_set_byte_by_offset(b, 47, p)
+#define         MolBuilder_Byte65_set_nth48(b, p)               mol_builder_set_byte_by_offset(b, 48, p)
+#define         MolBuilder_Byte65_set_nth49(b, p)               mol_builder_set_byte_by_offset(b, 49, p)
+#define         MolBuilder_Byte65_set_nth50(b, p)               mol_builder_set_byte_by_offset(b, 50, p)
+#define         MolBuilder_Byte65_set_nth51(b, p)               mol_builder_set_byte_by_offset(b, 51, p)
+#define         MolBuilder_Byte65_set_nth52(b, p)               mol_builder_set_byte_by_offset(b, 52, p)
+#define         MolBuilder_Byte65_set_nth53(b, p)               mol_builder_set_byte_by_offset(b, 53, p)
+#define         MolBuilder_Byte65_set_nth54(b, p)               mol_builder_set_byte_by_offset(b, 54, p)
+#define         MolBuilder_Byte65_set_nth55(b, p)               mol_builder_set_byte_by_offset(b, 55, p)
+#define         MolBuilder_Byte65_set_nth56(b, p)               mol_builder_set_byte_by_offset(b, 56, p)
+#define         MolBuilder_Byte65_set_nth57(b, p)               mol_builder_set_byte_by_offset(b, 57, p)
+#define         MolBuilder_Byte65_set_nth58(b, p)               mol_builder_set_byte_by_offset(b, 58, p)
+#define         MolBuilder_Byte65_set_nth59(b, p)               mol_builder_set_byte_by_offset(b, 59, p)
+#define         MolBuilder_Byte65_set_nth60(b, p)               mol_builder_set_byte_by_offset(b, 60, p)
+#define         MolBuilder_Byte65_set_nth61(b, p)               mol_builder_set_byte_by_offset(b, 61, p)
+#define         MolBuilder_Byte65_set_nth62(b, p)               mol_builder_set_byte_by_offset(b, 62, p)
+#define         MolBuilder_Byte65_set_nth63(b, p)               mol_builder_set_byte_by_offset(b, 63, p)
+#define         MolBuilder_Byte65_set_nth64(b, p)               mol_builder_set_byte_by_offset(b, 64, p)
+#define         MolBuilder_Byte65_build(b)                      mol_builder_finalize_simple(b)
+#define         MolBuilder_Byte65_clear(b)                      mol_builder_discard(b)
+#define         MolBuilder_GlobalState_init(b)                  mol_builder_initialize_fixed_size(b, 64)
 #define         MolBuilder_GlobalState_set_address_root(b, p)   mol_builder_set_by_offset(b, 0, p, 32)
+#define         MolBuilder_GlobalState_set_block_root(b, p)     mol_builder_set_by_offset(b, 32, p, 32)
 #define         MolBuilder_GlobalState_build(b)                 mol_builder_finalize_simple(b)
 #define         MolBuilder_GlobalState_clear(b)                 mol_builder_discard(b)
 #define         MolBuilder_AddressEntry_init(b)                 mol_builder_initialize_fixed_size(b, 36)
@@ -102,9 +255,23 @@ mol_errno       MolReader_Deposit_verify                        (const mol_seg_t
 #define         MolBuilder_AddressEntry_set_balance(b, p)       mol_builder_set_by_offset(b, 28, p, 8)
 #define         MolBuilder_AddressEntry_build(b)                mol_builder_finalize_simple(b)
 #define         MolBuilder_AddressEntry_clear(b)                mol_builder_discard(b)
+#define         MolBuilder_Tx_init(b)                           mol_builder_initialize_fixed_size(b, 93)
+#define         MolBuilder_Tx_set_from_index(b, p)              mol_builder_set_by_offset(b, 0, p, 4)
+#define         MolBuilder_Tx_set_to_index(b, p)                mol_builder_set_by_offset(b, 4, p, 4)
+#define         MolBuilder_Tx_set_amount(b, p)                  mol_builder_set_by_offset(b, 8, p, 8)
+#define         MolBuilder_Tx_set_fee(b, p)                     mol_builder_set_by_offset(b, 16, p, 8)
+#define         MolBuilder_Tx_set_nonce(b, p)                   mol_builder_set_by_offset(b, 24, p, 4)
+#define         MolBuilder_Tx_set_signature(b, p)               mol_builder_set_by_offset(b, 28, p, 65)
+#define         MolBuilder_Tx_build(b)                          mol_builder_finalize_simple(b)
+#define         MolBuilder_Tx_clear(b)                          mol_builder_discard(b)
+#define         MolBuilder_Txs_init(b)                          mol_fixvec_builder_initialize(b, 2048)
+#define         MolBuilder_Txs_push(b, p)                       mol_fixvec_builder_push(b, p, 93)
+#define         MolBuilder_Txs_build(b)                         mol_fixvec_builder_finalize(b)
+#define         MolBuilder_Txs_clear(b)                         mol_builder_discard(b)
 #define         MolBuilder_Action_init(b)                       mol_union_builder_initialize(b, 128, 0, &MolDefault_Register, 100)
 #define         MolBuilder_Action_set_Register(b, p, l)         mol_union_builder_set(b, 0, p, l)
 #define         MolBuilder_Action_set_Deposit(b, p, l)          mol_union_builder_set(b, 1, p, l)
+#define         MolBuilder_Action_set_SendBlock(b, p, l)        mol_union_builder_set(b, 2, p, l)
 #define         MolBuilder_Action_build(b)                      mol_builder_finalize_simple(b)
 #define         MolBuilder_Action_clear(b)                      mol_builder_discard(b)
 #define         MolBuilder_Register_init(b)                     mol_table_builder_initialize(b, 512, 4)
@@ -122,6 +289,13 @@ mol_seg_res_t   MolBuilder_Register_build                       (mol_builder_t);
 #define         MolBuilder_Deposit_set_proof(b, p, l)           mol_table_builder_add(b, 4, p, l)
 mol_seg_res_t   MolBuilder_Deposit_build                        (mol_builder_t);
 #define         MolBuilder_Deposit_clear(b)                     mol_builder_discard(b)
+#define         MolBuilder_SendBlock_init(b)                    mol_table_builder_initialize(b, 512, 4)
+#define         MolBuilder_SendBlock_set_txs(b, p, l)           mol_table_builder_add(b, 0, p, l)
+#define         MolBuilder_SendBlock_set_tx_root(b, p, l)       mol_table_builder_add(b, 1, p, l)
+#define         MolBuilder_SendBlock_set_mmr_size(b, p, l)      mol_table_builder_add(b, 2, p, l)
+#define         MolBuilder_SendBlock_set_proof(b, p, l)         mol_table_builder_add(b, 3, p, l)
+mol_seg_res_t   MolBuilder_SendBlock_build                      (mol_builder_t);
+#define         MolBuilder_SendBlock_clear(b)                   mol_builder_discard(b)
 
 /*
  * Default Value
@@ -133,16 +307,38 @@ const uint8_t MolDefault_Byte20[20]                              =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____,
 };
-const uint8_t MolDefault_GlobalState[32]                         =  {
+const uint8_t MolDefault_Byte65[65]                              =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
-    ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____,
+};
+const uint8_t MolDefault_GlobalState[64]                         =  {
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____,
 };
 const uint8_t MolDefault_AddressEntry[36]                        =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
 };
+const uint8_t MolDefault_Tx[93]                                  =  {
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____,
+};
+const uint8_t MolDefault_Txs[4]                                  =  {____, ____, ____, ____};
 const uint8_t MolDefault_Action[104]                             =  {
     ____, ____, ____, ____, 0x64, ____, ____, ____, 0x14, ____, ____, ____,
     0x38, ____, ____, ____, 0x58, ____, ____, ____, 0x60, ____, ____, ____,
@@ -177,6 +373,14 @@ const uint8_t MolDefault_Deposit[112]                            =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____,
 };
+const uint8_t MolDefault_SendBlock[68]                           =  {
+    0x44, ____, ____, ____, 0x14, ____, ____, ____, 0x18, ____, ____, ____,
+    0x38, ____, ____, ____, 0x40, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____,
+};
 
 #undef ____
 
@@ -197,6 +401,8 @@ mol_errno MolReader_Action_verify (const mol_seg_t *input, bool compatible) {
             return MolReader_Register_verify(&inner, compatible);
         case 1:
             return MolReader_Deposit_verify(&inner, compatible);
+        case 2:
+            return MolReader_SendBlock_verify(&inner, compatible);
         default:
             return MOL_ERR_UNKNOWN_ITEM;
     }
@@ -335,6 +541,73 @@ mol_errno MolReader_Deposit_verify (const mol_seg_t *input, bool compatible) {
         }
         inner.ptr = input->ptr + offsets[4];
         inner.size = offsets[5] - offsets[4];
+        errno = MolReader_Byte32Vec_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+    return MOL_OK;
+}
+mol_errno MolReader_SendBlock_verify (const mol_seg_t *input, bool compatible) {
+    if (input->size < MOL_NUM_T_SIZE) {
+        return MOL_ERR_HEADER;
+    }
+    uint8_t *ptr = input->ptr;
+    mol_num_t total_size = mol_unpack_number(ptr);
+    if (input->size != total_size) {
+        return MOL_ERR_TOTAL_SIZE;
+    }
+    if (input->size < MOL_NUM_T_SIZE * 2) {
+        return MOL_ERR_HEADER;
+    }
+    ptr += MOL_NUM_T_SIZE;
+    mol_num_t offset = mol_unpack_number(ptr);
+    if (offset % 4 > 0 || offset < MOL_NUM_T_SIZE*2) {
+        return MOL_ERR_OFFSET;
+    }
+    mol_num_t field_count = offset / 4 - 1;
+    if (field_count < 4) {
+        return MOL_ERR_FIELD_COUNT;
+    } else if (!compatible && field_count > 4) {
+        return MOL_ERR_FIELD_COUNT;
+    }
+    if (input->size < MOL_NUM_T_SIZE*(field_count+1)){
+        return MOL_ERR_HEADER;
+    }
+    mol_num_t offsets[field_count+1];
+    offsets[0] = offset;
+    for (mol_num_t i=1; i<field_count; i++) {
+        ptr += MOL_NUM_T_SIZE;
+        offsets[i] = mol_unpack_number(ptr);
+        if (offsets[i-1] > offsets[i]) {
+            return MOL_ERR_OFFSET;
+        }
+    }
+    if (offsets[field_count-1] > total_size) {
+        return MOL_ERR_OFFSET;
+    }
+    offsets[field_count] = total_size;
+        mol_seg_t inner;
+        mol_errno errno;
+        inner.ptr = input->ptr + offsets[0];
+        inner.size = offsets[1] - offsets[0];
+        errno = MolReader_Txs_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[1];
+        inner.size = offsets[2] - offsets[1];
+        errno = MolReader_Byte32_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[2];
+        inner.size = offsets[3] - offsets[2];
+        errno = MolReader_Uint64_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[3];
+        inner.size = offsets[4] - offsets[3];
         errno = MolReader_Byte32Vec_verify(&inner, compatible);
         if (errno != MOL_OK) {
             return MOL_ERR_DATA;
@@ -503,6 +776,80 @@ mol_seg_res_t MolBuilder_Deposit_build (mol_builder_t builder) {
         memcpy(dst, &MolDefault_Byte32Vec, len);
     } else {
         mol_num_t of = builder.number_ptr[8];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    mol_builder_discard(builder);
+    return res;
+}
+mol_seg_res_t MolBuilder_SendBlock_build (mol_builder_t builder) {
+    mol_seg_res_t res;
+    res.errno = MOL_OK;
+    mol_num_t offset = 20;
+    mol_num_t len;
+    res.seg.size = offset;
+    len = builder.number_ptr[1];
+    res.seg.size += len == 0 ? 4 : len;
+    len = builder.number_ptr[3];
+    res.seg.size += len == 0 ? 32 : len;
+    len = builder.number_ptr[5];
+    res.seg.size += len == 0 ? 8 : len;
+    len = builder.number_ptr[7];
+    res.seg.size += len == 0 ? 4 : len;
+    res.seg.ptr = (uint8_t*)malloc(res.seg.size);
+    uint8_t *dst = res.seg.ptr;
+    mol_pack_number(dst, &res.seg.size);
+    dst += MOL_NUM_T_SIZE;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[1];
+    offset += len == 0 ? 4 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[3];
+    offset += len == 0 ? 32 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[5];
+    offset += len == 0 ? 8 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[7];
+    offset += len == 0 ? 4 : len;
+    uint8_t *src = builder.data_ptr;
+    len = builder.number_ptr[1];
+    if (len == 0) {
+        len = 4;
+        memcpy(dst, &MolDefault_Txs, len);
+    } else {
+        mol_num_t of = builder.number_ptr[0];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[3];
+    if (len == 0) {
+        len = 32;
+        memcpy(dst, &MolDefault_Byte32, len);
+    } else {
+        mol_num_t of = builder.number_ptr[2];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[5];
+    if (len == 0) {
+        len = 8;
+        memcpy(dst, &MolDefault_Uint64, len);
+    } else {
+        mol_num_t of = builder.number_ptr[4];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[7];
+    if (len == 0) {
+        len = 4;
+        memcpy(dst, &MolDefault_Byte32Vec, len);
+    } else {
+        mol_num_t of = builder.number_ptr[6];
         memcpy(dst, src+of, len);
     }
     dst += len;
