@@ -1,10 +1,15 @@
 /* The main contract of Godwoken,
    This contract maintains the global state of all registered accounts,
-   and allow any valid aggregator to update the global state.
+   and allow any valid operations to update the global state.
 
-   This contract must guarantee a later challenger can fetch the state
-   transition `apply(S1, txs) -> S2`, the data of txs and the ID of the
-   aggregator who made the transition from the chain.
+   Basically, the main contract works like a state machine which allow valid
+   state transitions from operators. For some transitions which do not verify
+   on-chain, the contract keeps the transition record to allow a later potential
+   challenger to peanalize the operator who made the invalid sate transition.
+
+   This contract must guarantee a challenger can fetch the operator ID, data,
+   and the global state from the chain for an invalid state transition
+   `apply(S1, txs) -> S2`.
 
    Operations:
 
