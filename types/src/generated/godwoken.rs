@@ -1440,7 +1440,7 @@ impl ::std::fmt::Debug for GlobalState {
 impl ::std::fmt::Display for GlobalState {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "address_root", self.address_root())?;
+        write!(f, "{}: {}", "account_root", self.account_root())?;
         write!(f, ", {}: {}", "block_root", self.block_root())?;
         write!(f, " }}")
     }
@@ -1459,7 +1459,7 @@ impl GlobalState {
     pub const TOTAL_SIZE: usize = 64;
     pub const FIELD_SIZE: [usize; 2] = [32, 32];
     pub const FIELD_COUNT: usize = 2;
-    pub fn address_root(&self) -> Byte32 {
+    pub fn account_root(&self) -> Byte32 {
         Byte32::new_unchecked(self.0.slice(0, 32))
     }
     pub fn block_root(&self) -> Byte32 {
@@ -1492,7 +1492,7 @@ impl molecule::prelude::Entity for GlobalState {
     }
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
-            .address_root(self.address_root())
+            .account_root(self.account_root())
             .block_root(self.block_root())
     }
 }
@@ -1515,7 +1515,7 @@ impl<'r> ::std::fmt::Debug for GlobalStateReader<'r> {
 impl<'r> ::std::fmt::Display for GlobalStateReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "address_root", self.address_root())?;
+        write!(f, "{}: {}", "account_root", self.account_root())?;
         write!(f, ", {}: {}", "block_root", self.block_root())?;
         write!(f, " }}")
     }
@@ -1524,7 +1524,7 @@ impl<'r> GlobalStateReader<'r> {
     pub const TOTAL_SIZE: usize = 64;
     pub const FIELD_SIZE: [usize; 2] = [32, 32];
     pub const FIELD_COUNT: usize = 2;
-    pub fn address_root(&self) -> Byte32Reader<'r> {
+    pub fn account_root(&self) -> Byte32Reader<'r> {
         Byte32Reader::new_unchecked(&self.as_slice()[0..32])
     }
     pub fn block_root(&self) -> Byte32Reader<'r> {
@@ -1554,15 +1554,15 @@ impl<'r> molecule::prelude::Reader<'r> for GlobalStateReader<'r> {
 }
 #[derive(Debug, Default)]
 pub struct GlobalStateBuilder {
-    pub(crate) address_root: Byte32,
+    pub(crate) account_root: Byte32,
     pub(crate) block_root: Byte32,
 }
 impl GlobalStateBuilder {
     pub const TOTAL_SIZE: usize = 64;
     pub const FIELD_SIZE: [usize; 2] = [32, 32];
     pub const FIELD_COUNT: usize = 2;
-    pub fn address_root(mut self, v: Byte32) -> Self {
-        self.address_root = v;
+    pub fn account_root(mut self, v: Byte32) -> Self {
+        self.account_root = v;
         self
     }
     pub fn block_root(mut self, v: Byte32) -> Self {
@@ -1577,7 +1577,7 @@ impl molecule::prelude::Builder for GlobalStateBuilder {
         Self::TOTAL_SIZE
     }
     fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
-        writer.write_all(self.address_root.as_slice())?;
+        writer.write_all(self.account_root.as_slice())?;
         writer.write_all(self.block_root.as_slice())?;
         Ok(())
     }
@@ -1589,8 +1589,8 @@ impl molecule::prelude::Builder for GlobalStateBuilder {
     }
 }
 #[derive(Clone)]
-pub struct AddressEntry(molecule::bytes::Bytes);
-impl ::std::fmt::LowerHex for AddressEntry {
+pub struct AccountEntry(molecule::bytes::Bytes);
+impl ::std::fmt::LowerHex for AccountEntry {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         use molecule::faster_hex::hex_string;
         if f.alternate() {
@@ -1599,12 +1599,12 @@ impl ::std::fmt::LowerHex for AddressEntry {
         write!(f, "{}", hex_string(self.as_slice()).unwrap())
     }
 }
-impl ::std::fmt::Debug for AddressEntry {
+impl ::std::fmt::Debug for AccountEntry {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::std::fmt::Display for AddressEntry {
+impl ::std::fmt::Display for AccountEntry {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "index", self.index())?;
@@ -1614,16 +1614,16 @@ impl ::std::fmt::Display for AddressEntry {
         write!(f, " }}")
     }
 }
-impl ::std::default::Default for AddressEntry {
+impl ::std::default::Default for AccountEntry {
     fn default() -> Self {
         let v: Vec<u8> = vec![
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0,
         ];
-        AddressEntry::new_unchecked(v.into())
+        AccountEntry::new_unchecked(v.into())
     }
 }
-impl AddressEntry {
+impl AccountEntry {
     pub const TOTAL_SIZE: usize = 36;
     pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
     pub const FIELD_COUNT: usize = 4;
@@ -1639,15 +1639,15 @@ impl AddressEntry {
     pub fn balance(&self) -> Uint64 {
         Uint64::new_unchecked(self.0.slice(28, 36))
     }
-    pub fn as_reader<'r>(&'r self) -> AddressEntryReader<'r> {
-        AddressEntryReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> AccountEntryReader<'r> {
+        AccountEntryReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for AddressEntry {
-    type Builder = AddressEntryBuilder;
-    const NAME: &'static str = "AddressEntry";
+impl molecule::prelude::Entity for AccountEntry {
+    type Builder = AccountEntryBuilder;
+    const NAME: &'static str = "AccountEntry";
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        AddressEntry(data)
+        AccountEntry(data)
     }
     fn as_bytes(&self) -> molecule::bytes::Bytes {
         self.0.clone()
@@ -1656,10 +1656,10 @@ impl molecule::prelude::Entity for AddressEntry {
         &self.0[..]
     }
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        AddressEntryReader::from_slice(slice).map(|reader| reader.to_entity())
+        AccountEntryReader::from_slice(slice).map(|reader| reader.to_entity())
     }
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        AddressEntryReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        AccountEntryReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
     fn new_builder() -> Self::Builder {
         ::std::default::Default::default()
@@ -1673,8 +1673,8 @@ impl molecule::prelude::Entity for AddressEntry {
     }
 }
 #[derive(Clone, Copy)]
-pub struct AddressEntryReader<'r>(&'r [u8]);
-impl<'r> ::std::fmt::LowerHex for AddressEntryReader<'r> {
+pub struct AccountEntryReader<'r>(&'r [u8]);
+impl<'r> ::std::fmt::LowerHex for AccountEntryReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         use molecule::faster_hex::hex_string;
         if f.alternate() {
@@ -1683,12 +1683,12 @@ impl<'r> ::std::fmt::LowerHex for AddressEntryReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()).unwrap())
     }
 }
-impl<'r> ::std::fmt::Debug for AddressEntryReader<'r> {
+impl<'r> ::std::fmt::Debug for AccountEntryReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::std::fmt::Display for AddressEntryReader<'r> {
+impl<'r> ::std::fmt::Display for AccountEntryReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "index", self.index())?;
@@ -1698,7 +1698,7 @@ impl<'r> ::std::fmt::Display for AddressEntryReader<'r> {
         write!(f, " }}")
     }
 }
-impl<'r> AddressEntryReader<'r> {
+impl<'r> AccountEntryReader<'r> {
     pub const TOTAL_SIZE: usize = 36;
     pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
     pub const FIELD_COUNT: usize = 4;
@@ -1715,14 +1715,14 @@ impl<'r> AddressEntryReader<'r> {
         Uint64Reader::new_unchecked(&self.as_slice()[28..36])
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for AddressEntryReader<'r> {
-    type Entity = AddressEntry;
-    const NAME: &'static str = "AddressEntryReader";
+impl<'r> molecule::prelude::Reader<'r> for AccountEntryReader<'r> {
+    type Entity = AccountEntry;
+    const NAME: &'static str = "AccountEntryReader";
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().into())
     }
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        AddressEntryReader(slice)
+        AccountEntryReader(slice)
     }
     fn as_slice(&self) -> &'r [u8] {
         self.0
@@ -1737,13 +1737,13 @@ impl<'r> molecule::prelude::Reader<'r> for AddressEntryReader<'r> {
     }
 }
 #[derive(Debug, Default)]
-pub struct AddressEntryBuilder {
+pub struct AccountEntryBuilder {
     pub(crate) index: Uint32,
     pub(crate) pubkey_hash: Byte20,
     pub(crate) nonce: Uint32,
     pub(crate) balance: Uint64,
 }
-impl AddressEntryBuilder {
+impl AccountEntryBuilder {
     pub const TOTAL_SIZE: usize = 36;
     pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
     pub const FIELD_COUNT: usize = 4;
@@ -1764,9 +1764,9 @@ impl AddressEntryBuilder {
         self
     }
 }
-impl molecule::prelude::Builder for AddressEntryBuilder {
-    type Entity = AddressEntry;
-    const NAME: &'static str = "AddressEntryBuilder";
+impl molecule::prelude::Builder for AccountEntryBuilder {
+    type Entity = AccountEntry;
+    const NAME: &'static str = "AccountEntryBuilder";
     fn expected_length(&self) -> usize {
         Self::TOTAL_SIZE
     }
@@ -1781,7 +1781,7 @@ impl molecule::prelude::Builder for AddressEntryBuilder {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        AddressEntry::new_unchecked(inner.into())
+        AccountEntry::new_unchecked(inner.into())
     }
 }
 #[derive(Clone)]
@@ -2670,11 +2670,11 @@ impl Register {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn entry(&self) -> AddressEntry {
+    pub fn entry(&self) -> AccountEntry {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        AddressEntry::new_unchecked(self.0.slice(start, end))
+        AccountEntry::new_unchecked(self.0.slice(start, end))
     }
     pub fn last_entry_hash(&self) -> Byte32 {
         let offsets = self.field_offsets();
@@ -2782,11 +2782,11 @@ impl<'r> RegisterReader<'r> {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn entry(&self) -> AddressEntryReader<'r> {
+    pub fn entry(&self) -> AccountEntryReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        AddressEntryReader::new_unchecked(&self.as_slice()[start..end])
+        AccountEntryReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn last_entry_hash(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
@@ -2862,7 +2862,7 @@ impl<'r> molecule::prelude::Reader<'r> for RegisterReader<'r> {
         if offsets.windows(2).any(|i| i[0] > i[1]) {
             return ve!(Self, OffsetsNotMatch);
         }
-        AddressEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        AccountEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         Byte32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
         Uint64Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
@@ -2871,14 +2871,14 @@ impl<'r> molecule::prelude::Reader<'r> for RegisterReader<'r> {
 }
 #[derive(Debug, Default)]
 pub struct RegisterBuilder {
-    pub(crate) entry: AddressEntry,
+    pub(crate) entry: AccountEntry,
     pub(crate) last_entry_hash: Byte32,
     pub(crate) mmr_size: Uint64,
     pub(crate) proof: Byte32Vec,
 }
 impl RegisterBuilder {
     pub const FIELD_COUNT: usize = 4;
-    pub fn entry(mut self, v: AddressEntry) -> Self {
+    pub fn entry(mut self, v: AccountEntry) -> Self {
         self.entry = v;
         self
     }
@@ -2996,17 +2996,17 @@ impl Deposit {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn old_entry(&self) -> AddressEntry {
+    pub fn old_entry(&self) -> AccountEntry {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        AddressEntry::new_unchecked(self.0.slice(start, end))
+        AccountEntry::new_unchecked(self.0.slice(start, end))
     }
-    pub fn new_entry(&self) -> AddressEntry {
+    pub fn new_entry(&self) -> AccountEntry {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
-        AddressEntry::new_unchecked(self.0.slice(start, end))
+        AccountEntry::new_unchecked(self.0.slice(start, end))
     }
     pub fn count(&self) -> Uint32 {
         let offsets = self.field_offsets();
@@ -3116,17 +3116,17 @@ impl<'r> DepositReader<'r> {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn old_entry(&self) -> AddressEntryReader<'r> {
+    pub fn old_entry(&self) -> AccountEntryReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        AddressEntryReader::new_unchecked(&self.as_slice()[start..end])
+        AccountEntryReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn new_entry(&self) -> AddressEntryReader<'r> {
+    pub fn new_entry(&self) -> AccountEntryReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
-        AddressEntryReader::new_unchecked(&self.as_slice()[start..end])
+        AccountEntryReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn count(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
@@ -3202,8 +3202,8 @@ impl<'r> molecule::prelude::Reader<'r> for DepositReader<'r> {
         if offsets.windows(2).any(|i| i[0] > i[1]) {
             return ve!(Self, OffsetsNotMatch);
         }
-        AddressEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
-        AddressEntryReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        AccountEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        AccountEntryReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
         Uint32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Uint64Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
@@ -3212,19 +3212,19 @@ impl<'r> molecule::prelude::Reader<'r> for DepositReader<'r> {
 }
 #[derive(Debug, Default)]
 pub struct DepositBuilder {
-    pub(crate) old_entry: AddressEntry,
-    pub(crate) new_entry: AddressEntry,
+    pub(crate) old_entry: AccountEntry,
+    pub(crate) new_entry: AccountEntry,
     pub(crate) count: Uint32,
     pub(crate) mmr_size: Uint64,
     pub(crate) proof: Byte32Vec,
 }
 impl DepositBuilder {
     pub const FIELD_COUNT: usize = 5;
-    pub fn old_entry(mut self, v: AddressEntry) -> Self {
+    pub fn old_entry(mut self, v: AccountEntry) -> Self {
         self.old_entry = v;
         self
     }
-    pub fn new_entry(mut self, v: AddressEntry) -> Self {
+    pub fn new_entry(mut self, v: AccountEntry) -> Self {
         self.new_entry = v;
         self
     }

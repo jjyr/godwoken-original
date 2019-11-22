@@ -12,11 +12,11 @@ array Byte65 [byte; 65];
  * Reference implementation: https://github.com/nervosnetwork/merkle-mountain-range
  */
 struct GlobalState {
-    address_root: Byte32, // H(count | merkle root of address entries)
+    account_root: Byte32, // H(count | merkle root of address entries)
     block_root: Byte32, // merkle root of godwoken blocks
 }
 
-struct AddressEntry {
+struct AccountEntry {
     index: Uint32, // address index
     pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
     nonce: Uint32, // nonce
@@ -44,7 +44,7 @@ union Action {
 
 /* Register a new entry */
 table Register {
-    entry: AddressEntry,
+    entry: AccountEntry,
     last_entry_hash: Byte32, // used for merkle proof
     mmr_size: Uint64, // MMR size
     proof: Byte32Vec, // merkle proof of old state address entry
@@ -52,8 +52,8 @@ table Register {
 
 /* Deposit coins */
 table Deposit {
-    old_entry: AddressEntry, // AddressEntry contains old state.
-    new_entry: AddressEntry, // AddressEntry contains new state.
+    old_entry: AccountEntry, // AccountEntry contains old state.
+    new_entry: AccountEntry, // AccountEntry contains new state.
     count: Uint32, // count of entries, do not includes new_entry
     mmr_size: Uint64, // MMR size
     proof: Byte32Vec, // merkle proof of old state address entry

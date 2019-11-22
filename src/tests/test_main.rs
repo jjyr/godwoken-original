@@ -9,7 +9,7 @@ use ckb_types::{
     packed::WitnessArgs,
     prelude::*,
 };
-use godwoken_types::packed::{Action, AddressEntry, Byte20, Deposit, GlobalState, Register};
+use godwoken_types::packed::{AccountEntry, Action, Byte20, Deposit, GlobalState, Register};
 use rand::{thread_rng, Rng};
 
 struct HashMerge;
@@ -30,8 +30,8 @@ type HashMMR = MemMMR<[u8; 32], HashMerge>;
 
 #[derive(Default)]
 struct GlobalStateContext {
-    address_root: [u8; 32],
-    address_mmr: HashMMR,
+    account_root: [u8; 32],
+    account_mmr: HashMMR,
 }
 
 impl GlobalStateContext {
@@ -41,25 +41,25 @@ impl GlobalStateContext {
 
     fn get_global_state(&self) -> GlobalState {
         GlobalState::new_builder()
-            .address_root(self.address_root.pack())
+            .account_root(self.account_root.pack())
             .build()
     }
 
-    fn add_entry(&mut self, entry: AddressEntry) {
+    fn add_entry(&mut self, entry: AccountEntry) {
         let entry_hash = blake2b_256(entry.as_slice());
-        self.address_mmr.push(entry_hash).expect("mmr push");
-        let address_mmr_root = self.address_mmr.get_root().expect("mmr root");
+        self.account_mmr.push(entry_hash).expect("mmr push");
+        let account_mmr_root = self.account_mmr.get_root().expect("mmr root");
         let mut entries_count: u32 = entry.index().unpack();
         entries_count += 1;
         let mut hasher = new_blake2b();
         hasher.update(&entries_count.to_le_bytes());
-        hasher.update(&address_mmr_root);
-        hasher.finalize(&mut self.address_root);
+        hasher.update(&account_mmr_root);
+        hasher.finalize(&mut self.account_root);
     }
 
-    fn gen_address_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {
+    fn gen_account_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {
         let proof = self
-            .address_mmr
+            .account_mmr
             .gen_proof(leaf_index_to_pos(leaf_index.into()))
             .expect("result");
         (proof.mmr_size(), proof.proof_items().to_owned())
@@ -81,7 +81,7 @@ fn test_registration() {
     let mut global_state_context = GlobalStateContext::new();
     let global_state = global_state_context.get_global_state();
     // insert few entries
-    let mut last_entry: Option<AddressEntry> = None;
+    let mut last_entry: Option<AccountEntry> = None;
     let mut global_state = global_state;
     for index in 0u32..=5u32 {
         let tx = TxBuilder::default()
@@ -92,7 +92,7 @@ fn test_registration() {
             let mut pubkey = [0u8; 20];
             let mut rng = thread_rng();
             rng.fill(&mut pubkey);
-            AddressEntry::new_builder()
+            AccountEntry::new_builder()
                 .index(index.pack())
                 .pubkey_hash(Byte20::new_unchecked(pubkey.to_vec().into()))
                 .build()
@@ -104,7 +104,7 @@ fn test_registration() {
             }
             Some(last_entry) => {
                 let (mmr_size, proof) =
-                    global_state_context.gen_address_merkle_proof(last_entry.index().unpack());
+                    global_state_context.gen_account_merkle_proof(last_entry.index().unpack());
                 Register::new_builder()
                     .entry(entry.clone())
                     .last_entry_hash(blake2b_256(last_entry.as_slice()).pack())
@@ -140,8 +140,8 @@ fn test_registration() {
 fn test_deposit() {
     let mut data_loader = DummyDataLoader::new();
     let mut global_state_context = GlobalStateContext::new();
-    // prepare a address entry
-    let entry = AddressEntry::new_builder().build();
+    // prepare a account entry
+    let entry = AccountEntry::new_builder().build();
     global_state_context.add_entry(entry.clone());
     let global_state = global_state_context.get_global_state();
 
@@ -163,7 +163,7 @@ fn test_deposit() {
             .balance((balance + deposit_amount).pack())
             .build()
     };
-    let (mmr_size, proof) = global_state_context.gen_address_merkle_proof(entry.index().unpack());
+    let (mmr_size, proof) = global_state_context.gen_account_merkle_proof(entry.index().unpack());
     let deposit = Deposit::new_builder()
         .old_entry(entry.clone())
         .new_entry(new_entry.clone())

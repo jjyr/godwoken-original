@@ -67,7 +67,7 @@ int extract_merkle_proof(uint8_t proof[][HASH_SIZE], mol_seg_t *proof_seg,
   return OK;
 }
 
-struct compute_address_root_context {
+struct compute_account_root_context {
   MMRVerifyContext *proof_ctx;
   blake2b_state *blake2b_ctx;
   uint8_t *leaf_hash;
@@ -77,14 +77,14 @@ struct compute_address_root_context {
   void *proof;
 };
 
-/* compute address root */
-void compute_address_root(struct compute_address_root_context *ctx,
+/* compute account root */
+void compute_account_root(struct compute_account_root_context *ctx,
                           uint8_t root_hash[HASH_SIZE]) {
   MMRSizePos entry_pos = mmr_compute_pos_by_leaf_index(ctx->last_leaf_index);
   mmr_compute_proof_root(ctx->proof_ctx, root_hash, ctx->mmr_size,
                          ctx->leaf_hash, entry_pos.pos, ctx->proof,
                          ctx->proof_len);
-  /* calculate old address_root: H(count | address entries root) */
+  /* calculate old account_root: H(count | account entries root) */
   uint32_t count = ctx->last_leaf_index + 1;
   blake2b_init(ctx->blake2b_ctx, HASH_SIZE);
   blake2b_update(ctx->blake2b_ctx, &count, sizeof(uint32_t));
@@ -92,7 +92,7 @@ void compute_address_root(struct compute_address_root_context *ctx,
   blake2b_final(ctx->blake2b_ctx, root_hash, HASH_SIZE);
 }
 
-struct compute_new_address_root_context {
+struct compute_new_account_root_context {
   MMRVerifyContext *proof_ctx;
   blake2b_state *blake2b_ctx;
   uint8_t *leaf_hash;
@@ -103,12 +103,12 @@ struct compute_new_address_root_context {
   void *proof;
 };
 
-/* compute new address root from last merkle proof */
-void compute_new_address_root(struct compute_new_address_root_context *ctx,
+/* compute new account root from last merkle proof */
+void compute_new_account_root(struct compute_new_account_root_context *ctx,
                               uint8_t root_hash[HASH_SIZE]) {
   /* calculate new entries MMR root */
   if (ctx->new_leaf_index == 0) {
-    /* since address entry is the first registered entry
+    /* since account entry is the first registered entry
      * the merkle root is equals to leaf_hash
      */
     memcpy(root_hash, ctx->new_leaf_hash, HASH_SIZE);
@@ -123,7 +123,7 @@ void compute_new_address_root(struct compute_new_address_root_context *ctx,
         new_entry_pos);
   }
 
-  /* calculate new global state address root */
+  /* calculate new global state account root */
   uint32_t new_count = ctx->new_leaf_index + 1;
   blake2b_init(ctx->blake2b_ctx, HASH_SIZE);
   blake2b_update(ctx->blake2b_ctx, &new_count, sizeof(uint32_t));

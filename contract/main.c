@@ -28,7 +28,6 @@ enum ActionItem {
 
 /* End Actions */
 
-
 /* check the first output cell must have the same type */
 int check_output_type(uint8_t type_hash[HASH_SIZE]) {
   uint8_t output_type_hash[HASH_SIZE];
