@@ -15,7 +15,7 @@ default: ci
 
 ##@ Contracts
 C := contract
-CONTRACT_HEADERS := $C/common.h $C/registration.c $C/deposit.c
+CONTRACT_DEPS := $C/common.h $C/registration.c $C/deposit.c $C/submit_block.c
 GEN_MOL_OUT_DIR_C := $C/deps/types
 GEN_MOL_C_FILES := ${GEN_MOL_OUT_DIR_C}/blockchain.h ${GEN_MOL_OUT_DIR_C}/godwoken.h
 ${GEN_MOL_OUT_DIR_C}/blockchain.h: ${GEN_MOL_IN_DIR}/blockchain.mol
@@ -33,7 +33,7 @@ contracts-via-docker: install-tools ${GEN_MOL_C_FILES}
 contract/binary/dummy_lock: $C/dummy_lock.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-contract/binary/main: $C/main.c ${MMR_C}/mmr.o ${CONTRACT_HEADERS} ${GEN_MOL_C_FILES}
+contract/binary/main: $C/main.c ${MMR_C}/mmr.o ${CONTRACT_DEPS} ${GEN_MOL_C_FILES}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< ${MMR_C}/mmr.o
 
 ${MMR_C}/mmr.o: ${MMR_C}/mmr.c
@@ -64,7 +64,7 @@ install-tools:
 ci: contracts-via-docker check-fmt clippy test bench-test
 
 test: ${GEN_MOL_OUT_DIR}/godwoken.rs
-	cd $C && cargo test --all --all-features
+	cd $C && cargo test --all --all-features -- --nocapture
 
 bench-test:
 	cd $C && cargo bench -- --test

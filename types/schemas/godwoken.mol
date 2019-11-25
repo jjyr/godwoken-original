@@ -35,6 +35,7 @@ struct Tx {
 vector Txs <Tx>;
 
 struct AggregatorBlock {
+    number: Uint32, // block number
     tx_root: Byte32,
     old_account_root: Byte32,
     new_account_root: Byte32,
@@ -47,7 +48,7 @@ struct AggregatorBlock {
 union Action {
     Register,
     Deposit,
-    SendBlock,
+    SubmitBlock,
 }
 
 /* Register a new entry */
@@ -67,11 +68,10 @@ table Deposit {
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 
-/* Send txs in aggregator block */
-table SendBlock {
+/* Submit aggregator block */
+table SubmitBlock {
     txs: Txs,
     block: AggregatorBlock,
-    block_count: Uint32, // count of exists aggregator blocks
     last_block_hash: Byte32, // last blocks hash
     block_mmr_size: Uint64, // MMR size
     block_proof: Byte32Vec, // merkle proof of block_root

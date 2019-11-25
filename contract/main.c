@@ -26,11 +26,12 @@
 enum ActionItem {
   Register,
   Deposit,
+  SubmitBlock,
 };
 
 #include "deposit.c"
 #include "registration.c"
-#include "send_block.c"
+#include "submit_block.c"
 
 /* End Actions */
 
@@ -146,6 +147,13 @@ int main() {
   case Deposit:
     ret = verify_deposit(&old_global_state_seg, &new_global_state_seg,
                          &action_seg.seg);
+    if (ret != OK) {
+      return ret;
+    }
+    break;
+  case SubmitBlock:
+    ret = verify_submit_block(&old_global_state_seg, &new_global_state_seg,
+                              &action_seg.seg);
     if (ret != OK) {
       return ret;
     }

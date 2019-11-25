@@ -1,4 +1,4 @@
-use super::utils::{build_resolved_tx, TxBuilder};
+use super::utils::{build_resolved_tx, ContractCallTxBuilder};
 use super::{DummyDataLoader, MAIN_CONTRACT_BIN, MAX_CYCLES};
 use ckb_error::Error as CKBError;
 use ckb_hash::{blake2b_256, new_blake2b};
@@ -8,8 +8,12 @@ use ckb_types::{
     core::{Cycle, TransactionView},
     packed::WitnessArgs,
     prelude::*,
+    utilities::merkle_root,
 };
-use godwoken_types::packed::{AccountEntry, Action, Byte20, Deposit, GlobalState, Register};
+use godwoken_types::packed::{
+    AccountEntry, Action, AggregatorBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx,
+    Txs,
+};
 use rand::{thread_rng, Rng};
 
 struct HashMerge;
@@ -32,6 +36,8 @@ type HashMMR = MemMMR<[u8; 32], HashMerge>;
 struct GlobalStateContext {
     account_root: [u8; 32],
     account_mmr: HashMMR,
+    block_root: [u8; 32],
+    block_mmr: HashMMR,
 }
 
 impl GlobalStateContext {
@@ -42,6 +48,7 @@ impl GlobalStateContext {
     fn get_global_state(&self) -> GlobalState {
         GlobalState::new_builder()
             .account_root(self.account_root.pack())
+            .block_root(self.block_root.pack())
             .build()
     }
 
@@ -60,6 +67,25 @@ impl GlobalStateContext {
     fn gen_account_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {
         let proof = self
             .account_mmr
+            .gen_proof(leaf_index_to_pos(leaf_index.into()))
+            .expect("result");
+        (proof.mmr_size(), proof.proof_items().to_owned())
+    }
+
+    fn add_block(&mut self, block: AggregatorBlock, mut count: u32) {
+        let block_hash = blake2b_256(block.as_slice());
+        self.block_mmr.push(block_hash).expect("mmr push");
+        let block_mmr_root = self.block_mmr.get_root().expect("mmr root");
+        count += 1;
+        let mut hasher = new_blake2b();
+        hasher.update(&count.to_le_bytes());
+        hasher.update(&block_mmr_root);
+        hasher.finalize(&mut self.block_root);
+    }
+
+    fn gen_block_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {
+        let proof = self
+            .block_mmr
             .gen_proof(leaf_index_to_pos(leaf_index.into()))
             .expect("result");
         (proof.mmr_size(), proof.proof_items().to_owned())
@@ -84,7 +110,7 @@ fn test_registration() {
     let mut last_entry: Option<AccountEntry> = None;
     let mut global_state = global_state;
     for index in 0u32..=5u32 {
-        let tx = TxBuilder::default()
+        let tx = ContractCallTxBuilder::default()
             .type_bin(MAIN_CONTRACT_BIN.clone())
             .previous_output_data(global_state.as_bytes())
             .build(&mut data_loader);
@@ -149,7 +175,7 @@ fn test_deposit() {
     let deposit_amount = 42u64;
 
     // deposit money
-    let tx = TxBuilder::default()
+    let tx = ContractCallTxBuilder::default()
         .type_bin(MAIN_CONTRACT_BIN.clone())
         .previous_output_data(global_state.as_bytes())
         .input_capacity(original_amount)
@@ -181,6 +207,98 @@ fn test_deposit() {
     let new_global_state = {
         let mut new_global_state_context = GlobalStateContext::new();
         new_global_state_context.add_entry(new_entry.clone());
+        new_global_state_context.get_global_state()
+    };
+
+    // update tx witness
+    let witness = WitnessArgs::new_builder()
+        .output_type(Some(action.as_bytes()).pack())
+        .build();
+    let tx = tx
+        .as_advanced_builder()
+        .witnesses(vec![witness.as_bytes().pack()].pack())
+        .set_outputs_data(vec![new_global_state.as_bytes().pack()])
+        .build();
+    verify_tx(&data_loader, &tx).expect("pass verification");
+}
+
+#[test]
+fn test_submit_block() {
+    let mut data_loader = DummyDataLoader::new();
+    let mut global_state_context = GlobalStateContext::new();
+
+    // prepare account entries
+    let entry_a = AccountEntry::new_builder()
+        .balance(20u64.pack())
+        .index(0u32.pack())
+        .build();
+    let entry_b = AccountEntry::new_builder()
+        .balance(100u64.pack())
+        .index(1u32.pack())
+        .build();
+    global_state_context.add_entry(entry_a.clone());
+    global_state_context.add_entry(entry_b.clone());
+    let global_state = global_state_context.get_global_state();
+    let old_account_root = global_state.account_root();
+
+    // new account root
+    let new_entry_a = entry_a.clone().as_builder().balance(2u64.pack()).build();
+    let new_entry_b = entry_b.clone().as_builder().balance(118u64.pack()).build();
+    let new_account_root = {
+        let mut new_global_state_context = GlobalStateContext::new();
+        new_global_state_context.add_entry(new_entry_a.clone());
+        new_global_state_context.add_entry(new_entry_b.clone());
+        new_global_state_context.get_global_state().account_root()
+    };
+
+    let original_amount = 120u64;
+
+    // send money
+    let tx = ContractCallTxBuilder::default()
+        .type_bin(MAIN_CONTRACT_BIN.clone())
+        .previous_output_data(global_state.as_bytes())
+        .input_capacity(original_amount)
+        .output_capacity(original_amount)
+        .build(&mut data_loader);
+
+    let transfer_tx = Tx::new_builder()
+        .from_index(entry_a.index())
+        .to_index(entry_b.index())
+        .amount(15u64.pack())
+        .fee(3u64.pack())
+        .nonce(1u32.pack())
+        .build();
+
+    let tx_root = merkle_root(&[blake2b_256(transfer_tx.as_slice()).pack()]);
+
+    let block = AggregatorBlock::new_builder()
+        .number(0u32.pack())
+        .tx_root(tx_root)
+        .old_account_root(old_account_root)
+        .new_account_root(new_account_root)
+        .build();
+
+    let (_mmr_size, proof) = global_state_context.gen_block_merkle_proof(0);
+    let submit_block = {
+        let txs = Txs::new_builder().set(vec![transfer_tx.clone()]).build();
+        SubmitBlock::new_builder()
+            .txs(txs)
+            .block(block.clone())
+            .block_proof(
+                proof
+                    .into_iter()
+                    .map(|i| i.pack())
+                    .collect::<Vec<_>>()
+                    .pack(),
+            )
+            .build()
+    };
+    let action = Action::new_builder().set(submit_block).build();
+    let new_global_state = {
+        let mut new_global_state_context = GlobalStateContext::new();
+        new_global_state_context.add_entry(new_entry_a.clone());
+        new_global_state_context.add_entry(new_entry_b.clone());
+        new_global_state_context.add_block(block.clone(), 0);
         new_global_state_context.get_global_state()
     };
 

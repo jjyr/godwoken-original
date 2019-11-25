@@ -44,7 +44,7 @@ pub fn build_resolved_tx(
     }
 }
 
-pub struct TxBuilder {
+pub struct ContractCallTxBuilder {
     lock_bin: Bytes,
     type_bin: Option<Bytes>,
     previous_output_data: Bytes,
@@ -52,9 +52,9 @@ pub struct TxBuilder {
     output_capacity: u64,
 }
 
-impl Default for TxBuilder {
+impl Default for ContractCallTxBuilder {
     fn default() -> Self {
-        TxBuilder {
+        ContractCallTxBuilder {
             lock_bin: DUMMY_LOCK_BIN.clone(),
             type_bin: None,
             previous_output_data: Bytes::new(),
@@ -64,7 +64,7 @@ impl Default for TxBuilder {
     }
 }
 
-impl TxBuilder {
+impl ContractCallTxBuilder {
     pub fn lock_bin(mut self, lock_bin: Bytes) -> Self {
         self.lock_bin = lock_bin;
         self
