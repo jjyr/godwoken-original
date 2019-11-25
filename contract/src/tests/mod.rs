@@ -13,9 +13,8 @@ use utils::{build_resolved_tx, TxBuilder};
 
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
-        Bytes::from(&include_bytes!("../../contract/binary/dummy_lock")[..]);
-    pub static ref MAIN_CONTRACT_BIN: Bytes =
-        Bytes::from(&include_bytes!("../../contract/binary/main")[..]);
+        Bytes::from(&include_bytes!("../../binary/dummy_lock")[..]);
+    pub static ref MAIN_CONTRACT_BIN: Bytes = Bytes::from(&include_bytes!("../../binary/main")[..]);
 }
 
 pub const MAX_CYCLES: u64 = 500_000;

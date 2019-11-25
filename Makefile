@@ -61,22 +61,25 @@ install-tools:
 
 ##@ Development
 .PHONY: ci
-ci: contracts-via-docker fmt clippy test bench-test
+ci: contracts-via-docker check-fmt clippy test bench-test
 
 test: ${GEN_MOL_OUT_DIR}/godwoken.rs
-	cargo test --all --all-features
+	cd $C && cargo test --all --all-features
 
 bench-test:
-	cargo bench -- --test
+	cd $C && cargo bench -- --test
 
 clippy:
-	cargo clippy --all --all-features --all-targets
+	cd $C && cargo clippy --all --all-features --all-targets
 
-fmt:
-	cargo fmt --all -- --check
+check-fmt:
+	cd $C && cargo fmt --all -- --check
 
 check:
-	cargo check --all --all-targets
+	cd $C && cargo check --all --all-targets
+
+fmt:
+	cd $C && cargo fmt --all
 
 clean: clean-contracts
 

@@ -10,7 +10,7 @@ edition = "2018"
 lazy_static = "1.4"
 rand = "0.7"
 hex = "0.4"
-godwoken-types = { path = "types" }
+godwoken-types = { path = "../types" }
 ckb-types = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
 ckb-error = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
 ckb-script = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
