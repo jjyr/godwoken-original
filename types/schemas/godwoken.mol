@@ -34,6 +34,14 @@ struct Tx {
 
 vector Txs <Tx>;
 
+struct AggregatorBlock {
+    tx_root: Byte32,
+    old_account_root: Byte32,
+    new_account_root: Byte32,
+    pubkey: Byte20, // Aggregator's pubkey
+    signature: Byte65, // Aggregator's signature
+}
+
 /* contract allowed actions */
 
 union Action {
@@ -59,10 +67,14 @@ table Deposit {
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 
-/* Send txs in godwoken block */
+/* Send txs in aggregator block */
 table SendBlock {
     txs: Txs,
-    tx_root: Byte32,
-    mmr_size: Uint64, // MMR size
-    proof: Byte32Vec, // merkle proof of block_root
+    block: AggregatorBlock,
+    block_count: Uint32, // count of exists aggregator blocks
+    last_block_hash: Byte32, // last blocks hash
+    block_mmr_size: Uint64, // MMR size
+    block_proof: Byte32Vec, // merkle proof of block_root
+    aggregator_mmr_size: Uint64, // MMR size
+    aggregator_proof: Byte32Vec, // merkle proof of aggregator_root
 }

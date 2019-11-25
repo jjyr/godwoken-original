@@ -2279,6 +2279,222 @@ impl<'t: 'r, 'r> ::std::iter::ExactSizeIterator for TxsReaderIterator<'t, 'r> {
     }
 }
 #[derive(Clone)]
+pub struct AggregatorBlock(molecule::bytes::Bytes);
+impl ::std::fmt::LowerHex for AggregatorBlock {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        use molecule::faster_hex::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()).unwrap())
+    }
+}
+impl ::std::fmt::Debug for AggregatorBlock {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::std::fmt::Display for AggregatorBlock {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "tx_root", self.tx_root())?;
+        write!(f, ", {}: {}", "old_account_root", self.old_account_root())?;
+        write!(f, ", {}: {}", "new_account_root", self.new_account_root())?;
+        write!(f, ", {}: {}", "pubkey", self.pubkey())?;
+        write!(f, ", {}: {}", "signature", self.signature())?;
+        write!(f, " }}")
+    }
+}
+impl ::std::default::Default for AggregatorBlock {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+        ];
+        AggregatorBlock::new_unchecked(v.into())
+    }
+}
+impl AggregatorBlock {
+    pub const TOTAL_SIZE: usize = 181;
+    pub const FIELD_SIZE: [usize; 5] = [32, 32, 32, 20, 65];
+    pub const FIELD_COUNT: usize = 5;
+    pub fn tx_root(&self) -> Byte32 {
+        Byte32::new_unchecked(self.0.slice(0, 32))
+    }
+    pub fn old_account_root(&self) -> Byte32 {
+        Byte32::new_unchecked(self.0.slice(32, 64))
+    }
+    pub fn new_account_root(&self) -> Byte32 {
+        Byte32::new_unchecked(self.0.slice(64, 96))
+    }
+    pub fn pubkey(&self) -> Byte20 {
+        Byte20::new_unchecked(self.0.slice(96, 116))
+    }
+    pub fn signature(&self) -> Byte65 {
+        Byte65::new_unchecked(self.0.slice(116, 181))
+    }
+    pub fn as_reader<'r>(&'r self) -> AggregatorBlockReader<'r> {
+        AggregatorBlockReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for AggregatorBlock {
+    type Builder = AggregatorBlockBuilder;
+    const NAME: &'static str = "AggregatorBlock";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        AggregatorBlock(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        AggregatorBlockReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        AggregatorBlockReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::std::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .tx_root(self.tx_root())
+            .old_account_root(self.old_account_root())
+            .new_account_root(self.new_account_root())
+            .pubkey(self.pubkey())
+            .signature(self.signature())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct AggregatorBlockReader<'r>(&'r [u8]);
+impl<'r> ::std::fmt::LowerHex for AggregatorBlockReader<'r> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        use molecule::faster_hex::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()).unwrap())
+    }
+}
+impl<'r> ::std::fmt::Debug for AggregatorBlockReader<'r> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::std::fmt::Display for AggregatorBlockReader<'r> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "tx_root", self.tx_root())?;
+        write!(f, ", {}: {}", "old_account_root", self.old_account_root())?;
+        write!(f, ", {}: {}", "new_account_root", self.new_account_root())?;
+        write!(f, ", {}: {}", "pubkey", self.pubkey())?;
+        write!(f, ", {}: {}", "signature", self.signature())?;
+        write!(f, " }}")
+    }
+}
+impl<'r> AggregatorBlockReader<'r> {
+    pub const TOTAL_SIZE: usize = 181;
+    pub const FIELD_SIZE: [usize; 5] = [32, 32, 32, 20, 65];
+    pub const FIELD_COUNT: usize = 5;
+    pub fn tx_root(&self) -> Byte32Reader<'r> {
+        Byte32Reader::new_unchecked(&self.as_slice()[0..32])
+    }
+    pub fn old_account_root(&self) -> Byte32Reader<'r> {
+        Byte32Reader::new_unchecked(&self.as_slice()[32..64])
+    }
+    pub fn new_account_root(&self) -> Byte32Reader<'r> {
+        Byte32Reader::new_unchecked(&self.as_slice()[64..96])
+    }
+    pub fn pubkey(&self) -> Byte20Reader<'r> {
+        Byte20Reader::new_unchecked(&self.as_slice()[96..116])
+    }
+    pub fn signature(&self) -> Byte65Reader<'r> {
+        Byte65Reader::new_unchecked(&self.as_slice()[116..181])
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for AggregatorBlockReader<'r> {
+    type Entity = AggregatorBlock;
+    const NAME: &'static str = "AggregatorBlockReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        AggregatorBlockReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], _compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len != Self::TOTAL_SIZE {
+            return ve!(Self, TotalSizeNotMatch, Self::TOTAL_SIZE, slice_len);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct AggregatorBlockBuilder {
+    pub(crate) tx_root: Byte32,
+    pub(crate) old_account_root: Byte32,
+    pub(crate) new_account_root: Byte32,
+    pub(crate) pubkey: Byte20,
+    pub(crate) signature: Byte65,
+}
+impl AggregatorBlockBuilder {
+    pub const TOTAL_SIZE: usize = 181;
+    pub const FIELD_SIZE: [usize; 5] = [32, 32, 32, 20, 65];
+    pub const FIELD_COUNT: usize = 5;
+    pub fn tx_root(mut self, v: Byte32) -> Self {
+        self.tx_root = v;
+        self
+    }
+    pub fn old_account_root(mut self, v: Byte32) -> Self {
+        self.old_account_root = v;
+        self
+    }
+    pub fn new_account_root(mut self, v: Byte32) -> Self {
+        self.new_account_root = v;
+        self
+    }
+    pub fn pubkey(mut self, v: Byte20) -> Self {
+        self.pubkey = v;
+        self
+    }
+    pub fn signature(mut self, v: Byte65) -> Self {
+        self.signature = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for AggregatorBlockBuilder {
+    type Entity = AggregatorBlock;
+    const NAME: &'static str = "AggregatorBlockBuilder";
+    fn expected_length(&self) -> usize {
+        Self::TOTAL_SIZE
+    }
+    fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
+        writer.write_all(self.tx_root.as_slice())?;
+        writer.write_all(self.old_account_root.as_slice())?;
+        writer.write_all(self.new_account_root.as_slice())?;
+        writer.write_all(self.pubkey.as_slice())?;
+        writer.write_all(self.signature.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        AggregatorBlock::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
 pub struct Action(molecule::bytes::Bytes);
 impl ::std::fmt::LowerHex for Action {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -3303,9 +3519,18 @@ impl ::std::fmt::Display for SendBlock {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "txs", self.txs())?;
-        write!(f, ", {}: {}", "tx_root", self.tx_root())?;
-        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
-        write!(f, ", {}: {}", "proof", self.proof())?;
+        write!(f, ", {}: {}", "block", self.block())?;
+        write!(f, ", {}: {}", "block_count", self.block_count())?;
+        write!(f, ", {}: {}", "last_block_hash", self.last_block_hash())?;
+        write!(f, ", {}: {}", "block_mmr_size", self.block_mmr_size())?;
+        write!(f, ", {}: {}", "block_proof", self.block_proof())?;
+        write!(
+            f,
+            ", {}: {}",
+            "aggregator_mmr_size",
+            self.aggregator_mmr_size()
+        )?;
+        write!(f, ", {}: {}", "aggregator_proof", self.aggregator_proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -3316,15 +3541,22 @@ impl ::std::fmt::Display for SendBlock {
 impl ::std::default::Default for SendBlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            68, 0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 56, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            25, 1, 0, 0, 36, 0, 0, 0, 40, 0, 0, 0, 221, 0, 0, 0, 225, 0, 0, 0, 1, 1, 0, 0, 9, 1, 0,
+            0, 13, 1, 0, 0, 21, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         SendBlock::new_unchecked(v.into())
     }
 }
 impl SendBlock {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 8;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3350,23 +3582,47 @@ impl SendBlock {
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
         Txs::new_unchecked(self.0.slice(start, end))
     }
-    pub fn tx_root(&self) -> Byte32 {
+    pub fn block(&self) -> AggregatorBlock {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
-        Byte32::new_unchecked(self.0.slice(start, end))
+        AggregatorBlock::new_unchecked(self.0.slice(start, end))
     }
-    pub fn mmr_size(&self) -> Uint64 {
+    pub fn block_count(&self) -> Uint32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Uint64::new_unchecked(self.0.slice(start, end))
+        Uint32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn proof(&self) -> Byte32Vec {
+    pub fn last_block_hash(&self) -> Byte32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
+        let end = molecule::unpack_number(&offsets[4][..]) as usize;
+        Byte32::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn block_mmr_size(&self) -> Uint64 {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let end = molecule::unpack_number(&offsets[5][..]) as usize;
+        Uint64::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn block_proof(&self) -> Byte32Vec {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
+        let end = molecule::unpack_number(&offsets[6][..]) as usize;
+        Byte32Vec::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn aggregator_mmr_size(&self) -> Uint64 {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[6][..]) as usize;
+        let end = molecule::unpack_number(&offsets[7][..]) as usize;
+        Uint64::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn aggregator_proof(&self) -> Byte32Vec {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[7][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[4][..]) as usize;
+            let end = molecule::unpack_number(&offsets[8][..]) as usize;
             Byte32Vec::new_unchecked(self.0.slice(start, end))
         } else {
             Byte32Vec::new_unchecked(self.0.slice_from(start))
@@ -3400,9 +3656,13 @@ impl molecule::prelude::Entity for SendBlock {
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
             .txs(self.txs())
-            .tx_root(self.tx_root())
-            .mmr_size(self.mmr_size())
-            .proof(self.proof())
+            .block(self.block())
+            .block_count(self.block_count())
+            .last_block_hash(self.last_block_hash())
+            .block_mmr_size(self.block_mmr_size())
+            .block_proof(self.block_proof())
+            .aggregator_mmr_size(self.aggregator_mmr_size())
+            .aggregator_proof(self.aggregator_proof())
     }
 }
 #[derive(Clone, Copy)]
@@ -3425,9 +3685,18 @@ impl<'r> ::std::fmt::Display for SendBlockReader<'r> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "txs", self.txs())?;
-        write!(f, ", {}: {}", "tx_root", self.tx_root())?;
-        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
-        write!(f, ", {}: {}", "proof", self.proof())?;
+        write!(f, ", {}: {}", "block", self.block())?;
+        write!(f, ", {}: {}", "block_count", self.block_count())?;
+        write!(f, ", {}: {}", "last_block_hash", self.last_block_hash())?;
+        write!(f, ", {}: {}", "block_mmr_size", self.block_mmr_size())?;
+        write!(f, ", {}: {}", "block_proof", self.block_proof())?;
+        write!(
+            f,
+            ", {}: {}",
+            "aggregator_mmr_size",
+            self.aggregator_mmr_size()
+        )?;
+        write!(f, ", {}: {}", "aggregator_proof", self.aggregator_proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -3436,7 +3705,7 @@ impl<'r> ::std::fmt::Display for SendBlockReader<'r> {
     }
 }
 impl<'r> SendBlockReader<'r> {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 8;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3462,23 +3731,47 @@ impl<'r> SendBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
         TxsReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn tx_root(&self) -> Byte32Reader<'r> {
+    pub fn block(&self) -> AggregatorBlockReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[1][..]) as usize;
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
-        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
+        AggregatorBlockReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn mmr_size(&self) -> Uint64Reader<'r> {
+    pub fn block_count(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
+        Uint32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn proof(&self) -> Byte32VecReader<'r> {
+    pub fn last_block_hash(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
+        let end = molecule::unpack_number(&offsets[4][..]) as usize;
+        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn block_mmr_size(&self) -> Uint64Reader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let end = molecule::unpack_number(&offsets[5][..]) as usize;
+        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn block_proof(&self) -> Byte32VecReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
+        let end = molecule::unpack_number(&offsets[6][..]) as usize;
+        Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn aggregator_mmr_size(&self) -> Uint64Reader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[6][..]) as usize;
+        let end = molecule::unpack_number(&offsets[7][..]) as usize;
+        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn aggregator_proof(&self) -> Byte32VecReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[7][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[4][..]) as usize;
+            let end = molecule::unpack_number(&offsets[8][..]) as usize;
             Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Byte32VecReader::new_unchecked(&self.as_slice()[start..])
@@ -3537,35 +3830,59 @@ impl<'r> molecule::prelude::Reader<'r> for SendBlockReader<'r> {
             return ve!(Self, OffsetsNotMatch);
         }
         TxsReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
-        Byte32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        AggregatorBlockReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Byte32Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
 pub struct SendBlockBuilder {
     pub(crate) txs: Txs,
-    pub(crate) tx_root: Byte32,
-    pub(crate) mmr_size: Uint64,
-    pub(crate) proof: Byte32Vec,
+    pub(crate) block: AggregatorBlock,
+    pub(crate) block_count: Uint32,
+    pub(crate) last_block_hash: Byte32,
+    pub(crate) block_mmr_size: Uint64,
+    pub(crate) block_proof: Byte32Vec,
+    pub(crate) aggregator_mmr_size: Uint64,
+    pub(crate) aggregator_proof: Byte32Vec,
 }
 impl SendBlockBuilder {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 8;
     pub fn txs(mut self, v: Txs) -> Self {
         self.txs = v;
         self
     }
-    pub fn tx_root(mut self, v: Byte32) -> Self {
-        self.tx_root = v;
+    pub fn block(mut self, v: AggregatorBlock) -> Self {
+        self.block = v;
         self
     }
-    pub fn mmr_size(mut self, v: Uint64) -> Self {
-        self.mmr_size = v;
+    pub fn block_count(mut self, v: Uint32) -> Self {
+        self.block_count = v;
         self
     }
-    pub fn proof(mut self, v: Byte32Vec) -> Self {
-        self.proof = v;
+    pub fn last_block_hash(mut self, v: Byte32) -> Self {
+        self.last_block_hash = v;
+        self
+    }
+    pub fn block_mmr_size(mut self, v: Uint64) -> Self {
+        self.block_mmr_size = v;
+        self
+    }
+    pub fn block_proof(mut self, v: Byte32Vec) -> Self {
+        self.block_proof = v;
+        self
+    }
+    pub fn aggregator_mmr_size(mut self, v: Uint64) -> Self {
+        self.aggregator_mmr_size = v;
+        self
+    }
+    pub fn aggregator_proof(mut self, v: Byte32Vec) -> Self {
+        self.aggregator_proof = v;
         self
     }
 }
@@ -3575,9 +3892,13 @@ impl molecule::prelude::Builder for SendBlockBuilder {
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.txs.as_slice().len()
-            + self.tx_root.as_slice().len()
-            + self.mmr_size.as_slice().len()
-            + self.proof.as_slice().len()
+            + self.block.as_slice().len()
+            + self.block_count.as_slice().len()
+            + self.last_block_hash.as_slice().len()
+            + self.block_mmr_size.as_slice().len()
+            + self.block_proof.as_slice().len()
+            + self.aggregator_mmr_size.as_slice().len()
+            + self.aggregator_proof.as_slice().len()
     }
     fn write<W: ::std::io::Write>(&self, writer: &mut W) -> ::std::io::Result<()> {
         let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
@@ -3585,19 +3906,31 @@ impl molecule::prelude::Builder for SendBlockBuilder {
         offsets.push(total_size);
         total_size += self.txs.as_slice().len();
         offsets.push(total_size);
-        total_size += self.tx_root.as_slice().len();
+        total_size += self.block.as_slice().len();
         offsets.push(total_size);
-        total_size += self.mmr_size.as_slice().len();
+        total_size += self.block_count.as_slice().len();
         offsets.push(total_size);
-        total_size += self.proof.as_slice().len();
+        total_size += self.last_block_hash.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.block_mmr_size.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.block_proof.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.aggregator_mmr_size.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.aggregator_proof.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
         writer.write_all(self.txs.as_slice())?;
-        writer.write_all(self.tx_root.as_slice())?;
-        writer.write_all(self.mmr_size.as_slice())?;
-        writer.write_all(self.proof.as_slice())?;
+        writer.write_all(self.block.as_slice())?;
+        writer.write_all(self.block_count.as_slice())?;
+        writer.write_all(self.last_block_hash.as_slice())?;
+        writer.write_all(self.block_mmr_size.as_slice())?;
+        writer.write_all(self.block_proof.as_slice())?;
+        writer.write_all(self.aggregator_mmr_size.as_slice())?;
+        writer.write_all(self.aggregator_proof.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {

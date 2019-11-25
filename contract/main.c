@@ -30,6 +30,7 @@ enum ActionItem {
 
 #include "deposit.c"
 #include "registration.c"
+#include "send_block.c"
 
 /* End Actions */
 

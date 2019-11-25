@@ -26,7 +26,7 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   mol_seg_t new_index_seg = MolReader_AccountEntry_get_index(&new_entry_seg);
   ret = memcmp(old_index_seg.ptr, new_index_seg.ptr, new_index_seg.size);
   if (ret != 0)
-    return ERROR_INVALID_ENTRY_STATE_TRANSITION;
+    return ERROR_INVALID_STATE_TRANSITION;
 
   mol_seg_t old_pubkey_hash_seg =
       MolReader_AccountEntry_get_pubkey_hash(&old_entry_seg);
@@ -35,14 +35,14 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   ret = memcmp(old_pubkey_hash_seg.ptr, new_pubkey_hash_seg.ptr,
                new_pubkey_hash_seg.size);
   if (ret != 0)
-    return ERROR_INVALID_ENTRY_STATE_TRANSITION;
+    return ERROR_INVALID_STATE_TRANSITION;
 
   mol_seg_t old_nonce_seg = MolReader_AccountEntry_get_nonce(&old_entry_seg);
   mol_seg_t new_nonce_seg = MolReader_AccountEntry_get_nonce(&new_entry_seg);
   uint32_t old_nonce = *(uint32_t *)old_nonce_seg.ptr;
   uint32_t new_nonce = *(uint32_t *)new_nonce_seg.ptr;
   if (old_nonce != new_nonce)
-    return ERROR_INVALID_ENTRY_STATE_TRANSITION;
+    return ERROR_INVALID_STATE_TRANSITION;
 
   mol_seg_t old_balance_seg =
       MolReader_AccountEntry_get_balance(&old_entry_seg);
@@ -51,7 +51,7 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   uint64_t old_balance = *(uint64_t *)old_balance_seg.ptr;
   uint64_t new_balance = *(uint64_t *)new_balance_seg.ptr;
   if (old_balance + deposit_capacity != new_balance)
-    return ERROR_INVALID_ENTRY_STATE_TRANSITION;
+    return ERROR_INVALID_STATE_TRANSITION;
 
   /* verify old state */
   mol_seg_t mmr_size_seg = MolReader_Deposit_get_mmr_size(deposit_seg);

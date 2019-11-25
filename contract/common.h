@@ -8,6 +8,7 @@
 #include "ckb_syscalls.h"
 #include "godwoken.h"
 #include "mmr.h"
+#include "cbmt.h"
 
 #define HASH_SIZE 32
 #define MAX_WITNESS_SIZE 32768
@@ -16,6 +17,7 @@
 
 /* error codes */
 #define OK 0
+#define ERROR_INTERNAL -1
 #define ERROR_SYSCALL -4
 /* contract state errors */
 #define ERROR_INVALID_NEW_ROOT -5
@@ -26,7 +28,8 @@
 #define ERROR_UNKNOWN_ACTION -12
 #define ERROR_LOAD_GLOBAL_STATE -13
 #define ERROR_INVALID_MERKLE_PROOF -14
-#define ERROR_INVALID_ENTRY_STATE_TRANSITION -15
+#define ERROR_INVALID_STATE_TRANSITION -15
+#define ERROR_INVALID_TX_ROOT -16
 
 /* merge function for MMR proof */
 void merge_hash(uint8_t dst[HASH_SIZE], uint8_t left_hash[HASH_SIZE],

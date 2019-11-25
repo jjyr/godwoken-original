@@ -123,6 +123,12 @@ _CPP_BEGIN
 #define         MolReader_Txs_verify(s, c)                      mol_fixvec_verify(s, 93)
 #define         MolReader_Txs_length(s)                         mol_fixvec_length(s)
 #define         MolReader_Txs_get(s, i)                         mol_fixvec_slice_by_index(s, 93, i)
+#define         MolReader_AggregatorBlock_verify(s, c)          mol_verify_fixed_size(s, 181)
+#define         MolReader_AggregatorBlock_get_tx_root(s)        mol_slice_by_offset(s, 0, 32)
+#define         MolReader_AggregatorBlock_get_old_account_root(s) mol_slice_by_offset(s, 32, 32)
+#define         MolReader_AggregatorBlock_get_new_account_root(s) mol_slice_by_offset(s, 64, 32)
+#define         MolReader_AggregatorBlock_get_pubkey(s)         mol_slice_by_offset(s, 96, 20)
+#define         MolReader_AggregatorBlock_get_signature(s)      mol_slice_by_offset(s, 116, 65)
 mol_errno       MolReader_Action_verify                         (const mol_seg_t*, bool);
 #define         MolReader_Action_unpack(s)                      mol_union_unpack(s)
 mol_errno       MolReader_Register_verify                       (const mol_seg_t*, bool);
@@ -142,11 +148,15 @@ mol_errno       MolReader_Deposit_verify                        (const mol_seg_t
 #define         MolReader_Deposit_get_proof(s)                  mol_table_slice_by_index(s, 4)
 mol_errno       MolReader_SendBlock_verify                      (const mol_seg_t*, bool);
 #define         MolReader_SendBlock_actual_field_count(s)       mol_table_actual_field_count(s)
-#define         MolReader_SendBlock_has_extra_fields(s)         mol_table_has_extra_fields(s, 4)
+#define         MolReader_SendBlock_has_extra_fields(s)         mol_table_has_extra_fields(s, 8)
 #define         MolReader_SendBlock_get_txs(s)                  mol_table_slice_by_index(s, 0)
-#define         MolReader_SendBlock_get_tx_root(s)              mol_table_slice_by_index(s, 1)
-#define         MolReader_SendBlock_get_mmr_size(s)             mol_table_slice_by_index(s, 2)
-#define         MolReader_SendBlock_get_proof(s)                mol_table_slice_by_index(s, 3)
+#define         MolReader_SendBlock_get_block(s)                mol_table_slice_by_index(s, 1)
+#define         MolReader_SendBlock_get_block_count(s)          mol_table_slice_by_index(s, 2)
+#define         MolReader_SendBlock_get_last_block_hash(s)      mol_table_slice_by_index(s, 3)
+#define         MolReader_SendBlock_get_block_mmr_size(s)       mol_table_slice_by_index(s, 4)
+#define         MolReader_SendBlock_get_block_proof(s)          mol_table_slice_by_index(s, 5)
+#define         MolReader_SendBlock_get_aggregator_mmr_size(s)  mol_table_slice_by_index(s, 6)
+#define         MolReader_SendBlock_get_aggregator_proof(s)     mol_table_slice_by_index(s, 7)
 
 /*
  * Builder APIs
@@ -268,6 +278,14 @@ mol_errno       MolReader_SendBlock_verify                      (const mol_seg_t
 #define         MolBuilder_Txs_push(b, p)                       mol_fixvec_builder_push(b, p, 93)
 #define         MolBuilder_Txs_build(b)                         mol_fixvec_builder_finalize(b)
 #define         MolBuilder_Txs_clear(b)                         mol_builder_discard(b)
+#define         MolBuilder_AggregatorBlock_init(b)              mol_builder_initialize_fixed_size(b, 181)
+#define         MolBuilder_AggregatorBlock_set_tx_root(b, p)    mol_builder_set_by_offset(b, 0, p, 32)
+#define         MolBuilder_AggregatorBlock_set_old_account_root(b, p) mol_builder_set_by_offset(b, 32, p, 32)
+#define         MolBuilder_AggregatorBlock_set_new_account_root(b, p) mol_builder_set_by_offset(b, 64, p, 32)
+#define         MolBuilder_AggregatorBlock_set_pubkey(b, p)     mol_builder_set_by_offset(b, 96, p, 20)
+#define         MolBuilder_AggregatorBlock_set_signature(b, p)  mol_builder_set_by_offset(b, 116, p, 65)
+#define         MolBuilder_AggregatorBlock_build(b)             mol_builder_finalize_simple(b)
+#define         MolBuilder_AggregatorBlock_clear(b)             mol_builder_discard(b)
 #define         MolBuilder_Action_init(b)                       mol_union_builder_initialize(b, 128, 0, &MolDefault_Register, 100)
 #define         MolBuilder_Action_set_Register(b, p, l)         mol_union_builder_set(b, 0, p, l)
 #define         MolBuilder_Action_set_Deposit(b, p, l)          mol_union_builder_set(b, 1, p, l)
@@ -289,11 +307,15 @@ mol_seg_res_t   MolBuilder_Register_build                       (mol_builder_t);
 #define         MolBuilder_Deposit_set_proof(b, p, l)           mol_table_builder_add(b, 4, p, l)
 mol_seg_res_t   MolBuilder_Deposit_build                        (mol_builder_t);
 #define         MolBuilder_Deposit_clear(b)                     mol_builder_discard(b)
-#define         MolBuilder_SendBlock_init(b)                    mol_table_builder_initialize(b, 512, 4)
+#define         MolBuilder_SendBlock_init(b)                    mol_table_builder_initialize(b, 2048, 8)
 #define         MolBuilder_SendBlock_set_txs(b, p, l)           mol_table_builder_add(b, 0, p, l)
-#define         MolBuilder_SendBlock_set_tx_root(b, p, l)       mol_table_builder_add(b, 1, p, l)
-#define         MolBuilder_SendBlock_set_mmr_size(b, p, l)      mol_table_builder_add(b, 2, p, l)
-#define         MolBuilder_SendBlock_set_proof(b, p, l)         mol_table_builder_add(b, 3, p, l)
+#define         MolBuilder_SendBlock_set_block(b, p, l)         mol_table_builder_add(b, 1, p, l)
+#define         MolBuilder_SendBlock_set_block_count(b, p, l)   mol_table_builder_add(b, 2, p, l)
+#define         MolBuilder_SendBlock_set_last_block_hash(b, p, l) mol_table_builder_add(b, 3, p, l)
+#define         MolBuilder_SendBlock_set_block_mmr_size(b, p, l) mol_table_builder_add(b, 4, p, l)
+#define         MolBuilder_SendBlock_set_block_proof(b, p, l)   mol_table_builder_add(b, 5, p, l)
+#define         MolBuilder_SendBlock_set_aggregator_mmr_size(b, p, l) mol_table_builder_add(b, 6, p, l)
+#define         MolBuilder_SendBlock_set_aggregator_proof(b, p, l) mol_table_builder_add(b, 7, p, l)
 mol_seg_res_t   MolBuilder_SendBlock_build                      (mol_builder_t);
 #define         MolBuilder_SendBlock_clear(b)                   mol_builder_discard(b)
 
@@ -339,6 +361,24 @@ const uint8_t MolDefault_Tx[93]                                  =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____,
 };
 const uint8_t MolDefault_Txs[4]                                  =  {____, ____, ____, ____};
+const uint8_t MolDefault_AggregatorBlock[181]                    =  {
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____,
+};
 const uint8_t MolDefault_Action[104]                             =  {
     ____, ____, ____, ____, 0x64, ____, ____, ____, 0x14, ____, ____, ____,
     0x38, ____, ____, ____, 0x58, ____, ____, ____, 0x60, ____, ____, ____,
@@ -373,13 +413,31 @@ const uint8_t MolDefault_Deposit[112]                            =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____,
 };
-const uint8_t MolDefault_SendBlock[68]                           =  {
-    0x44, ____, ____, ____, 0x14, ____, ____, ____, 0x18, ____, ____, ____,
-    0x38, ____, ____, ____, 0x40, ____, ____, ____, ____, ____, ____, ____,
+const uint8_t MolDefault_SendBlock[281]                          =  {
+    0x19, 0x01, ____, ____, 0x24, ____, ____, ____, 0x28, ____, ____, ____,
+    0xdd, ____, ____, ____, 0xe1, ____, ____, ____, 0x01, 0x01, ____, ____,
+    0x09, 0x01, ____, ____, 0x0d, 0x01, ____, ____, 0x15, 0x01, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
-    ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____,
 };
 
 #undef ____
@@ -565,9 +623,9 @@ mol_errno MolReader_SendBlock_verify (const mol_seg_t *input, bool compatible) {
         return MOL_ERR_OFFSET;
     }
     mol_num_t field_count = offset / 4 - 1;
-    if (field_count < 4) {
+    if (field_count < 8) {
         return MOL_ERR_FIELD_COUNT;
-    } else if (!compatible && field_count > 4) {
+    } else if (!compatible && field_count > 8) {
         return MOL_ERR_FIELD_COUNT;
     }
     if (input->size < MOL_NUM_T_SIZE*(field_count+1)){
@@ -596,18 +654,42 @@ mol_errno MolReader_SendBlock_verify (const mol_seg_t *input, bool compatible) {
         }
         inner.ptr = input->ptr + offsets[1];
         inner.size = offsets[2] - offsets[1];
-        errno = MolReader_Byte32_verify(&inner, compatible);
+        errno = MolReader_AggregatorBlock_verify(&inner, compatible);
         if (errno != MOL_OK) {
             return MOL_ERR_DATA;
         }
         inner.ptr = input->ptr + offsets[2];
         inner.size = offsets[3] - offsets[2];
-        errno = MolReader_Uint64_verify(&inner, compatible);
+        errno = MolReader_Uint32_verify(&inner, compatible);
         if (errno != MOL_OK) {
             return MOL_ERR_DATA;
         }
         inner.ptr = input->ptr + offsets[3];
         inner.size = offsets[4] - offsets[3];
+        errno = MolReader_Byte32_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[4];
+        inner.size = offsets[5] - offsets[4];
+        errno = MolReader_Uint64_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[5];
+        inner.size = offsets[6] - offsets[5];
+        errno = MolReader_Byte32Vec_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[6];
+        inner.size = offsets[7] - offsets[6];
+        errno = MolReader_Uint64_verify(&inner, compatible);
+        if (errno != MOL_OK) {
+            return MOL_ERR_DATA;
+        }
+        inner.ptr = input->ptr + offsets[7];
+        inner.size = offsets[8] - offsets[7];
         errno = MolReader_Byte32Vec_verify(&inner, compatible);
         if (errno != MOL_OK) {
             return MOL_ERR_DATA;
@@ -785,16 +867,24 @@ mol_seg_res_t MolBuilder_Deposit_build (mol_builder_t builder) {
 mol_seg_res_t MolBuilder_SendBlock_build (mol_builder_t builder) {
     mol_seg_res_t res;
     res.errno = MOL_OK;
-    mol_num_t offset = 20;
+    mol_num_t offset = 36;
     mol_num_t len;
     res.seg.size = offset;
     len = builder.number_ptr[1];
     res.seg.size += len == 0 ? 4 : len;
     len = builder.number_ptr[3];
-    res.seg.size += len == 0 ? 32 : len;
+    res.seg.size += len == 0 ? 181 : len;
     len = builder.number_ptr[5];
-    res.seg.size += len == 0 ? 8 : len;
+    res.seg.size += len == 0 ? 4 : len;
     len = builder.number_ptr[7];
+    res.seg.size += len == 0 ? 32 : len;
+    len = builder.number_ptr[9];
+    res.seg.size += len == 0 ? 8 : len;
+    len = builder.number_ptr[11];
+    res.seg.size += len == 0 ? 4 : len;
+    len = builder.number_ptr[13];
+    res.seg.size += len == 0 ? 8 : len;
+    len = builder.number_ptr[15];
     res.seg.size += len == 0 ? 4 : len;
     res.seg.ptr = (uint8_t*)malloc(res.seg.size);
     uint8_t *dst = res.seg.ptr;
@@ -807,14 +897,30 @@ mol_seg_res_t MolBuilder_SendBlock_build (mol_builder_t builder) {
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[3];
-    offset += len == 0 ? 32 : len;
+    offset += len == 0 ? 181 : len;
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[5];
-    offset += len == 0 ? 8 : len;
+    offset += len == 0 ? 4 : len;
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[7];
+    offset += len == 0 ? 32 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[9];
+    offset += len == 0 ? 8 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[11];
+    offset += len == 0 ? 4 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[13];
+    offset += len == 0 ? 8 : len;
+    mol_pack_number(dst, &offset);
+    dst += MOL_NUM_T_SIZE;
+    len = builder.number_ptr[15];
     offset += len == 0 ? 4 : len;
     uint8_t *src = builder.data_ptr;
     len = builder.number_ptr[1];
@@ -828,8 +934,8 @@ mol_seg_res_t MolBuilder_SendBlock_build (mol_builder_t builder) {
     dst += len;
     len = builder.number_ptr[3];
     if (len == 0) {
-        len = 32;
-        memcpy(dst, &MolDefault_Byte32, len);
+        len = 181;
+        memcpy(dst, &MolDefault_AggregatorBlock, len);
     } else {
         mol_num_t of = builder.number_ptr[2];
         memcpy(dst, src+of, len);
@@ -837,8 +943,8 @@ mol_seg_res_t MolBuilder_SendBlock_build (mol_builder_t builder) {
     dst += len;
     len = builder.number_ptr[5];
     if (len == 0) {
-        len = 8;
-        memcpy(dst, &MolDefault_Uint64, len);
+        len = 4;
+        memcpy(dst, &MolDefault_Uint32, len);
     } else {
         mol_num_t of = builder.number_ptr[4];
         memcpy(dst, src+of, len);
@@ -846,10 +952,46 @@ mol_seg_res_t MolBuilder_SendBlock_build (mol_builder_t builder) {
     dst += len;
     len = builder.number_ptr[7];
     if (len == 0) {
+        len = 32;
+        memcpy(dst, &MolDefault_Byte32, len);
+    } else {
+        mol_num_t of = builder.number_ptr[6];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[9];
+    if (len == 0) {
+        len = 8;
+        memcpy(dst, &MolDefault_Uint64, len);
+    } else {
+        mol_num_t of = builder.number_ptr[8];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[11];
+    if (len == 0) {
         len = 4;
         memcpy(dst, &MolDefault_Byte32Vec, len);
     } else {
-        mol_num_t of = builder.number_ptr[6];
+        mol_num_t of = builder.number_ptr[10];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[13];
+    if (len == 0) {
+        len = 8;
+        memcpy(dst, &MolDefault_Uint64, len);
+    } else {
+        mol_num_t of = builder.number_ptr[12];
+        memcpy(dst, src+of, len);
+    }
+    dst += len;
+    len = builder.number_ptr[15];
+    if (len == 0) {
+        len = 4;
+        memcpy(dst, &MolDefault_Byte32Vec, len);
+    } else {
+        mol_num_t of = builder.number_ptr[14];
         memcpy(dst, src+of, len);
     }
     dst += len;
