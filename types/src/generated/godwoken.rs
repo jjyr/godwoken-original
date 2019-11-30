@@ -1611,6 +1611,7 @@ impl ::std::fmt::Display for AccountEntry {
         write!(f, ", {}: {}", "pubkey_hash", self.pubkey_hash())?;
         write!(f, ", {}: {}", "nonce", self.nonce())?;
         write!(f, ", {}: {}", "balance", self.balance())?;
+        write!(f, ", {}: {}", "is_aggregator", self.is_aggregator())?;
         write!(f, " }}")
     }
 }
@@ -1618,15 +1619,15 @@ impl ::std::default::Default for AccountEntry {
     fn default() -> Self {
         let v: Vec<u8> = vec![
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
         ];
         AccountEntry::new_unchecked(v.into())
     }
 }
 impl AccountEntry {
-    pub const TOTAL_SIZE: usize = 36;
-    pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
-    pub const FIELD_COUNT: usize = 4;
+    pub const TOTAL_SIZE: usize = 37;
+    pub const FIELD_SIZE: [usize; 5] = [4, 20, 4, 8, 1];
+    pub const FIELD_COUNT: usize = 5;
     pub fn index(&self) -> Uint32 {
         Uint32::new_unchecked(self.0.slice(0, 4))
     }
@@ -1638,6 +1639,9 @@ impl AccountEntry {
     }
     pub fn balance(&self) -> Uint64 {
         Uint64::new_unchecked(self.0.slice(28, 36))
+    }
+    pub fn is_aggregator(&self) -> Byte {
+        Byte::new_unchecked(self.0.slice(36, 37))
     }
     pub fn as_reader<'r>(&'r self) -> AccountEntryReader<'r> {
         AccountEntryReader::new_unchecked(self.as_slice())
@@ -1670,6 +1674,7 @@ impl molecule::prelude::Entity for AccountEntry {
             .pubkey_hash(self.pubkey_hash())
             .nonce(self.nonce())
             .balance(self.balance())
+            .is_aggregator(self.is_aggregator())
     }
 }
 #[derive(Clone, Copy)]
@@ -1695,13 +1700,14 @@ impl<'r> ::std::fmt::Display for AccountEntryReader<'r> {
         write!(f, ", {}: {}", "pubkey_hash", self.pubkey_hash())?;
         write!(f, ", {}: {}", "nonce", self.nonce())?;
         write!(f, ", {}: {}", "balance", self.balance())?;
+        write!(f, ", {}: {}", "is_aggregator", self.is_aggregator())?;
         write!(f, " }}")
     }
 }
 impl<'r> AccountEntryReader<'r> {
-    pub const TOTAL_SIZE: usize = 36;
-    pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
-    pub const FIELD_COUNT: usize = 4;
+    pub const TOTAL_SIZE: usize = 37;
+    pub const FIELD_SIZE: [usize; 5] = [4, 20, 4, 8, 1];
+    pub const FIELD_COUNT: usize = 5;
     pub fn index(&self) -> Uint32Reader<'r> {
         Uint32Reader::new_unchecked(&self.as_slice()[0..4])
     }
@@ -1713,6 +1719,9 @@ impl<'r> AccountEntryReader<'r> {
     }
     pub fn balance(&self) -> Uint64Reader<'r> {
         Uint64Reader::new_unchecked(&self.as_slice()[28..36])
+    }
+    pub fn is_aggregator(&self) -> ByteReader<'r> {
+        ByteReader::new_unchecked(&self.as_slice()[36..37])
     }
 }
 impl<'r> molecule::prelude::Reader<'r> for AccountEntryReader<'r> {
@@ -1742,11 +1751,12 @@ pub struct AccountEntryBuilder {
     pub(crate) pubkey_hash: Byte20,
     pub(crate) nonce: Uint32,
     pub(crate) balance: Uint64,
+    pub(crate) is_aggregator: Byte,
 }
 impl AccountEntryBuilder {
-    pub const TOTAL_SIZE: usize = 36;
-    pub const FIELD_SIZE: [usize; 4] = [4, 20, 4, 8];
-    pub const FIELD_COUNT: usize = 4;
+    pub const TOTAL_SIZE: usize = 37;
+    pub const FIELD_SIZE: [usize; 5] = [4, 20, 4, 8, 1];
+    pub const FIELD_COUNT: usize = 5;
     pub fn index(mut self, v: Uint32) -> Self {
         self.index = v;
         self
@@ -1763,6 +1773,10 @@ impl AccountEntryBuilder {
         self.balance = v;
         self
     }
+    pub fn is_aggregator(mut self, v: Byte) -> Self {
+        self.is_aggregator = v;
+        self
+    }
 }
 impl molecule::prelude::Builder for AccountEntryBuilder {
     type Entity = AccountEntry;
@@ -1775,6 +1789,7 @@ impl molecule::prelude::Builder for AccountEntryBuilder {
         writer.write_all(self.pubkey_hash.as_slice())?;
         writer.write_all(self.nonce.as_slice())?;
         writer.write_all(self.balance.as_slice())?;
+        writer.write_all(self.is_aggregator.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
@@ -2535,10 +2550,10 @@ impl ::std::fmt::Display for Action {
 impl ::std::default::Default for Action {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            0, 0, 0, 0, 100, 0, 0, 0, 20, 0, 0, 0, 56, 0, 0, 0, 88, 0, 0, 0, 96, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 101, 0, 0, 0, 20, 0, 0, 0, 57, 0, 0, 0, 89, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         Action::new_unchecked(v.into())
     }
@@ -2872,10 +2887,10 @@ impl ::std::fmt::Display for Register {
 impl ::std::default::Default for Register {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            100, 0, 0, 0, 20, 0, 0, 0, 56, 0, 0, 0, 88, 0, 0, 0, 96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            101, 0, 0, 0, 20, 0, 0, 0, 57, 0, 0, 0, 89, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         Register::new_unchecked(v.into())
     }
@@ -3198,10 +3213,11 @@ impl ::std::fmt::Display for Deposit {
 impl ::std::default::Default for Deposit {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            112, 0, 0, 0, 24, 0, 0, 0, 60, 0, 0, 0, 96, 0, 0, 0, 100, 0, 0, 0, 108, 0, 0, 0, 0, 0,
+            114, 0, 0, 0, 24, 0, 0, 0, 61, 0, 0, 0, 98, 0, 0, 0, 102, 0, 0, 0, 110, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
         ];
         Deposit::new_unchecked(v.into())
     }

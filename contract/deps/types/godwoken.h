@@ -108,11 +108,12 @@ _CPP_BEGIN
 #define         MolReader_GlobalState_verify(s, c)              mol_verify_fixed_size(s, 64)
 #define         MolReader_GlobalState_get_account_root(s)       mol_slice_by_offset(s, 0, 32)
 #define         MolReader_GlobalState_get_block_root(s)         mol_slice_by_offset(s, 32, 32)
-#define         MolReader_AccountEntry_verify(s, c)             mol_verify_fixed_size(s, 36)
+#define         MolReader_AccountEntry_verify(s, c)             mol_verify_fixed_size(s, 37)
 #define         MolReader_AccountEntry_get_index(s)             mol_slice_by_offset(s, 0, 4)
 #define         MolReader_AccountEntry_get_pubkey_hash(s)       mol_slice_by_offset(s, 4, 20)
 #define         MolReader_AccountEntry_get_nonce(s)             mol_slice_by_offset(s, 24, 4)
 #define         MolReader_AccountEntry_get_balance(s)           mol_slice_by_offset(s, 28, 8)
+#define         MolReader_AccountEntry_get_is_aggregator(s)     mol_slice_by_offset(s, 36, 1)
 #define         MolReader_Tx_verify(s, c)                       mol_verify_fixed_size(s, 93)
 #define         MolReader_Tx_get_from_index(s)                  mol_slice_by_offset(s, 0, 4)
 #define         MolReader_Tx_get_to_index(s)                    mol_slice_by_offset(s, 4, 4)
@@ -258,11 +259,12 @@ mol_errno       MolReader_SubmitBlock_verify                    (const mol_seg_t
 #define         MolBuilder_GlobalState_set_block_root(b, p)     mol_builder_set_by_offset(b, 32, p, 32)
 #define         MolBuilder_GlobalState_build(b)                 mol_builder_finalize_simple(b)
 #define         MolBuilder_GlobalState_clear(b)                 mol_builder_discard(b)
-#define         MolBuilder_AccountEntry_init(b)                 mol_builder_initialize_fixed_size(b, 36)
+#define         MolBuilder_AccountEntry_init(b)                 mol_builder_initialize_fixed_size(b, 37)
 #define         MolBuilder_AccountEntry_set_index(b, p)         mol_builder_set_by_offset(b, 0, p, 4)
 #define         MolBuilder_AccountEntry_set_pubkey_hash(b, p)   mol_builder_set_by_offset(b, 4, p, 20)
 #define         MolBuilder_AccountEntry_set_nonce(b, p)         mol_builder_set_by_offset(b, 24, p, 4)
 #define         MolBuilder_AccountEntry_set_balance(b, p)       mol_builder_set_by_offset(b, 28, p, 8)
+#define         MolBuilder_AccountEntry_set_is_aggregator(b, p) mol_builder_set_byte_by_offset(b, 36, p)
 #define         MolBuilder_AccountEntry_build(b)                mol_builder_finalize_simple(b)
 #define         MolBuilder_AccountEntry_clear(b)                mol_builder_discard(b)
 #define         MolBuilder_Tx_init(b)                           mol_builder_initialize_fixed_size(b, 93)
@@ -287,7 +289,7 @@ mol_errno       MolReader_SubmitBlock_verify                    (const mol_seg_t
 #define         MolBuilder_AggregatorBlock_set_signature(b, p)  mol_builder_set_by_offset(b, 120, p, 65)
 #define         MolBuilder_AggregatorBlock_build(b)             mol_builder_finalize_simple(b)
 #define         MolBuilder_AggregatorBlock_clear(b)             mol_builder_discard(b)
-#define         MolBuilder_Action_init(b)                       mol_union_builder_initialize(b, 128, 0, &MolDefault_Register, 100)
+#define         MolBuilder_Action_init(b)                       mol_union_builder_initialize(b, 128, 0, &MolDefault_Register, 101)
 #define         MolBuilder_Action_set_Register(b, p, l)         mol_union_builder_set(b, 0, p, l)
 #define         MolBuilder_Action_set_Deposit(b, p, l)          mol_union_builder_set(b, 1, p, l)
 #define         MolBuilder_Action_set_SubmitBlock(b, p, l)      mol_union_builder_set(b, 2, p, l)
@@ -345,10 +347,11 @@ const uint8_t MolDefault_GlobalState[64]                         =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____,
 };
-const uint8_t MolDefault_AccountEntry[36]                        =  {
+const uint8_t MolDefault_AccountEntry[37]                        =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
+    ____,
 };
 const uint8_t MolDefault_Tx[93]                                  =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
@@ -379,31 +382,31 @@ const uint8_t MolDefault_AggregatorBlock[185]                    =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____,
 };
-const uint8_t MolDefault_Action[104]                             =  {
-    ____, ____, ____, ____, 0x64, ____, ____, ____, 0x14, ____, ____, ____,
-    0x38, ____, ____, ____, 0x58, ____, ____, ____, 0x60, ____, ____, ____,
+const uint8_t MolDefault_Action[105]                             =  {
+    ____, ____, ____, ____, 0x65, ____, ____, ____, 0x14, ____, ____, ____,
+    0x39, ____, ____, ____, 0x59, ____, ____, ____, 0x61, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
-    ____, ____, ____, ____, ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____, ____, ____, ____,
 };
-const uint8_t MolDefault_Register[100]                           =  {
-    0x64, ____, ____, ____, 0x14, ____, ____, ____, 0x38, ____, ____, ____,
-    0x58, ____, ____, ____, 0x60, ____, ____, ____, ____, ____, ____, ____,
+const uint8_t MolDefault_Register[101]                           =  {
+    0x65, ____, ____, ____, 0x14, ____, ____, ____, 0x39, ____, ____, ____,
+    0x59, ____, ____, ____, 0x61, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
-    ____, ____, ____, ____,
+    ____, ____, ____, ____, ____,
 };
-const uint8_t MolDefault_Deposit[112]                            =  {
-    0x70, ____, ____, ____, 0x18, ____, ____, ____, 0x3c, ____, ____, ____,
-    0x60, ____, ____, ____, 0x64, ____, ____, ____, 0x6c, ____, ____, ____,
+const uint8_t MolDefault_Deposit[114]                            =  {
+    0x72, ____, ____, ____, 0x18, ____, ____, ____, 0x3d, ____, ____, ____,
+    0x62, ____, ____, ____, 0x66, ____, ____, ____, 0x6e, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
@@ -411,7 +414,7 @@ const uint8_t MolDefault_Deposit[112]                            =  {
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
     ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
-    ____, ____, ____, ____,
+    ____, ____, ____, ____, ____, ____,
 };
 const uint8_t MolDefault_SubmitBlock[277]                        =  {
     0x15, 0x01, ____, ____, 0x20, ____, ____, ____, 0x24, ____, ____, ____,
@@ -702,7 +705,7 @@ mol_seg_res_t MolBuilder_Register_build (mol_builder_t builder) {
     mol_num_t len;
     res.seg.size = offset;
     len = builder.number_ptr[1];
-    res.seg.size += len == 0 ? 36 : len;
+    res.seg.size += len == 0 ? 37 : len;
     len = builder.number_ptr[3];
     res.seg.size += len == 0 ? 32 : len;
     len = builder.number_ptr[5];
@@ -716,7 +719,7 @@ mol_seg_res_t MolBuilder_Register_build (mol_builder_t builder) {
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[1];
-    offset += len == 0 ? 36 : len;
+    offset += len == 0 ? 37 : len;
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[3];
@@ -732,7 +735,7 @@ mol_seg_res_t MolBuilder_Register_build (mol_builder_t builder) {
     uint8_t *src = builder.data_ptr;
     len = builder.number_ptr[1];
     if (len == 0) {
-        len = 36;
+        len = 37;
         memcpy(dst, &MolDefault_AccountEntry, len);
     } else {
         mol_num_t of = builder.number_ptr[0];
@@ -776,9 +779,9 @@ mol_seg_res_t MolBuilder_Deposit_build (mol_builder_t builder) {
     mol_num_t len;
     res.seg.size = offset;
     len = builder.number_ptr[1];
-    res.seg.size += len == 0 ? 36 : len;
+    res.seg.size += len == 0 ? 37 : len;
     len = builder.number_ptr[3];
-    res.seg.size += len == 0 ? 36 : len;
+    res.seg.size += len == 0 ? 37 : len;
     len = builder.number_ptr[5];
     res.seg.size += len == 0 ? 4 : len;
     len = builder.number_ptr[7];
@@ -792,11 +795,11 @@ mol_seg_res_t MolBuilder_Deposit_build (mol_builder_t builder) {
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[1];
-    offset += len == 0 ? 36 : len;
+    offset += len == 0 ? 37 : len;
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[3];
-    offset += len == 0 ? 36 : len;
+    offset += len == 0 ? 37 : len;
     mol_pack_number(dst, &offset);
     dst += MOL_NUM_T_SIZE;
     len = builder.number_ptr[5];
@@ -812,7 +815,7 @@ mol_seg_res_t MolBuilder_Deposit_build (mol_builder_t builder) {
     uint8_t *src = builder.data_ptr;
     len = builder.number_ptr[1];
     if (len == 0) {
-        len = 36;
+        len = 37;
         memcpy(dst, &MolDefault_AccountEntry, len);
     } else {
         mol_num_t of = builder.number_ptr[0];
@@ -821,7 +824,7 @@ mol_seg_res_t MolBuilder_Deposit_build (mol_builder_t builder) {
     dst += len;
     len = builder.number_ptr[3];
     if (len == 0) {
-        len = 36;
+        len = 37;
         memcpy(dst, &MolDefault_AccountEntry, len);
     } else {
         mol_num_t of = builder.number_ptr[2];
