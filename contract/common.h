@@ -140,6 +140,21 @@ void compute_new_account_root(struct compute_new_account_root_context *ctx,
   blake2b_final(ctx->blake2b_ctx, root_hash, HASH_SIZE);
 }
 
+/* verify aggregator */
+int verify_aggregator(mol_seg_t *ag_seg) {
+  mol_seg_t is_ag_seg = MolReader_AccountEntry_get_is_aggregator(ag_seg);
+  int is_ag = *(uint8_t *)is_ag_seg.ptr;
+  if (!is_ag) {
+    return ERROR_INVALID_AGGREGATOR;
+  }
+  mol_seg_t balance_seg = MolReader_AccountEntry_get_balance(ag_seg);
+  uint64_t balance = *(uint64_t *)balance_seg.ptr;
+  if (balance < AGGREGATOR_REQUIRED_BALANCE) {
+    return ERROR_INVALID_AGGREGATOR;
+  }
+  return OK;
+}
+
 int verify_signature(uint8_t signature[65], uint8_t message[HASH_SIZE],
                      uint8_t pubkey_hash[20]) {
   // TODO

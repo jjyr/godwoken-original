@@ -10,21 +10,6 @@
 
 #include "common.h"
 
-/* verify aggregator */
-int verify_aggregator(mol_seg_t *ag_seg) {
-  mol_seg_t is_ag_seg = MolReader_AccountEntry_get_is_aggregator(ag_seg);
-  int is_ag = *(uint8_t *)is_ag_seg.ptr;
-  if (!is_ag) {
-    return ERROR_INVALID_AGGREGATOR;
-  }
-  mol_seg_t balance_seg = MolReader_AccountEntry_get_balance(ag_seg);
-  uint64_t balance = *(uint64_t *)balance_seg.ptr;
-  if (balance < AGGREGATOR_REQUIRED_BALANCE) {
-    return ERROR_INVALID_AGGREGATOR;
-  }
-  return OK;
-}
-
 /* verify aggregator pubkey */
 int check_aggregator(mol_seg_t *old_global_state_seg,
                      mol_seg_t *new_global_state_seg,

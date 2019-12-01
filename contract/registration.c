@@ -19,13 +19,23 @@ int verify_register(mol_seg_t *old_global_state_seg,
   /* extract data */
   mol_seg_t mmr_size_seg = MolReader_Register_get_mmr_size(register_seg);
   uint64_t mmr_size = *(uint64_t *)mmr_size_seg.ptr;
-  mol_seg_t new_entry_seg = MolReader_Register_get_entry(register_seg);
-  mol_seg_t new_index_seg = MolReader_AccountEntry_get_index(&new_entry_seg);
+  mol_seg_t account_seg = MolReader_Register_get_entry(register_seg);
+  mol_seg_t new_index_seg = MolReader_AccountEntry_get_index(&account_seg);
   uint32_t new_index = *(uint32_t *)new_index_seg.ptr;
   mol_seg_t leaf_hash_seg =
       MolReader_Register_get_last_entry_hash(register_seg);
   mol_seg_t old_account_root_seg =
       MolReader_GlobalState_get_account_root(old_global_state_seg);
+
+  /* check account */
+  mol_seg_t is_ag_seg = MolReader_AccountEntry_get_is_aggregator(&account_seg);
+  int is_ag = *(uint8_t *)is_ag_seg.ptr;
+  if (is_ag) {
+    ret = verify_aggregator(&account_seg);
+    if (ret != OK) {
+      return ERROR_INVALID_AGGREGATOR;
+    }
+  }
 
   /* load merkle proof */
   mol_seg_t proof_seg = MolReader_Register_get_proof(register_seg);
@@ -63,7 +73,7 @@ int verify_register(mol_seg_t *old_global_state_seg,
   /* calculate new global state account root */
   uint8_t new_leaf_hash[HASH_SIZE];
   blake2b_init(&blake2b_ctx, HASH_SIZE);
-  blake2b_update(&blake2b_ctx, new_entry_seg.ptr, new_entry_seg.size);
+  blake2b_update(&blake2b_ctx, account_seg.ptr, account_seg.size);
   blake2b_final(&blake2b_ctx, new_leaf_hash, HASH_SIZE);
   struct compute_new_account_root_context new_ctx = {
       &proof_ctx, &blake2b_ctx, leaf_hash_seg.ptr, new_leaf_hash,
