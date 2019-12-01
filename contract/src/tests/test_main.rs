@@ -236,18 +236,43 @@ fn test_submit_block() {
         .balance(100u64.pack())
         .index(1u32.pack())
         .build();
+    let entry_ag = AccountEntry::new_builder()
+        .balance(1000u64.pack())
+        .index(2u32.pack())
+        .is_aggregator(1u8.into())
+        .build();
     global_state_context.add_entry(entry_a.clone());
     global_state_context.add_entry(entry_b.clone());
+    global_state_context.add_entry(entry_ag.clone());
     let global_state = global_state_context.get_global_state();
     let old_account_root = global_state.account_root();
 
+    let transfer_tx = Tx::new_builder()
+        .from_index(entry_a.index())
+        .to_index(entry_b.index())
+        .amount(15u64.pack())
+        .fee(3u64.pack())
+        .nonce(1u32.pack())
+        .build();
+
     // new account root
-    let new_entry_a = entry_a.clone().as_builder().balance(2u64.pack()).build();
-    let new_entry_b = entry_b.clone().as_builder().balance(118u64.pack()).build();
+    let new_entry_a = entry_a
+        .clone()
+        .as_builder()
+        .balance(2u64.pack())
+        .nonce(1u32.pack())
+        .build();
+    let new_entry_b = entry_b.clone().as_builder().balance(115u64.pack()).build();
+    let new_entry_ag = entry_ag
+        .clone()
+        .as_builder()
+        .balance(1003u64.pack())
+        .build();
     let new_account_root = {
         let mut new_global_state_context = GlobalStateContext::new();
         new_global_state_context.add_entry(new_entry_a.clone());
         new_global_state_context.add_entry(new_entry_b.clone());
+        new_global_state_context.add_entry(new_entry_ag.clone());
         new_global_state_context.get_global_state().account_root()
     };
 
@@ -261,36 +286,41 @@ fn test_submit_block() {
         .output_capacity(original_amount)
         .build(&mut data_loader);
 
-    let transfer_tx = Tx::new_builder()
-        .from_index(entry_a.index())
-        .to_index(entry_b.index())
-        .amount(15u64.pack())
-        .fee(3u64.pack())
-        .nonce(1u32.pack())
-        .build();
-
     let tx_root = merkle_root(&[blake2b_256(transfer_tx.as_slice()).pack()]);
 
     let block = AggregatorBlock::new_builder()
         .number(0u32.pack())
         .tx_root(tx_root)
-        .old_account_root(old_account_root)
+        .old_account_root(old_account_root.clone())
         .new_account_root(new_account_root)
         .build();
 
-    let (_mmr_size, proof) = global_state_context.gen_block_merkle_proof(0);
+    let (block_mmr_size, block_proof) = global_state_context.gen_block_merkle_proof(0);
+    let (ag_mmr_size, ag_proof) =
+        global_state_context.gen_account_merkle_proof(entry_ag.index().unpack());
     let submit_block = {
         let txs = Txs::new_builder().set(vec![transfer_tx.clone()]).build();
         SubmitBlock::new_builder()
             .txs(txs)
             .block(block.clone())
             .block_proof(
-                proof
+                block_proof
                     .into_iter()
                     .map(|i| i.pack())
                     .collect::<Vec<_>>()
                     .pack(),
             )
+            .block_mmr_size(block_mmr_size.pack())
+            .aggregator(entry_ag.clone())
+            .aggregator_proof(
+                ag_proof
+                    .into_iter()
+                    .map(|i| i.pack())
+                    .collect::<Vec<_>>()
+                    .pack(),
+            )
+            .aggregator_mmr_size(ag_mmr_size.pack())
+            .account_count(3u32.pack())
             .build()
     };
     let action = Action::new_builder().set(submit_block).build();
@@ -298,6 +328,7 @@ fn test_submit_block() {
         let mut new_global_state_context = GlobalStateContext::new();
         new_global_state_context.add_entry(new_entry_a.clone());
         new_global_state_context.add_entry(new_entry_b.clone());
+        new_global_state_context.add_entry(new_entry_ag.clone());
         new_global_state_context.add_block(block.clone(), 0);
         new_global_state_context.get_global_state()
     };

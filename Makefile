@@ -10,6 +10,7 @@ MOLC_VERSION := 0.4.2
 GEN_MOL_IN_DIR := types/schemas
 # docker pull nervos/ckb-riscv-gnu-toolchain:bionic-20190702
 BUILDER_DOCKER := nervos/ckb-riscv-gnu-toolchain@sha256:7b168b4b109a0f741078a71b7c4dddaf1d283a5244608f7851f5714fbad273ba
+TEST_ARGS :=
 
 default: ci
 
@@ -64,7 +65,7 @@ install-tools:
 ci: contracts-via-docker check-fmt clippy test bench-test
 
 test: ${GEN_MOL_OUT_DIR}/godwoken.rs
-	cd $C && cargo test --all --all-features -- --nocapture
+	cd $C && cargo test --all --all-features ${TEST_ARGS} -- --nocapture
 
 bench-test:
 	cd $C && cargo bench -- --test

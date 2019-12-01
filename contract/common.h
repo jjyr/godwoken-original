@@ -5,15 +5,19 @@
 
 #include "blake2b.h"
 #include "blockchain.h"
+#include "cbmt.h"
 #include "ckb_syscalls.h"
 #include "godwoken.h"
 #include "mmr.h"
-#include "cbmt.h"
 
+// constants
 #define HASH_SIZE 32
 #define MAX_WITNESS_SIZE 32768
 #define BUF_SIZE 32768
 #define GLOBAL_STATE_SIZE 64
+
+// configs
+#define AGGREGATOR_REQUIRED_BALANCE 1000
 
 /* error codes */
 #define OK 0
@@ -30,6 +34,8 @@
 #define ERROR_INVALID_MERKLE_PROOF -14
 #define ERROR_INVALID_STATE_TRANSITION -15
 #define ERROR_INVALID_TX_ROOT -16
+#define ERROR_INVALID_AGGREGATOR -17
+#define ERROR_INVALID_BLOCK_SIGNATURE -18
 
 /* merge function for MMR proof */
 void merge_hash(uint8_t dst[HASH_SIZE], uint8_t left_hash[HASH_SIZE],
@@ -132,6 +138,12 @@ void compute_new_account_root(struct compute_new_account_root_context *ctx,
   blake2b_update(ctx->blake2b_ctx, &new_count, sizeof(uint32_t));
   blake2b_update(ctx->blake2b_ctx, root_hash, HASH_SIZE);
   blake2b_final(ctx->blake2b_ctx, root_hash, HASH_SIZE);
+}
+
+int verify_signature(uint8_t signature[65], uint8_t message[HASH_SIZE],
+                     uint8_t pubkey_hash[20]) {
+  // TODO
+  return OK;
 }
 
 #endif /* COMMON_H */

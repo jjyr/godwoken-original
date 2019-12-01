@@ -10,18 +10,103 @@
 
 #include "common.h"
 
+int verify_aggregator(mol_seg_t *ag_seg) {
+  mol_seg_t is_ag_seg = MolReader_AccountEntry_get_is_aggregator(ag_seg);
+  int is_ag = *(uint8_t *)is_ag_seg.ptr;
+  if (!is_ag) {
+    return ERROR_INVALID_AGGREGATOR;
+  }
+  mol_seg_t balance_seg = MolReader_AccountEntry_get_balance(ag_seg);
+  uint64_t balance = *(uint64_t *)balance_seg.ptr;
+  if (balance < AGGREGATOR_REQUIRED_BALANCE) {
+    return ERROR_INVALID_AGGREGATOR;
+  }
+  return OK;
+}
+
 /* verify aggregator pubkey */
-int check_aggregator(mol_seg_t *send_block_seg) {
-  /* TODO
-   * 1. verify aggregator signature according to pubkey hash
-   * 2. verify aggregator exsits in aggregator_list
+int check_aggregator(mol_seg_t *old_global_state_seg,
+                     mol_seg_t *new_global_state_seg,
+                     mol_seg_t *submit_block_seg) {
+  /*
+   * 1. aggregator is a valid
+   * 2. verify aggregator exsits in account root
+   * 3. verify aggregator signature according to pubkey hash
    */
+
+  mol_seg_t block_seg = MolReader_SubmitBlock_get_block(submit_block_seg);
+  mol_seg_t ag_seg = MolReader_SubmitBlock_get_aggregator(submit_block_seg);
+  int ret = verify_aggregator(&ag_seg);
+  if (ret != OK) {
+    return ERROR_INVALID_AGGREGATOR;
+  }
+
+  // verify merkle proof of aggregator
+  blake2b_state blake2b_ctx;
+  mol_seg_t index_seg = MolReader_AccountEntry_get_index(&ag_seg);
+  uint32_t index = *(uint32_t *)index_seg.ptr;
+  mol_seg_t account_count_seg =
+      MolReader_SubmitBlock_get_account_count(submit_block_seg);
+  uint32_t account_count = *(uint32_t *)account_count_seg.ptr;
+  mol_seg_t ag_mmr_size_seg =
+      MolReader_SubmitBlock_get_aggregator_mmr_size(submit_block_seg);
+  uint64_t ag_mmr_size = *(uint64_t *)ag_mmr_size_seg.ptr;
+  MMRSizePos ag_pos = mmr_compute_pos_by_leaf_index(index);
+  // extract proof
+  mol_seg_t proof_seg =
+      MolReader_SubmitBlock_get_aggregator_proof(submit_block_seg);
+  size_t proof_len = MolReader_Byte32Vec_length(&proof_seg);
+  uint8_t proof[proof_len][HASH_SIZE];
+  ret = extract_merkle_proof(proof, &proof_seg, proof_len);
+  if (ret != OK) {
+    return ret;
+  }
+  // compute ag hash
+  uint8_t ag_hash[HASH_SIZE];
+  blake2b_init(&blake2b_ctx, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, ag_seg.ptr, ag_seg.size);
+  blake2b_final(&blake2b_ctx, ag_hash, HASH_SIZE);
+  MMRVerifyContext ctx;
+  mmr_initialize_verify_context(&ctx, merge_hash);
+  uint8_t entries_root[HASH_SIZE];
+  mmr_compute_proof_root(&ctx, entries_root, ag_mmr_size, ag_hash, ag_pos.pos,
+                         proof, proof_len);
+  uint8_t account_root[HASH_SIZE];
+  blake2b_init(&blake2b_ctx, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, &account_count, sizeof(uint32_t));
+  blake2b_update(&blake2b_ctx, entries_root, HASH_SIZE);
+  blake2b_final(&blake2b_ctx, account_root, HASH_SIZE);
+  mol_seg_t old_account_root_seg =
+      MolReader_GlobalState_get_account_root(old_global_state_seg);
+  ret =
+      memcmp(account_root, old_account_root_seg.ptr, old_account_root_seg.size);
+  if (ret != 0) {
+    return ERROR_INVALID_STATE_TRANSITION;
+  }
+
+  // verify block signature
+  // get signature
+  mol_seg_t signature_seg = MolReader_AggregatorBlock_get_signature(&block_seg);
+  uint8_t signature[65];
+  memcpy(signature, signature_seg.ptr, 65);
+  // get pubkey
+  mol_seg_t pubkey_hash_seg = MolReader_AccountEntry_get_pubkey_hash(&ag_seg);
+  // compute zero-signature block hash as message
+  uint8_t message[HASH_SIZE];
+  memset(signature_seg.ptr, 0, signature_seg.size);
+  blake2b_init(&blake2b_ctx, HASH_SIZE);
+  blake2b_update(&blake2b_ctx, block_seg.ptr, block_seg.size);
+  blake2b_final(&blake2b_ctx, message, HASH_SIZE);
+  ret = verify_signature(signature_seg.ptr, message, pubkey_hash_seg.ptr);
+  if (ret != OK) {
+    return ERROR_INVALID_BLOCK_SIGNATURE;
+  }
   return OK;
 }
 
 /* verify tx_root */
-int check_tx_root(mol_seg_t *send_block_seg) {
-  mol_seg_t txs_seg = MolReader_SubmitBlock_get_txs(send_block_seg);
+int check_tx_root(mol_seg_t *submit_block_seg) {
+  mol_seg_t txs_seg = MolReader_SubmitBlock_get_txs(submit_block_seg);
   size_t txs_len = MolReader_Txs_length(&txs_seg);
   uint8_t tx_hashes[txs_len][HASH_SIZE];
   /* calculate tx_hashes */
@@ -40,7 +125,7 @@ int check_tx_root(mol_seg_t *send_block_seg) {
   if (ret != OK) {
     return ERROR_INTERNAL;
   }
-  mol_seg_t block_seg = MolReader_SubmitBlock_get_block(send_block_seg);
+  mol_seg_t block_seg = MolReader_SubmitBlock_get_block(submit_block_seg);
   mol_seg_t tx_root_seg = MolReader_AggregatorBlock_get_tx_root(&block_seg);
   ret = memcmp(root, tx_root_seg.ptr, HASH_SIZE);
   if (ret != OK) {
@@ -52,15 +137,15 @@ int check_tx_root(mol_seg_t *send_block_seg) {
 /* verify global state block root transition */
 int check_block_root_transition(mol_seg_t *old_global_state_seg,
                                 mol_seg_t *new_global_state_seg,
-                                mol_seg_t *send_block_seg) {
+                                mol_seg_t *submit_block_seg) {
   /* extract data */
   mol_seg_t mmr_size_seg =
-      MolReader_SubmitBlock_get_block_mmr_size(send_block_seg);
-  mol_seg_t proof_seg = MolReader_SubmitBlock_get_block_proof(send_block_seg);
-  mol_seg_t block_seg = MolReader_SubmitBlock_get_block(send_block_seg);
+      MolReader_SubmitBlock_get_block_mmr_size(submit_block_seg);
+  mol_seg_t proof_seg = MolReader_SubmitBlock_get_block_proof(submit_block_seg);
+  mol_seg_t block_seg = MolReader_SubmitBlock_get_block(submit_block_seg);
   mol_seg_t block_number_seg = MolReader_AggregatorBlock_get_number(&block_seg);
   mol_seg_t last_block_hash_seg =
-      MolReader_SubmitBlock_get_last_block_hash(send_block_seg);
+      MolReader_SubmitBlock_get_last_block_hash(submit_block_seg);
 
   /* verify account root transition */
   mol_seg_t block_old_account_root_seg =
@@ -148,7 +233,7 @@ int check_block_root_transition(mol_seg_t *old_global_state_seg,
 
 int verify_submit_block(mol_seg_t *old_global_state_seg,
                         mol_seg_t *new_global_state_seg,
-                        mol_seg_t *send_block_seg) {
+                        mol_seg_t *submit_block_seg) {
   /* check contract coins */
   uint64_t old_capacity, new_capacity;
   int ret = fetch_contract_capacities(&old_capacity, &new_capacity);
@@ -159,20 +244,21 @@ int verify_submit_block(mol_seg_t *old_global_state_seg,
     return ERROR_INCORRECT_CAPACITY;
 
   /* check aggregator */
-  ret = check_aggregator(send_block_seg);
+  ret = check_aggregator(old_global_state_seg, new_global_state_seg,
+                         submit_block_seg);
   if (ret != OK) {
     return ret;
   }
 
   /* check tx root */
-  ret = check_tx_root(send_block_seg);
+  ret = check_tx_root(submit_block_seg);
   if (ret != OK) {
     return ret;
   }
 
   /* check block_root transition */
   ret = check_block_root_transition(old_global_state_seg, new_global_state_seg,
-                                    send_block_seg);
+                                    submit_block_seg);
   if (ret != OK) {
     return ret;
   }
