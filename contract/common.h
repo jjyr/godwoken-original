@@ -80,7 +80,8 @@ struct compute_account_root_context {
   MMRVerifyContext *proof_ctx;
   blake2b_state *blake2b_ctx;
   uint8_t *leaf_hash;
-  uint64_t last_leaf_index;
+  uint64_t leaf_index;
+  uint32_t leaves_count;
   size_t proof_len;
   uint64_t mmr_size;
   void *proof;
@@ -89,14 +90,13 @@ struct compute_account_root_context {
 /* compute account root */
 void compute_account_root(struct compute_account_root_context *ctx,
                           uint8_t root_hash[HASH_SIZE]) {
-  MMRSizePos entry_pos = mmr_compute_pos_by_leaf_index(ctx->last_leaf_index);
+  MMRSizePos entry_pos = mmr_compute_pos_by_leaf_index(ctx->leaf_index);
   mmr_compute_proof_root(ctx->proof_ctx, root_hash, ctx->mmr_size,
                          ctx->leaf_hash, entry_pos.pos, ctx->proof,
                          ctx->proof_len);
   /* calculate old account_root: H(count | account entries root) */
-  uint32_t count = ctx->last_leaf_index + 1;
   blake2b_init(ctx->blake2b_ctx, HASH_SIZE);
-  blake2b_update(ctx->blake2b_ctx, &count, sizeof(uint32_t));
+  blake2b_update(ctx->blake2b_ctx, &ctx->leaves_count, sizeof(uint32_t));
   blake2b_update(ctx->blake2b_ctx, root_hash, HASH_SIZE);
   blake2b_final(ctx->blake2b_ctx, root_hash, HASH_SIZE);
 }

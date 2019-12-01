@@ -85,7 +85,7 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
 
   struct compute_account_root_context ctx = {
       &proof_ctx, &blake2b_ctx, leaf_hash, count - 1,
-      proof_len,  mmr_size,     proof};
+      count,      proof_len,    mmr_size,  proof};
   compute_account_root(&ctx, root_hash);
   ret = memcmp(root_hash, old_account_root_seg.ptr, HASH_SIZE);
   if (ret != OK)
@@ -99,8 +99,8 @@ int verify_deposit(mol_seg_t *old_global_state_seg,
   blake2b_final(&blake2b_ctx, updated_leaf_hash, HASH_SIZE);
 
   ctx = (struct compute_account_root_context){
-      &proof_ctx, &blake2b_ctx, updated_leaf_hash, count - 1, proof_len,
-      mmr_size,   proof};
+      &proof_ctx, &blake2b_ctx, updated_leaf_hash, count - 1,
+      count,      proof_len,    mmr_size,          proof};
   compute_account_root(&ctx, root_hash);
 
   /* compare global state transition */

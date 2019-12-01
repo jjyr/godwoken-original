@@ -51,8 +51,8 @@ int verify_register(mol_seg_t *old_global_state_seg,
   } else {
     /* calculate account entries merkle root */
     struct compute_account_root_context ctx = {
-        &proof_ctx, &blake2b_ctx, leaf_hash_seg.ptr, new_index - 1, proof_len,
-        mmr_size,   proof};
+        &proof_ctx, &blake2b_ctx, leaf_hash_seg.ptr, new_index - 1,
+        new_index,  proof_len,    mmr_size,          proof};
     compute_account_root(&ctx, root_hash);
     ret = memcmp(root_hash, old_account_root_seg.ptr, HASH_SIZE);
     if (ret != OK)

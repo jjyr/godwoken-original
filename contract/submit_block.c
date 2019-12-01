@@ -10,6 +10,7 @@
 
 #include "common.h"
 
+/* verify aggregator */
 int verify_aggregator(mol_seg_t *ag_seg) {
   mol_seg_t is_ag_seg = MolReader_AccountEntry_get_is_aggregator(ag_seg);
   int is_ag = *(uint8_t *)is_ag_seg.ptr;
@@ -51,7 +52,6 @@ int check_aggregator(mol_seg_t *old_global_state_seg,
   mol_seg_t ag_mmr_size_seg =
       MolReader_SubmitBlock_get_aggregator_mmr_size(submit_block_seg);
   uint64_t ag_mmr_size = *(uint64_t *)ag_mmr_size_seg.ptr;
-  MMRSizePos ag_pos = mmr_compute_pos_by_leaf_index(index);
   // extract proof
   mol_seg_t proof_seg =
       MolReader_SubmitBlock_get_aggregator_proof(submit_block_seg);
@@ -66,16 +66,13 @@ int check_aggregator(mol_seg_t *old_global_state_seg,
   blake2b_init(&blake2b_ctx, HASH_SIZE);
   blake2b_update(&blake2b_ctx, ag_seg.ptr, ag_seg.size);
   blake2b_final(&blake2b_ctx, ag_hash, HASH_SIZE);
-  MMRVerifyContext ctx;
-  mmr_initialize_verify_context(&ctx, merge_hash);
-  uint8_t entries_root[HASH_SIZE];
-  mmr_compute_proof_root(&ctx, entries_root, ag_mmr_size, ag_hash, ag_pos.pos,
-                         proof, proof_len);
+  MMRVerifyContext proof_ctx;
+  mmr_initialize_verify_context(&proof_ctx, merge_hash);
+  struct compute_account_root_context ctx = {
+      &proof_ctx,    &blake2b_ctx, ag_hash,     index,
+      account_count, proof_len,    ag_mmr_size, proof};
   uint8_t account_root[HASH_SIZE];
-  blake2b_init(&blake2b_ctx, HASH_SIZE);
-  blake2b_update(&blake2b_ctx, &account_count, sizeof(uint32_t));
-  blake2b_update(&blake2b_ctx, entries_root, HASH_SIZE);
-  blake2b_final(&blake2b_ctx, account_root, HASH_SIZE);
+  compute_account_root(&ctx, account_root);
   mol_seg_t old_account_root_seg =
       MolReader_GlobalState_get_account_root(old_global_state_seg);
   ret =
