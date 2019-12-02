@@ -16,6 +16,9 @@ use godwoken_types::packed::{
 };
 use rand::{thread_rng, Rng};
 
+const AGGREGATOR_REQUIRED_BALANCE: u64 = 2000;
+const NEW_ACCOUNT_REQUIRED_BALANCE: u64 = 1000;
+
 struct HashMerge;
 
 impl Merge for HashMerge {
@@ -160,18 +163,28 @@ fn verify_tx(data_loader: &DummyDataLoader, tx: &TransactionView) -> Result<Cycl
 }
 
 #[test]
-fn test_registration() {
+fn test_account_register() {
     let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
     let global_state = context.get_global_state();
     // insert few entries
     let mut last_entry: Option<AccountEntry> = None;
     let mut global_state = global_state;
+    let mut contract_amount = 0;
     for index in 0u32..=5u32 {
+        let is_aggregator = index < 2;
+        let deposit_amount = if is_aggregator {
+            AGGREGATOR_REQUIRED_BALANCE
+        } else {
+            NEW_ACCOUNT_REQUIRED_BALANCE
+        };
         let tx = ContractCallTxBuilder::default()
             .type_bin(MAIN_CONTRACT_BIN.clone())
             .previous_output_data(global_state.as_bytes())
+            .input_capacity(contract_amount)
+            .output_capacity(contract_amount + deposit_amount)
             .build(&mut data_loader);
+        contract_amount += deposit_amount;
         let entry = {
             let mut pubkey = [0u8; 20];
             let mut rng = thread_rng();
@@ -179,6 +192,14 @@ fn test_registration() {
             AccountEntry::new_builder()
                 .index(index.pack())
                 .pubkey_hash(Byte20::new_unchecked(pubkey.to_vec().into()))
+                .is_aggregator({
+                    if is_aggregator {
+                        1.into()
+                    } else {
+                        0.into()
+                    }
+                })
+                .balance(deposit_amount.pack())
                 .build()
         };
         let register = match last_entry {
@@ -295,7 +316,7 @@ fn test_submit_block() {
         .index(1u32.pack())
         .build();
     let entry_ag = AccountEntry::new_builder()
-        .balance(1000u64.pack())
+        .balance(AGGREGATOR_REQUIRED_BALANCE.pack())
         .index(2u32.pack())
         .is_aggregator(1u8.into())
         .build();

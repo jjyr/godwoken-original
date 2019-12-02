@@ -13,8 +13,11 @@ int verify_register(mol_seg_t *old_global_state_seg,
   int ret = fetch_contract_capacities(&old_capacity, &new_capacity);
   if (ret != OK)
     return ret;
-  if (old_capacity != new_capacity)
+
+  if (old_capacity >= new_capacity)
     return ERROR_INCORRECT_CAPACITY;
+
+  uint64_t deposit_capacity = new_capacity - old_capacity;
 
   /* extract data */
   mol_seg_t mmr_size_seg = MolReader_Register_get_mmr_size(register_seg);
@@ -35,6 +38,12 @@ int verify_register(mol_seg_t *old_global_state_seg,
     if (ret != OK) {
       return ERROR_INVALID_AGGREGATOR;
     }
+  }
+
+  mol_seg_t balance_seg = MolReader_AccountEntry_get_balance(&account_seg);
+  uint64_t balance = *(uint64_t *)balance_seg.ptr;
+  if (balance != deposit_capacity || balance < NEW_ACCOUNT_REQUIRED_BALANCE) {
+    return ERROR_INCORRECT_CAPACITY;
   }
 
   /* load merkle proof */

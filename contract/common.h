@@ -10,14 +10,15 @@
 #include "godwoken.h"
 #include "mmr.h"
 
-// constants
+/* constants */
 #define HASH_SIZE 32
 #define MAX_WITNESS_SIZE 32768
 #define BUF_SIZE 32768
 #define GLOBAL_STATE_SIZE 64
 
-// configs
-#define AGGREGATOR_REQUIRED_BALANCE 1000
+/* configs */
+#define AGGREGATOR_REQUIRED_BALANCE 2000
+#define NEW_ACCOUNT_REQUIRED_BALANCE 1000
 
 /* error codes */
 #define OK 0
