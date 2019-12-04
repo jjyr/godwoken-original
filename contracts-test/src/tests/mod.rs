@@ -13,7 +13,7 @@ use utils::{build_resolved_tx, ContractCallTxBuilder};
 
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
-        Bytes::from(&include_bytes!("../../binary/dummy_lock")[..]);
+        Bytes::from(&include_bytes!("../../../contracts/binaries/dummy_lock")[..]);
     pub static ref MAIN_CONTRACT_BIN: Bytes = Bytes::from(&include_bytes!("../../binary/main")[..]);
 }
 
@@ -59,7 +59,7 @@ impl DataLoader for DummyDataLoader {
 
 #[test]
 fn test_dummy_lock() {
-    const DUMMY_LOCK_CYCLES: u64 = 2108;
+    const DUMMY_LOCK_CYCLES: u64 = 2155;
     let mut data_loader = DummyDataLoader::new();
     let tx = ContractCallTxBuilder::default()
         .lock_bin(DUMMY_LOCK_BIN.clone())
