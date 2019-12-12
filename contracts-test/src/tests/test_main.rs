@@ -1,19 +1,13 @@
-use super::utils::{build_resolved_tx, ContractCallTxBuilder};
-use super::{DummyDataLoader, MAIN_CONTRACT_BIN, MAX_CYCLES};
-use ckb_error::Error as CKBError;
+use super::types_utils::merkle_root;
+use super::utils::{verify_tx, ContractCallTxBuilder};
+use super::{DummyDataLoader, MAIN_CONTRACT_BIN};
 use ckb_hash::{blake2b_256, new_blake2b};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
-use ckb_script::TransactionScriptsVerifier;
-use ckb_types::{
-    core::{Cycle, TransactionView},
-    packed::WitnessArgs,
-    prelude::*,
-    utilities::merkle_root,
-};
 use godwoken_types::packed::{
     AccountEntry, Action, AggregatorBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx,
-    Txs,
+    Txs, WitnessArgs,
 };
+use godwoken_types::prelude::*;
 use rand::{thread_rng, Rng};
 
 const AGGREGATOR_REQUIRED_BALANCE: u64 = 2000;
@@ -153,15 +147,6 @@ impl GlobalStateContext {
     }
 }
 
-fn verify_tx(data_loader: &DummyDataLoader, tx: &TransactionView) -> Result<Cycle, CKBError> {
-    let resolved_tx = build_resolved_tx(data_loader, tx);
-    let mut verifier = TransactionScriptsVerifier::new(&resolved_tx, data_loader);
-    verifier.set_debug_printer(|_id, msg| {
-        println!("[contract debug] {}", msg);
-    });
-    verifier.verify(MAX_CYCLES)
-}
-
 #[test]
 fn test_account_register() {
     let mut data_loader = DummyDataLoader::new();
@@ -178,12 +163,6 @@ fn test_account_register() {
         } else {
             NEW_ACCOUNT_REQUIRED_BALANCE
         };
-        let tx = ContractCallTxBuilder::default()
-            .type_bin(MAIN_CONTRACT_BIN.clone())
-            .previous_output_data(global_state.as_bytes())
-            .input_capacity(contract_amount)
-            .output_capacity(contract_amount + deposit_amount)
-            .build(&mut data_loader);
         contract_amount += deposit_amount;
         let entry = {
             let mut pubkey = [0u8; 20];
@@ -230,11 +209,14 @@ fn test_account_register() {
         let witness = WitnessArgs::new_builder()
             .output_type(Some(action.as_bytes()).pack())
             .build();
-        let tx = tx
-            .as_advanced_builder()
-            .witnesses(vec![witness.as_bytes().pack()].pack())
-            .set_outputs_data(vec![new_global_state.as_bytes().pack()])
-            .build();
+        let tx = ContractCallTxBuilder::default()
+            .type_bin(MAIN_CONTRACT_BIN.to_vec())
+            .previous_output_data(global_state.as_slice().to_vec())
+            .input_capacity(contract_amount)
+            .output_capacity(contract_amount + deposit_amount)
+            .witnesses(vec![witness.as_slice().to_vec()])
+            .outputs_data(vec![new_global_state.as_slice().to_vec()])
+            .build(&mut data_loader);
         verify_tx(&data_loader, &tx).expect("pass verification");
         last_entry = Some(entry);
         global_state = new_global_state;
@@ -254,12 +236,6 @@ fn test_deposit() {
     let deposit_amount = 42u64;
 
     // deposit money
-    let tx = ContractCallTxBuilder::default()
-        .type_bin(MAIN_CONTRACT_BIN.clone())
-        .previous_output_data(global_state.as_bytes())
-        .input_capacity(original_amount)
-        .output_capacity(original_amount + deposit_amount)
-        .build(&mut data_loader);
     let new_entry = {
         let balance: u64 = entry.balance().unpack();
         entry
@@ -293,11 +269,14 @@ fn test_deposit() {
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
-    let tx = tx
-        .as_advanced_builder()
-        .witnesses(vec![witness.as_bytes().pack()].pack())
-        .set_outputs_data(vec![new_global_state.as_bytes().pack()])
-        .build();
+    let tx = ContractCallTxBuilder::default()
+        .type_bin(MAIN_CONTRACT_BIN.to_vec())
+        .previous_output_data(global_state.as_slice().to_vec())
+        .input_capacity(original_amount)
+        .output_capacity(original_amount + deposit_amount)
+        .witnesses(vec![witness.as_slice().to_vec()])
+        .outputs_data(vec![new_global_state.as_slice().to_vec()])
+        .build(&mut data_loader);
     verify_tx(&data_loader, &tx).expect("pass verification");
 }
 
@@ -344,13 +323,6 @@ fn test_submit_block() {
 
     let original_amount = 120u64;
     // send money
-    let tx = ContractCallTxBuilder::default()
-        .type_bin(MAIN_CONTRACT_BIN.clone())
-        .previous_output_data(global_state.as_bytes())
-        .input_capacity(original_amount)
-        .output_capacity(original_amount)
-        .build(&mut data_loader);
-
     let tx_root = merkle_root(&[blake2b_256(transfer_tx.as_slice()).pack()]);
 
     let block = AggregatorBlock::new_builder()
@@ -396,10 +368,13 @@ fn test_submit_block() {
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
-    let tx = tx
-        .as_advanced_builder()
-        .witnesses(vec![witness.as_bytes().pack()].pack())
-        .set_outputs_data(vec![new_global_state.as_bytes().pack()])
-        .build();
+    let tx = ContractCallTxBuilder::default()
+        .type_bin(MAIN_CONTRACT_BIN.to_vec())
+        .previous_output_data(global_state.as_slice().to_vec())
+        .input_capacity(original_amount)
+        .output_capacity(original_amount)
+        .witnesses(vec![witness.as_slice().to_vec()])
+        .outputs_data(vec![new_global_state.as_slice().to_vec()])
+        .build(&mut data_loader);
     verify_tx(&data_loader, &tx).expect("pass verification");
 }

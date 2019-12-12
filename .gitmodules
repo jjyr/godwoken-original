@@ -4,3 +4,6 @@
 [submodule "contracts-test/deps/mmr-c"]
 	path = contracts-test/deps/mmr-c
 	url = https://github.com/jjyr/mmr-c.git
+[submodule "molecule"]
+	path = molecule
+	url = https://github.com/jjyr/molecule.git

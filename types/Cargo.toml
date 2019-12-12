@@ -5,6 +5,9 @@ authors = ["Jiang Jinyang <jjyruby@gmail.com>"]
 edition = "2018"
 license = "MIT"
 
+[features]
+default = ["std"]
+std = []
+
 [dependencies]
-molecule = "=0.4.0"
-ckb-types = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
+molecule = { path = "../molecule/bindings/rust", default-features = false }

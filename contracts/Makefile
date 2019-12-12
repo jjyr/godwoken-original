@@ -17,17 +17,25 @@ TEST_ARGS :=
 
 ##@ Contracts
 DUMMY_LOCK_LIB := dummy-lock/target/${RUST_TARGET}/release/libdummy_lock.a
+MAIN_LIB := main/target/${RUST_TARGET}/release/libmain.a
+
 # deps
 contracts: binaries/dummy_lock
 
-contracts-via-docker: ${DUMMY_LOCK_LIB}
+contracts-via-docker: ${DUMMY_LOCK_LIB} ${MAIN_LIB}
 	docker run --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make contracts"
 
 binaries/dummy_lock: c/entry.c ${DUMMY_LOCK_LIB}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
+binaries/main: c/entry.c ${MAIN_LIB}
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
 ${DUMMY_LOCK_LIB}: dummy-lock/src/lib.rs
 	cd dummy-lock && cargo build --target ${RUST_TARGET} --release
 
+${MAIN_LIB}: main/src/lib.rs
+	cd main && cargo build --target ${RUST_TARGET} --release
+
 clean:
-	rm binaries/dummy_lock
+	rm binaries/dummy_lock binaries/main
