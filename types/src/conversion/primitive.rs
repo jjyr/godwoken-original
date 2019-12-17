@@ -92,6 +92,7 @@ impl<'r> packed::BytesReader<'r> {
         str::from_utf8(self.raw_data())
     }
 
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn as_utf8_unchecked(&self) -> &str {
         str::from_utf8_unchecked(self.raw_data())
     }

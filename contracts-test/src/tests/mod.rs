@@ -16,7 +16,10 @@ use utils::{verify_tx, ContractCallTxBuilder};
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
         Bytes::from(&include_bytes!("../../../contracts/binaries/dummy_lock")[..]);
-    pub static ref MAIN_CONTRACT_BIN: Bytes = Bytes::from(&include_bytes!("../../binary/main")[..]);
+    pub static ref MAIN_CONTRACT_BIN: Bytes =
+        Bytes::from(&include_bytes!("../../../contracts/binaries/main")[..]);
+    pub static ref EXPERIMENTAL_BIN: Bytes =
+        Bytes::from(&include_bytes!("../../../contracts/binaries/main")[..]);
 }
 
 pub const MAX_CYCLES: u64 = 500_000;
@@ -75,4 +78,16 @@ fn test_dummy_lock() {
     let verify_result = verify_tx(&data_loader, &tx);
     let cycles = verify_result.expect("pass verification");
     assert_eq!(cycles, DUMMY_LOCK_CYCLES);
+}
+
+#[test]
+fn test_experimental_contract() {
+    const EXPECTED_CYCLES: u64 = 8082;
+    let mut data_loader = DummyDataLoader::new();
+    let tx = ContractCallTxBuilder::default()
+        .lock_bin(EXPERIMENTAL_BIN.to_vec())
+        .build(&mut data_loader);
+    let verify_result = verify_tx(&data_loader, &tx);
+    let cycles = verify_result.expect("pass verification");
+    assert_eq!(cycles, EXPECTED_CYCLES);
 }

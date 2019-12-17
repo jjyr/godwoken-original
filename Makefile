@@ -34,7 +34,7 @@ TESTS := contracts-test
 ci: contracts-via-docker check-fmt clippy test
 
 contracts-via-docker:
-	make -C ${CONTRACTS} $@
+	make -C ${CONTRACTS} $@ binary-patch
 
 test: ${GEN_MOL_OUT_DIR}/godwoken.rs
 	cd ${TESTS} && cargo test --all --all-features ${TEST_ARGS} -- --nocapture

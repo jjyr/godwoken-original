@@ -246,7 +246,7 @@ fn test_deposit() {
     };
     let (mmr_size, proof) = context.gen_account_merkle_proof(entry.index().unpack());
     let deposit = Deposit::new_builder()
-        .old_entry(entry.clone())
+        .old_entry(entry)
         .new_entry(new_entry.clone())
         .count(1u32.pack())
         .mmr_size(mmr_size.pack())
@@ -261,7 +261,7 @@ fn test_deposit() {
     let action = Action::new_builder().set(deposit).build();
     let new_global_state = {
         let mut new_context = GlobalStateContext::new();
-        new_context.push_account(new_entry.clone());
+        new_context.push_account(new_entry);
         new_context.get_global_state()
     };
 
@@ -328,13 +328,13 @@ fn test_submit_block() {
     let block = AggregatorBlock::new_builder()
         .number(0u32.pack())
         .tx_root(tx_root)
-        .old_account_root(old_account_root.clone())
+        .old_account_root(old_account_root)
         .new_account_root(new_account_root.pack())
         .build();
 
     let (block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
     let submit_block = {
-        let txs = Txs::new_builder().set(vec![transfer_tx.clone()]).build();
+        let txs = Txs::new_builder().set(vec![transfer_tx]).build();
         SubmitBlock::new_builder()
             .txs(txs)
             .block(block.clone())
@@ -346,7 +346,7 @@ fn test_submit_block() {
                     .pack(),
             )
             .block_mmr_size(block_mmr_size.pack())
-            .aggregator(entry_ag.clone())
+            .aggregator(entry_ag)
             .aggregator_proof(
                 ag_proof
                     .into_iter()
@@ -361,7 +361,7 @@ fn test_submit_block() {
     let action = Action::new_builder().set(submit_block).build();
 
     // submit block
-    context.submit_block(block.clone(), 0);
+    context.submit_block(block, 0);
     let new_global_state = context.get_global_state();
 
     // update tx witness

@@ -7,3 +7,6 @@
 [submodule "molecule"]
 	path = molecule
 	url = https://github.com/jjyr/molecule.git
+[submodule "contracts/c/ckb-c-stdlib"]
+	path = contracts/c/ckb-c-stdlib
+	url = https://github.com/nervosnetwork/ckb-c-stdlib.git

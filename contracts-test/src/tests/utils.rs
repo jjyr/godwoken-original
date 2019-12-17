@@ -21,12 +21,11 @@ fn build_resolved_tx(data_loader: &DummyDataLoader, tx: &TransactionView) -> Res
     let resolved_cell_deps = tx
         .cell_deps()
         .into_iter()
-        .map(|dep| {
-            let deps_out_point = dep.clone();
+        .map(|deps_out_point| {
             let (dep_output, dep_data) =
                 data_loader.cells.get(&deps_out_point.out_point()).unwrap();
             CellMetaBuilder::from_cell_output(dep_output.to_owned(), dep_data.to_vec().into())
-                .out_point(deps_out_point.out_point().clone())
+                .out_point(deps_out_point.out_point())
                 .build()
         })
         .collect();
@@ -156,7 +155,7 @@ fn gen_tx(
         buf.pack()
     };
     let lock_out_point = OutPoint::new(contract_tx_hash.clone(), 0);
-    let type_out_point = OutPoint::new(contract_tx_hash.clone(), 1);
+    let type_out_point = OutPoint::new(contract_tx_hash, 1);
     // deploy contract code
     let lock_data_hash = CellOutput::calc_data_hash(&lock_bin);
     {
@@ -213,7 +212,7 @@ fn gen_tx(
         (cell_to_spent, previous_output_data.into()),
     );
     let mut tx_builder = TransactionBuilder::default()
-        .input(CellInput::new(previous_out_point.clone(), 0))
+        .input(CellInput::new(previous_out_point, 0))
         .cell_dep(
             CellDep::new_builder()
                 .out_point(lock_out_point)
