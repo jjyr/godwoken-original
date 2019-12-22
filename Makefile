@@ -29,6 +29,7 @@ install-tools:
 ##@ Development
 CONTRACTS := contracts
 TESTS := contracts-test
+CARGO_PROJS := ${CONTRACTS}/main ${CONTRACTS}/dummy-lock ${TESTS}
 
 .PHONY: ci
 ci: contracts-via-docker check-fmt clippy test
@@ -51,7 +52,15 @@ check:
 fmt:
 	cd ${TESTS} && cargo fmt --all
 
-clean:
-	make -C ${CONTRACTS} $@
+clean-contracts:
+	make -C ${CONTRACTS} clean
+
+clean-cargo:
+	CURRENT_DIR=`pwd`; \
+	for proj in ${CARGO_PROJS} ; do \
+        cd $$CURRENT_DIR/$$proj && cargo clean ; \
+    done
+
+clean: clean-contracts clean-cargo
 
 # .PHONY:
