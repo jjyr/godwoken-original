@@ -15,31 +15,34 @@ install-binary-patcher:
 binary-patch: install-binary-patcher
 	ckb-binary-patcher -i binaries/main -o binaries/main
 
-# docker pull nervos/ckb-riscv-gnu-toolchain:bionic-20190702
-BUILDER_DOCKER := nervos/ckb-riscv-gnu-toolchain@sha256:7b168b4b109a0f741078a71b7c4dddaf1d283a5244608f7851f5714fbad273ba
-TEST_ARGS :=
+# Docker
+BUILDER_DOCKER := jjy0/ckb-riscv-rust-toolchain:2019-12-22
+
+build-image:
+	docker build -t ${BUILDER_DOCKER} .
 
 ##@ Contracts
 DUMMY_LOCK_LIB := dummy-lock/target/${RUST_TARGET}/release/libdummy_lock.a
 MAIN_LIB := main/target/${RUST_TARGET}/release/libgodwoken_main.a
-
 # deps
 contracts: binaries/dummy_lock binaries/main
 
-contracts-via-docker: ${DUMMY_LOCK_LIB} ${MAIN_LIB}
-	docker run --user `id -u`:`id -g` --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make contracts"
+contracts-via-docker:
+	docker run -eOWNER=`id -u`:`id -g` --rm -v `pwd`/..:/code ${BUILDER_DOCKER} bash -c "cd /code/contracts && make contracts"
 
 binaries/dummy_lock: c/entry.c ${DUMMY_LOCK_LIB}
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ && chown $$OWNER $@
 
 binaries/main: c/entry.c c/ckb_syscalls.c ${MAIN_LIB}
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ && chown $$OWNER $@
 
-${DUMMY_LOCK_LIB}: dummy-lock/src/lib.rs
+${DUMMY_LOCK_LIB}:
 	cd dummy-lock && cargo build --target ${RUST_TARGET} --release
 
-${MAIN_LIB}: main/src/lib.rs
+${MAIN_LIB}:
 	cd main && cargo build --target ${RUST_TARGET} --release
 
 clean:
 	rm binaries/dummy_lock binaries/main
+
+.phony: clean ${DUMMY_LOCK_LIB} ${MAIN_LIB}
