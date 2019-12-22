@@ -27,7 +27,7 @@ MAIN_LIB := main/target/${RUST_TARGET}/release/libgodwoken_main.a
 contracts: binaries/dummy_lock binaries/main
 
 contracts-via-docker: ${DUMMY_LOCK_LIB} ${MAIN_LIB}
-	docker run --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make contracts"
+	docker run --user `id -u`:`id -g` --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make contracts"
 
 binaries/dummy_lock: c/entry.c ${DUMMY_LOCK_LIB}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
