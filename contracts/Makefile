@@ -12,8 +12,6 @@ RUST_TARGET := riscv64imac-unknown-none-elf
 install-binary-patcher:
 	which ckb-binary-patcher || \
 		cargo install --force --git https://github.com/xxuejie/ckb-binary-patcher.git
-binary-patch: install-binary-patcher
-	ckb-binary-patcher -i binaries/main -o binaries/main
 
 # Docker
 BUILDER_DOCKER := jjy0/ckb-riscv-rust-toolchain:2019-12-22
@@ -25,7 +23,7 @@ build-image:
 DUMMY_LOCK_LIB := dummy-lock/target/${RUST_TARGET}/release/libdummy_lock.a
 MAIN_LIB := main/target/${RUST_TARGET}/release/libgodwoken_main.a
 # deps
-contracts: binaries/dummy_lock binaries/main
+contracts: install-binary-patcher binaries/dummy_lock binaries/main
 
 contracts-via-docker:
 	docker run -eOWNER=`id -u`:`id -g` --rm -v `pwd`/..:/code ${BUILDER_DOCKER} bash -c "cd /code/contracts && make contracts"
@@ -34,7 +32,8 @@ binaries/dummy_lock: c/entry.c ${DUMMY_LOCK_LIB}
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ && chown $$OWNER $@
 
 binaries/main: c/entry.c c/ckb_syscalls.c ${MAIN_LIB}
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ && chown $$OWNER $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ && chown $$OWNER $@ && \
+		ckb-binary-patcher -i binaries/main -o binaries/main
 
 ${DUMMY_LOCK_LIB}:
 	cd dummy-lock && cargo build --target ${RUST_TARGET} --release

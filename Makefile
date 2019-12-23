@@ -35,7 +35,7 @@ CARGO_PROJS := ${CONTRACTS}/main ${CONTRACTS}/dummy-lock ${TESTS}
 ci: contracts-via-docker check-fmt clippy test
 
 contracts-via-docker:
-	make -C ${CONTRACTS} $@ binary-patch
+	make -C ${CONTRACTS} $@
 
 test: ${GEN_MOL_OUT_DIR}/godwoken.rs
 	cd ${TESTS} && cargo test --all --all-features ${TEST_ARGS} -- --nocapture
