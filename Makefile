@@ -7,10 +7,9 @@ MOLC_VERSION := 0.4.2
 GEN_MOL_IN_DIR := types/schemas
 GEN_MOL_OUT_DIR := types/src/generated
 GEN_MOL_FILES := ${GEN_MOL_OUT_DIR}/godwoken.rs ${GEN_MOL_OUT_DIR}/blockchain.rs
-remove-gen:
+remove-generated:
 	rm ${GEN_MOL_FILES} # Remove Generate Files
-gen: check-moleculec-version ${GEN_MOL_FILES} # Generate Files
-regen: remove-gen gen
+gen: check-moleculec-version remove-generated ${GEN_MOL_FILES} # Generate Files
 
 .PHONY: check-moleculec-version
 check-moleculec-version:
