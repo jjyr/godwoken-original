@@ -1,4 +1,4 @@
-default: ci
+default: integration
 
 ##@ Generates Schema
 .PHONY: gen
@@ -30,8 +30,8 @@ CONTRACTS := contracts
 TESTS := contracts-test
 CARGO_PROJS := ${CONTRACTS}/main ${CONTRACTS}/dummy-lock ${TESTS}
 
-.PHONY: ci
-ci: contracts-via-docker check-fmt clippy test
+.PHONY: integration
+integration: contracts-via-docker check-fmt clippy test
 
 contracts-via-docker:
 	make -C ${CONTRACTS} $@
@@ -60,6 +60,6 @@ clean-cargo:
         cd $$CURRENT_DIR/$$proj && cargo clean ; \
     done
 
-clean: clean-contracts clean-cargo
+clean: clean-cargo clean-contracts
 
 # .PHONY:

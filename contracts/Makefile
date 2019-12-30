@@ -14,7 +14,7 @@ install-binary-patcher:
 		cargo install --force --git https://github.com/xxuejie/ckb-binary-patcher.git
 
 # Docker
-BUILDER_DOCKER := jjy0/ckb-riscv-rust-toolchain:2019-12-22
+BUILDER_DOCKER := jjy0/ckb-riscv-rust-toolchain:2019-12-30
 
 build-image:
 	docker build -t ${BUILDER_DOCKER} .
@@ -23,7 +23,7 @@ build-image:
 DUMMY_LOCK_LIB := dummy-lock/target/${RUST_TARGET}/release/libdummy_lock.a
 MAIN_LIB := main/target/${RUST_TARGET}/release/libgodwoken_main.a
 # deps
-contracts: install-binary-patcher binaries/dummy_lock binaries/main
+contracts: binaries/dummy_lock binaries/main
 
 contracts-via-docker:
 	docker run -eOWNER=`id -u`:`id -g` --rm -v `pwd`/..:/code ${BUILDER_DOCKER} bash -c "cd /code/contracts && make contracts"

@@ -82,7 +82,7 @@ fn test_dummy_lock() {
 
 #[test]
 fn test_experimental_contract() {
-    const EXPECTED_CYCLES: u64 = 8077;
+    const EXPECTED_CYCLES: u64 = 7158;
     let mut data_loader = DummyDataLoader::new();
     let tx = ContractCallTxBuilder::default()
         .lock_bin(EXPERIMENTAL_BIN.to_vec())
