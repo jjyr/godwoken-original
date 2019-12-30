@@ -1,7 +1,9 @@
-use super::types_utils::merkle_root;
-use super::utils::{verify_tx, ContractCallTxBuilder};
-use super::{DummyDataLoader, MAIN_CONTRACT_BIN};
-use ckb_hash::{blake2b_256, new_blake2b};
+use super::{types_utils::merkle_root, MAX_CYCLES};
+use super::{DUMMY_LOCK_BIN, MAIN_CONTRACT_BIN};
+use ckb_contract_tool::{
+    ckb_hash::{blake2b_256, new_blake2b},
+    Context, TxBuilder,
+};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
 use godwoken_types::packed::{
     AccountEntry, Action, AggregatorBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx,
@@ -149,13 +151,12 @@ impl GlobalStateContext {
 
 #[test]
 fn test_account_register() {
-    let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
     let global_state = context.get_global_state();
     // insert few entries
     let mut last_entry: Option<AccountEntry> = None;
     let mut global_state = global_state;
-    let mut contract_amount = 0;
+    let mut original_amount = 0;
     for index in 0u32..=5u32 {
         let is_aggregator = index < 2;
         let deposit_amount = if is_aggregator {
@@ -163,7 +164,7 @@ fn test_account_register() {
         } else {
             NEW_ACCOUNT_REQUIRED_BALANCE
         };
-        contract_amount += deposit_amount;
+        original_amount += deposit_amount;
         let entry = {
             let mut pubkey = [0u8; 20];
             let mut rng = thread_rng();
@@ -209,15 +210,22 @@ fn test_account_register() {
         let witness = WitnessArgs::new_builder()
             .output_type(Some(action.as_bytes()).pack())
             .build();
-        let tx = ContractCallTxBuilder::default()
-            .type_bin(MAIN_CONTRACT_BIN.to_vec())
-            .previous_output_data(global_state.as_slice().to_vec())
-            .input_capacity(contract_amount)
-            .output_capacity(contract_amount + deposit_amount)
-            .witnesses(vec![witness.as_slice().to_vec()])
-            .outputs_data(vec![new_global_state.as_slice().to_vec()])
-            .build(&mut data_loader);
-        verify_tx(&data_loader, &tx).expect("pass verification");
+        let contract_bin = MAIN_CONTRACT_BIN.to_owned();
+        let mut context = Context::default();
+        context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
+        context.deploy_contract(contract_bin.clone());
+        let tx = TxBuilder::default()
+            .lock_bin(DUMMY_LOCK_BIN.to_owned())
+            .type_bin(contract_bin)
+            .previous_output_data(global_state.as_slice().into())
+            .input_capacity(original_amount)
+            .output_capacity(original_amount + deposit_amount)
+            .witnesses(vec![witness.as_slice().into()])
+            .outputs_data(vec![new_global_state.as_slice().into()])
+            .inject_and_build(&mut context)
+            .expect("build tx");
+        let verify_result = context.verify_tx(&tx, MAX_CYCLES);
+        verify_result.expect("pass verification");
         last_entry = Some(entry);
         global_state = new_global_state;
     }
@@ -225,7 +233,6 @@ fn test_account_register() {
 
 #[test]
 fn test_deposit() {
-    let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
     // prepare a account entry
     let entry = AccountEntry::new_builder().build();
@@ -269,20 +276,26 @@ fn test_deposit() {
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
-    let tx = ContractCallTxBuilder::default()
-        .type_bin(MAIN_CONTRACT_BIN.to_vec())
-        .previous_output_data(global_state.as_slice().to_vec())
+    let contract_bin = MAIN_CONTRACT_BIN.to_owned();
+    let mut context = Context::default();
+    context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
+    context.deploy_contract(contract_bin.clone());
+    let tx = TxBuilder::default()
+        .lock_bin(DUMMY_LOCK_BIN.to_owned())
+        .type_bin(contract_bin)
+        .previous_output_data(global_state.as_slice().into())
         .input_capacity(original_amount)
         .output_capacity(original_amount + deposit_amount)
-        .witnesses(vec![witness.as_slice().to_vec()])
-        .outputs_data(vec![new_global_state.as_slice().to_vec()])
-        .build(&mut data_loader);
-    verify_tx(&data_loader, &tx).expect("pass verification");
+        .witnesses(vec![witness.as_slice().into()])
+        .outputs_data(vec![new_global_state.as_slice().into()])
+        .inject_and_build(&mut context)
+        .expect("build tx");
+    let verify_result = context.verify_tx(&tx, MAX_CYCLES);
+    verify_result.expect("pass verification");
 }
 
 #[test]
 fn test_submit_block() {
-    let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
 
     // prepare account entries
@@ -368,13 +381,20 @@ fn test_submit_block() {
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
-    let tx = ContractCallTxBuilder::default()
-        .type_bin(MAIN_CONTRACT_BIN.to_vec())
-        .previous_output_data(global_state.as_slice().to_vec())
+    let contract_bin = MAIN_CONTRACT_BIN.to_owned();
+    let mut context = Context::default();
+    context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
+    context.deploy_contract(contract_bin.clone());
+    let tx = TxBuilder::default()
+        .lock_bin(DUMMY_LOCK_BIN.to_owned())
+        .type_bin(contract_bin)
+        .previous_output_data(global_state.as_slice().into())
         .input_capacity(original_amount)
         .output_capacity(original_amount)
-        .witnesses(vec![witness.as_slice().to_vec()])
-        .outputs_data(vec![new_global_state.as_slice().to_vec()])
-        .build(&mut data_loader);
-    verify_tx(&data_loader, &tx).expect("pass verification");
+        .witnesses(vec![witness.as_slice().into()])
+        .outputs_data(vec![new_global_state.as_slice().into()])
+        .inject_and_build(&mut context)
+        .expect("build tx");
+    let verify_result = context.verify_tx(&tx, MAX_CYCLES);
+    verify_result.expect("pass verification");
 }

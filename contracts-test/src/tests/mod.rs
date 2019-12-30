@@ -1,17 +1,9 @@
 #[macro_use]
 mod types_utils;
 mod test_main;
-mod utils;
 
-use ckb_script::DataLoader;
-use ckb_types::{
-    bytes::Bytes,
-    core::{cell::CellMeta, BlockExt, EpochExt, HeaderView},
-    packed::{Byte32, CellOutput, OutPoint},
-};
+use ckb_contract_tool::{ckb_types::bytes::Bytes, Context, TxBuilder};
 use lazy_static::lazy_static;
-use std::collections::HashMap;
-use utils::{verify_tx, ContractCallTxBuilder};
 
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
@@ -24,70 +16,32 @@ lazy_static! {
 
 pub const MAX_CYCLES: u64 = 500_000;
 
-#[derive(Default)]
-pub struct DummyDataLoader {
-    pub cells: HashMap<OutPoint, (CellOutput, Bytes)>,
-    pub headers: HashMap<Byte32, HeaderView>,
-    pub epoches: HashMap<Byte32, EpochExt>,
-}
-
-impl DummyDataLoader {
-    fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl DataLoader for DummyDataLoader {
-    // load Cell Data
-    fn load_cell_data(&self, cell: &CellMeta) -> Option<(Bytes, Byte32)> {
-        cell.mem_cell_data
-            .as_ref()
-            .map(|(data, hash)| (Bytes::from(data.to_vec()), hash.to_owned()))
-            .or_else(|| {
-                self.cells.get(&cell.out_point).map(|(_, data)| {
-                    (
-                        Bytes::from(data.to_vec()),
-                        CellOutput::calc_data_hash(&data),
-                    )
-                })
-            })
-    }
-    // load BlockExt
-    fn get_block_ext(&self, _hash: &Byte32) -> Option<BlockExt> {
-        unreachable!()
-    }
-
-    // load header
-    fn get_header(&self, block_hash: &Byte32) -> Option<HeaderView> {
-        self.headers.get(block_hash).cloned()
-    }
-
-    // load EpochExt
-    fn get_block_epoch(&self, block_hash: &Byte32) -> Option<EpochExt> {
-        self.epoches.get(block_hash).cloned()
-    }
-}
-
 #[test]
 fn test_dummy_lock() {
-    const DUMMY_LOCK_CYCLES: u64 = 2155;
-    let mut data_loader = DummyDataLoader::new();
-    let tx = ContractCallTxBuilder::default()
-        .lock_bin(DUMMY_LOCK_BIN.to_vec())
-        .build(&mut data_loader);
-    let verify_result = verify_tx(&data_loader, &tx);
+    const EXPECTED_CYCLES: u64 = 2155;
+    let contract_bin = DUMMY_LOCK_BIN.to_owned();
+    let mut context = Context::default();
+    context.deploy_contract(contract_bin.clone());
+    let tx = TxBuilder::default()
+        .lock_bin(contract_bin)
+        .inject_and_build(&mut context)
+        .expect("build tx");
+    let verify_result = context.verify_tx(&tx, EXPECTED_CYCLES);
     let cycles = verify_result.expect("pass verification");
-    assert_eq!(cycles, DUMMY_LOCK_CYCLES);
+    assert_eq!(cycles, EXPECTED_CYCLES);
 }
 
 #[test]
 fn test_experimental_contract() {
     const EXPECTED_CYCLES: u64 = 7158;
-    let mut data_loader = DummyDataLoader::new();
-    let tx = ContractCallTxBuilder::default()
-        .lock_bin(EXPERIMENTAL_BIN.to_vec())
-        .build(&mut data_loader);
-    let verify_result = verify_tx(&data_loader, &tx);
+    let contract_bin = EXPERIMENTAL_BIN.to_owned();
+    let mut context = Context::default();
+    context.deploy_contract(contract_bin.clone());
+    let tx = TxBuilder::default()
+        .lock_bin(contract_bin)
+        .inject_and_build(&mut context)
+        .expect("build tx");
+    let verify_result = context.verify_tx(&tx, EXPECTED_CYCLES);
     let cycles = verify_result.expect("pass verification");
     assert_eq!(cycles, EXPECTED_CYCLES);
 }

@@ -11,8 +11,5 @@ lazy_static = "1.4"
 rand = "0.7"
 hex = "0.4"
 godwoken-types = { path = "../types" }
-ckb-types = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
-ckb-error = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
-ckb-script = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
-ckb-hash = { git = "https://github.com/nervosnetwork/ckb.git", rev = "v0.24.0" }
 ckb-merkle-mountain-range = { git = "https://github.com/nervosnetwork/merkle-mountain-range", branch = "master" }
+ckb-contract-tool = { git = "https://github.com/jjyr/ckb-contract-tool", branch = "master" }

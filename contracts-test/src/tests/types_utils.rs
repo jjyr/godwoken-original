@@ -1,4 +1,6 @@
-// pack data to ckb_types
+use ckb_contract_tool::ckb_types;
+
+// convert godwoken_types to ckb_types
 macro_rules! to {
     ($entity:expr) => {
         ckb_types::prelude::Pack::pack(&godwoken_types::prelude::Unpack::unpack($entity))
