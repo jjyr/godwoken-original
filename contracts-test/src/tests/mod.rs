@@ -33,7 +33,6 @@ fn test_dummy_lock() {
 
 #[test]
 fn test_experimental_contract() {
-    const EXPECTED_CYCLES: u64 = 7158;
     let contract_bin = EXPERIMENTAL_BIN.to_owned();
     let mut context = Context::default();
     context.deploy_contract(contract_bin.clone());
@@ -41,7 +40,6 @@ fn test_experimental_contract() {
         .lock_bin(contract_bin)
         .inject_and_build(&mut context)
         .expect("build tx");
-    let verify_result = context.verify_tx(&tx, EXPECTED_CYCLES);
-    let cycles = verify_result.expect("pass verification");
-    assert_eq!(cycles, EXPECTED_CYCLES);
+    let verify_result = context.verify_tx(&tx, std::u32::MAX.into());
+    verify_result.expect("pass verification");
 }

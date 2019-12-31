@@ -9,3 +9,4 @@ crate-type = ["staticlib"]
 
 [dependencies]
 godwoken-types = { path = "../../types", default-features = false }
+ckb-contract-std = { git = "https://github.com/jjyr/ckb-contract-std.git", branch = "master" }

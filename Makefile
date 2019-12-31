@@ -31,7 +31,7 @@ TESTS := contracts-test
 CARGO_PROJS := ${CONTRACTS}/main ${CONTRACTS}/dummy-lock ${TESTS}
 
 .PHONY: integration
-integration: contracts-via-docker check-fmt clippy test
+integration: clean-contracts contracts-via-docker check-fmt clippy test
 
 contracts-via-docker:
 	make -C ${CONTRACTS} $@
