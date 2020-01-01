@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(alloc_error_handler)]
+#![feature(alloc_error_handler, panic_info_message)]
 
 /// Main contract of Godwoken
 /// This contract maintains the global state of accounts and blocks.
@@ -24,8 +24,12 @@ mod libc_alloc;
 mod utils;
 
 use crate::constants::{Error, HASH_SIZE};
-use crate::utils::check_output_type_hash;
-use ckb_contract_std::{ckb_constants::*, syscalls};
+use crate::utils::{check_output_type_hash, load_action};
+use alloc::{
+    format,
+    string::{String, ToString},
+};
+use ckb_contract_std::{ckb_constants::*, debug, syscalls};
 use godwoken_types::{packed::*, prelude::*};
 
 #[global_allocator]
@@ -33,10 +37,8 @@ static HEAP: libc_alloc::LibCAllocator = libc_alloc::LibCAllocator;
 
 #[alloc_error_handler]
 fn oom_handler(_: core::alloc::Layout) -> ! {
-    extern "C" {
-        fn abort() -> !;
-    }
-    unsafe { abort() }
+    syscalls::exit(Error::OutOfMemory as i8);
+    loop {}
 }
 
 #[no_mangle]
@@ -48,8 +50,28 @@ fn contract_entry() -> isize {
 }
 
 #[panic_handler]
-fn panic_handler(_: &core::panic::PanicInfo) -> ! {
-    syscalls::exit(42);
+fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
+    let mut s = String::new();
+    if let Some(p) = panic_info.payload().downcast_ref::<&str>() {
+        s.push_str(&format!("panic occurred: {:?}", p));
+    } else {
+        s.push_str(&format!("panic occurred"));
+    }
+    if let Some(m) = panic_info.message() {
+        s.push_str(&format!(" {:?}", m));
+    }
+    if let Some(location) = panic_info.location() {
+        s.push_str(&format!(
+            ", in file {}:{}",
+            location.file(),
+            location.line()
+        ));
+    } else {
+        s.push_str(&format!(", but can't get location information..."));
+    }
+
+    syscalls::debug(s);
+    syscalls::exit(Error::Panic as i8);
     loop {}
 }
 
@@ -63,5 +85,6 @@ fn contract_main() -> Result<(), Error> {
         return check_output_type_hash(&type_hash);
     }
     // do output verification
+    let action = load_action();
     Ok(())
 }

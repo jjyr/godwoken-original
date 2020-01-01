@@ -8,7 +8,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "ckb-contract-std"
 version = "0.1.0-pre"
-source = "git+https://github.com/jjyr/ckb-contract-std.git#c9f2eedbaaefd9250f09396468e4bc2b7723d789"
+source = "git+https://github.com/jjyr/ckb-contract-std.git#5db1827821d26e23e7535f57c2f0c7bc07b0b7ad"
 
 [[package]]
 name = "godwoken-main"
