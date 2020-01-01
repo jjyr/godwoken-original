@@ -4,9 +4,9 @@
 [submodule "contracts-test/deps/mmr-c"]
 	path = contracts-test/deps/mmr-c
 	url = https://github.com/jjyr/mmr-c.git
-[submodule "molecule"]
-	path = molecule
-	url = https://github.com/jjyr/molecule.git
 [submodule "contracts/c/ckb-c-stdlib"]
 	path = contracts/c/ckb-c-stdlib
 	url = https://github.com/nervosnetwork/ckb-c-stdlib.git
+[submodule "molecule"]
+	path = molecule
+	url = https://github.com/nervosnetwork/molecule.git

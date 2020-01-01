@@ -49,7 +49,10 @@ check:
 	cd ${TESTS} && cargo check --all --all-targets
 
 fmt:
-	cd ${TESTS} && cargo fmt --all
+	CURRENT_DIR=`pwd`; \
+	for proj in ${CARGO_PROJS} ; do \
+        cd $$CURRENT_DIR/$$proj && cargo fmt --all ; \
+    done
 
 clean-contracts:
 	make -C ${CONTRACTS} clean
