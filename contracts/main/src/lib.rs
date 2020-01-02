@@ -85,6 +85,18 @@ fn contract_main() -> Result<(), Error> {
         return check_output_type_hash(&type_hash);
     }
     // do output verification
-    let action = load_action();
+    let action = load_action().expect("load action");
+    match action.to_enum() {
+        ActionUnion::Deposit(deposit) => {
+            crate::action::deposit::DepositVerifier::new(deposit).verify()?;
+        }
+        ActionUnion::Register(register) => {
+            crate::action::register::RegisterVerifier::new(register).verify()?;
+        }
+        ActionUnion::SubmitBlock(submit_block) => {
+            crate::action::submit_block::SubmitBlockVerifier::new(submit_block).verify()?;
+        }
+        _ => panic!("not support action {}", action.item_id()),
+    }
     Ok(())
 }

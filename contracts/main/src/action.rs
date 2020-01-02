@@ -1,5 +1,3 @@
-pub enum ActionType {
-    Register,
-    Deposit,
-    SubmitBlock,
-}
+pub mod deposit;
+pub mod register;
+pub mod submit_block;

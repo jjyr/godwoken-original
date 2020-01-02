@@ -1,11 +1,11 @@
 use crate::constants::Error;
 use godwoken_types::{packed::*, prelude::*};
 
-pub struct DepositVerifier(Deposit);
+pub struct RegisterVerifier(Register);
 
-impl DepositVerifier {
-    pub fn new(deposit_action: Deposit) -> Self {
-        DepositVerifier(deposit_action)
+impl RegisterVerifier {
+    pub fn new(register: Register) -> Self {
+        RegisterVerifier(register)
     }
 
     pub fn verify(&self) -> Result<(), Error> {
