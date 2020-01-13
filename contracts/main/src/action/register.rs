@@ -1,10 +1,10 @@
 use crate::constants::Error;
 use godwoken_types::{packed::*, prelude::*};
 
-pub struct RegisterVerifier(Register);
+pub struct RegisterVerifier<'a>(RegisterReader<'a>);
 
-impl RegisterVerifier {
-    pub fn new(register: Register) -> Self {
+impl<'a> RegisterVerifier<'a> {
+    pub fn new(register: RegisterReader<'a>) -> Self {
         RegisterVerifier(register)
     }
 

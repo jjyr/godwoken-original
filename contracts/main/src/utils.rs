@@ -1,6 +1,7 @@
 use crate::constants::{Error, HASH_SIZE};
 use ckb_contract_std::{ckb_constants::*, debug, syscalls};
-use godwoken_types::{packed::*, prelude::*};
+use core::mem::size_of;
+use godwoken_types::{bytes::Bytes, packed::*, prelude::*};
 
 const BUF_LEN: usize = 4096;
 
@@ -33,6 +34,49 @@ pub fn load_action() -> Result<Action, Error> {
     witness_args
         .output_type()
         .to_opt()
-        .map(|buf| Action::new_unchecked(buf.unpack()))
         .ok_or(Error::InvalidWitness)
+        .and_then(|buf| {
+            let buf: Bytes = buf.unpack();
+            match ActionReader::verify(&buf, false) {
+                Ok(()) => Ok(Action::new_unchecked(buf)),
+                Err(_) => Err(Error::InvalidWitness),
+            }
+        })
+}
+
+pub struct CapacityChange {
+    pub input: u64,
+    pub output: u64,
+}
+
+/* fetch input cell's capacity and output cell's capacity */
+pub fn fetch_capacities() -> CapacityChange {
+    let input = {
+        let raw = syscalls::load_cell_by_field(
+            size_of::<u64>(),
+            0,
+            0,
+            Source::Input,
+            CellField::Capacity,
+        )
+        .expect("load capacity");
+        let mut buf = [0u8; 8];
+        buf.copy_from_slice(&raw);
+        u64::from_le_bytes(buf)
+    };
+    let output = {
+        let raw = syscalls::load_cell_by_field(
+            size_of::<u64>(),
+            0,
+            0,
+            Source::Output,
+            CellField::Capacity,
+        )
+        .expect("load capacity");
+        let mut buf = [0u8; 8];
+        buf.copy_from_slice(&raw);
+        u64::from_le_bytes(buf)
+    };
+
+    CapacityChange { input, output }
 }

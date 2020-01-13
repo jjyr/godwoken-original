@@ -86,17 +86,16 @@ fn contract_main() -> Result<(), Error> {
     }
     // do output verification
     let action = load_action().expect("load action");
-    match action.to_enum() {
-        ActionUnion::Deposit(deposit) => {
+    match action.as_reader().to_enum() {
+        ActionUnionReader::Deposit(deposit) => {
             crate::action::deposit::DepositVerifier::new(deposit).verify()?;
         }
-        ActionUnion::Register(register) => {
+        ActionUnionReader::Register(register) => {
             crate::action::register::RegisterVerifier::new(register).verify()?;
         }
-        ActionUnion::SubmitBlock(submit_block) => {
+        ActionUnionReader::SubmitBlock(submit_block) => {
             crate::action::submit_block::SubmitBlockVerifier::new(submit_block).verify()?;
         }
-        _ => panic!("not support action {}", action.item_id()),
     }
     Ok(())
 }

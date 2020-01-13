@@ -1,10 +1,15 @@
 pub const HASH_SIZE: usize = 32;
 
 #[derive(Debug)]
-#[repr(isize)]
+#[repr(i8)]
 pub enum Error {
     InvalidOutputTypeHash = -6,
     InvalidWitness = -11,
-    Panic = -42,
-    OutOfMemory = 255,
+    IncorrectCapacity = -12,
+    InvalidEntryIndex = -13,
+    InvalidEntryPubkeyHash = -14,
+    InvalidEntryNonce = -15,
+    InvalidEntryBalance = -16,
+    Panic = -126,
+    OutOfMemory = -127,
 }

@@ -1,10 +1,10 @@
 use crate::constants::Error;
 use godwoken_types::{packed::*, prelude::*};
 
-pub struct SubmitBlockVerifier(SubmitBlock);
+pub struct SubmitBlockVerifier<'a>(SubmitBlockReader<'a>);
 
-impl SubmitBlockVerifier {
-    pub fn new(submit_block: SubmitBlock) -> Self {
+impl<'a> SubmitBlockVerifier<'a> {
+    pub fn new(submit_block: SubmitBlockReader<'a>) -> Self {
         SubmitBlockVerifier(submit_block)
     }
 
