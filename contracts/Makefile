@@ -37,10 +37,12 @@ binaries/main: c/entry.c c/ckb_syscalls.c ${MAIN_LIB}
 		ckb-binary-patcher -i binaries/main -o binaries/main
 
 ${DUMMY_LOCK_LIB}:
-	cd dummy-lock && cargo build --target ${RUST_TARGET}
+	cd dummy-lock && cargo build --target ${RUST_TARGET}; \
+		chown -R $$OWNER target
 
 ${MAIN_LIB}:
-	cd main && cargo build --target ${RUST_TARGET}
+	cd main && cargo build --target ${RUST_TARGET}; \
+		chown -R $$OWNER target
 
 clean-cargo:
 	CURRENT_DIR=`pwd`; \
