@@ -7,16 +7,16 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref DUMMY_LOCK_BIN: Bytes =
-        Bytes::from(&include_bytes!("../../../contracts/binaries/dummy_lock")[..]);
+        Bytes::from(&include_bytes!("../../../contracts/binaries/dummy-lock")[..]);
     pub static ref MAIN_CONTRACT_BIN: Bytes =
-        Bytes::from(&include_bytes!("../../../contracts/binaries/main")[..]);
+        Bytes::from(&include_bytes!("../../../contracts/binaries/godwoken-main")[..]);
 }
 
 pub const MAX_CYCLES: u64 = 500_0000;
 
 #[test]
 fn test_dummy_lock() {
-    const EXPECTED_CYCLES: u64 = 2155;
+    const EXPECTED_CYCLES: u64 = 6452;
     let contract_bin = DUMMY_LOCK_BIN.to_owned();
     let mut context = Context::default();
     context.deploy_contract(contract_bin.clone());

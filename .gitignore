@@ -7,3 +7,6 @@ contracts-test/binary/
 
 # Rust files
 target/
+
+# GDB
+.gdb_history

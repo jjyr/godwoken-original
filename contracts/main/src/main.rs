@@ -1,5 +1,8 @@
 #![no_std]
-#![feature(alloc_error_handler, panic_info_message)]
+#![no_main]
+#![feature(lang_items)]
+#![feature(alloc_error_handler)]
+#![feature(panic_info_message)]
 
 /// Main contract of Godwoken
 /// This contract maintains the global state of accounts and blocks.
@@ -17,65 +20,29 @@
 /// 2. Deposit
 /// 3. Witdraw
 /// 4. Send Tx
-extern crate alloc;
 mod action;
 mod constants;
-mod libc_alloc;
 mod utils;
 
 use crate::constants::{Error, HASH_SIZE};
 use crate::utils::{check_output_type_hash, load_action};
 use alloc::{
     format,
-    string::{String, ToString},
 };
-use ckb_contract_std::{ckb_constants::*, debug, syscalls};
+use ckb_contract_std::{ckb_constants::*, setup, syscalls};
 use godwoken_types::{packed::*, prelude::*};
 
-#[global_allocator]
-static HEAP: libc_alloc::LibCAllocator = libc_alloc::LibCAllocator;
-
-#[alloc_error_handler]
-fn oom_handler(_: core::alloc::Layout) -> ! {
-    syscalls::exit(Error::OutOfMemory as i8);
-    loop {}
-}
-
 #[no_mangle]
-fn contract_entry() -> isize {
-    match contract_main() {
-        Ok(_) => 0,
-        Err(err) => err as isize,
+fn main() -> i8 {
+    match contract_entry() {
+        Ok(()) => 0,
+        Err(err) => err as i8,
     }
 }
 
-#[panic_handler]
-fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
-    let mut s = String::new();
-    if let Some(p) = panic_info.payload().downcast_ref::<&str>() {
-        s.push_str(&format!("panic occurred: {:?}", p));
-    } else {
-        s.push_str(&format!("panic occurred"));
-    }
-    if let Some(m) = panic_info.message() {
-        s.push_str(&format!(" {:?}", m));
-    }
-    if let Some(location) = panic_info.location() {
-        s.push_str(&format!(
-            ", in file {}:{}",
-            location.file(),
-            location.line()
-        ));
-    } else {
-        s.push_str(&format!(", but can't get location information..."));
-    }
+setup!(main);
 
-    syscalls::debug(s);
-    syscalls::exit(Error::Panic as i8);
-    loop {}
-}
-
-fn contract_main() -> Result<(), Error> {
+fn contract_entry() -> Result<(), Error> {
     // try get input type_hash
     if let Ok(type_hash) =
         syscalls::load_cell_by_field(HASH_SIZE, 0, 0, Source::GroupInput, CellField::TypeHash)

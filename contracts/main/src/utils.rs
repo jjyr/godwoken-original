@@ -1,5 +1,5 @@
 use crate::constants::{Error, HASH_SIZE};
-use ckb_contract_std::{ckb_constants::*, debug, syscalls};
+use ckb_contract_std::{ckb_constants::*, syscalls};
 use core::mem::size_of;
 use godwoken_types::{bytes::Bytes, packed::*, prelude::*};
 

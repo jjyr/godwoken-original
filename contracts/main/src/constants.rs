@@ -10,6 +10,4 @@ pub enum Error {
     InvalidEntryPubkeyHash = -14,
     InvalidEntryNonce = -15,
     InvalidEntryBalance = -16,
-    Panic = -126,
-    OutOfMemory = -127,
 }

@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["jjy <jjyruby@gmail.com>"]
 edition = "2018"
 
-[lib]
-crate-type = ["staticlib"]
-
 [dependencies]
 godwoken-types = { path = "../../types", default-features = false }
-ckb-contract-std = { git = "https://github.com/jjyr/ckb-contract-std.git", branch = "master" }
+ckb-contract-std = "0.1.5-pre"
