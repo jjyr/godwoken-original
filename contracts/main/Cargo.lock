@@ -12,7 +12,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "ckb-contract-std"
-version = "0.1.5-pre"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "buddy-alloc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -22,7 +22,7 @@ dependencies = [
 name = "godwoken-main"
 version = "0.1.0"
 dependencies = [
- "ckb-contract-std 0.1.5-pre (registry+https://github.com/rust-lang/crates.io-index)",
+ "ckb-contract-std 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "godwoken-types 0.1.0-pre",
 ]
 
@@ -43,4 +43,4 @@ dependencies = [
 [metadata]
 "checksum buddy-alloc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "16220bbb33cb8861c373ae045ecc77f7faa1a4e964bb21cb8373d1079b0907cb"
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
-"checksum ckb-contract-std 0.1.5-pre (registry+https://github.com/rust-lang/crates.io-index)" = "34d0f91e907da0ee526d6ac622dac268be7cbbec504eed42e73a7ff1d16f1235"
+"checksum ckb-contract-std 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "68c50acfd8ea4efd818a1207133b297474f111b4af8ce69ca9fa26173bd65cca"

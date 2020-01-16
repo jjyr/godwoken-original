@@ -2,24 +2,24 @@
 # It is not intended for manual editing.
 [[package]]
 name = "buddy-alloc"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "ckb-contract-std"
-version = "0.1.4-pre"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "buddy-alloc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "buddy-alloc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "dummy-lock"
 version = "0.1.0"
 dependencies = [
- "ckb-contract-std 0.1.4-pre (registry+https://github.com/rust-lang/crates.io-index)",
+ "ckb-contract-std 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]
-"checksum buddy-alloc 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4e9f0d559023af2837fdc8ae308d55222bb4ec13655febf6cbdd16d382d4bff2"
-"checksum ckb-contract-std 0.1.4-pre (registry+https://github.com/rust-lang/crates.io-index)" = "adc68a2eb1012ea2a0c45c57ec7cae784c7455ac9d0887d7928698b8b0c7dab4"
+"checksum buddy-alloc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "16220bbb33cb8861c373ae045ecc77f7faa1a4e964bb21cb8373d1079b0907cb"
+"checksum ckb-contract-std 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "68c50acfd8ea4efd818a1207133b297474f111b4af8ce69ca9fa26173bd65cca"

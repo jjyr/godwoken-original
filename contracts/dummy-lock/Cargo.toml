@@ -5,4 +5,4 @@ authors = ["jjy <jjyruby@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-ckb-contract-std = "0.1.4-pre"
+ckb-contract-std = "0.1.1"

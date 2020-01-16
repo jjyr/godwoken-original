@@ -6,4 +6,4 @@ edition = "2018"
 
 [dependencies]
 godwoken-types = { path = "../../types", default-features = false }
-ckb-contract-std = "0.1.5-pre"
+ckb-contract-std = "0.1.1"
