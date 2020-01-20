@@ -25,10 +25,8 @@ mod constants;
 mod utils;
 
 use crate::constants::{Error, HASH_SIZE};
-use crate::utils::{check_output_type_hash, load_action};
-use alloc::{
-    format,
-};
+use crate::utils::{check_output_type_hash, load_action, load_global_state};
+use alloc::format;
 use ckb_contract_std::{ckb_constants::*, setup, syscalls};
 use godwoken_types::{packed::*, prelude::*};
 
@@ -52,10 +50,17 @@ fn contract_entry() -> Result<(), Error> {
         return check_output_type_hash(&type_hash);
     }
     // do output verification
-    let action = load_action().expect("load action");
+    let action = load_action()?;
+    let old_global_state = load_global_state(Source::Input)?;
+    let new_global_state = load_global_state(Source::Output)?;
     match action.as_reader().to_enum() {
         ActionUnionReader::Deposit(deposit) => {
-            crate::action::deposit::DepositVerifier::new(deposit).verify()?;
+            crate::action::deposit::DepositVerifier::new(
+                old_global_state.as_reader(),
+                new_global_state.as_reader(),
+                deposit,
+            )
+            .verify()?;
         }
         ActionUnionReader::Register(register) => {
             crate::action::register::RegisterVerifier::new(register).verify()?;

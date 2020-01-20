@@ -30,7 +30,10 @@ pub fn check_output_type_hash(type_hash: &[u8]) -> Result<(), Error> {
 
 pub fn load_action() -> Result<Action, Error> {
     let buf = syscalls::load_witness(BUF_LEN, 0, 0, Source::GroupOutput).expect("load witness");
-    let witness_args = WitnessArgs::new_unchecked(buf.into());
+    let witness_args = match WitnessArgsReader::verify(&buf, false) {
+        Ok(()) => WitnessArgs::new_unchecked(buf.into()),
+        Err(_) => return Err(Error::InvalidWitness),
+    };
     witness_args
         .output_type()
         .to_opt()
@@ -42,6 +45,16 @@ pub fn load_action() -> Result<Action, Error> {
                 Err(_) => Err(Error::InvalidWitness),
             }
         })
+}
+
+pub fn load_global_state(source: Source) -> Result<GlobalState, Error> {
+    const GLOBAL_STATE_SIZE: usize = 64;
+
+    let buf = syscalls::load_cell_data(GLOBAL_STATE_SIZE, 0, 0, source).expect("load global state");
+    match GlobalStateReader::verify(&buf, false) {
+        Ok(()) => Ok(GlobalState::new_unchecked(buf.into())),
+        Err(_) => Err(Error::InvalidGlobalState),
+    }
 }
 
 pub struct CapacityChange {
