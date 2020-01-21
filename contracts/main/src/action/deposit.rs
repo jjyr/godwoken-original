@@ -1,4 +1,4 @@
-use crate::{constants::Error, utils};
+use crate::{error::Error, utils};
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
 
@@ -54,12 +54,7 @@ impl<'a> DepositVerifier<'a> {
         // verify new_entry
         let new_entry = self.action.new_entry();
         let new_account_root = self.new_state.account_root().unpack();
-        verify_entry_state(
-            new_entry,
-            &new_account_root,
-            entries_count,
-            proof_items,
-        )?;
+        verify_entry_state(new_entry, &new_account_root, entries_count, proof_items)?;
         Ok(())
     }
 }

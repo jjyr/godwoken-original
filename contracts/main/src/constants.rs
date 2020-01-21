@@ -1,15 +1,5 @@
 pub const HASH_SIZE: usize = 32;
-
-#[derive(Debug)]
-#[repr(i8)]
-pub enum Error {
-    InvalidOutputTypeHash = -6,
-    InvalidWitness = -11,
-    IncorrectCapacity = -12,
-    InvalidEntryIndex = -13,
-    InvalidEntryPubkeyHash = -14,
-    InvalidEntryNonce = -15,
-    InvalidEntryBalance = -16,
-    InvalidGlobalState = -17,
-    InvalidMerkleProof = -18,
-}
+/// required shannons to create a new account
+pub const NEW_ACCOUNT_REQUIRED_BALANCE: u64 = 1000;
+/// required shannons for an aggregator
+pub const AGGREGATOR_REQUIRED_BALANCE: u64 = 2000;

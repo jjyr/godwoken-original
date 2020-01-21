@@ -1,4 +1,4 @@
-use crate::constants::Error;
+use crate::error::Error;
 use godwoken_types::{packed::*, prelude::*};
 
 pub struct SubmitBlockVerifier<'a>(SubmitBlockReader<'a>);

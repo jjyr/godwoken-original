@@ -1,9 +1,22 @@
-use crate::constants::{Error, HASH_SIZE};
+use crate::constants::{AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
+use crate::error::Error;
 use ckb_contract_std::{ckb_constants::*, syscalls};
 use core::mem::size_of;
 use godwoken_types::{bytes::Bytes, packed::*, prelude::*};
 
 const BUF_LEN: usize = 4096;
+
+pub fn check_aggregator<'a>(entry: &AccountEntryReader<'a>) -> Result<(), Error> {
+    if !entry.is_ag() {
+        return Err(Error::InvalidAggregator);
+    }
+
+    let balance: u64 = entry.balance().unpack();
+    if balance < AGGREGATOR_REQUIRED_BALANCE {
+        return Err(Error::InvalidAggregator);
+    }
+    Ok(())
+}
 
 /// check output type hash, make sure there is exactly one contract in output
 pub fn check_output_type_hash(type_hash: &[u8]) -> Result<(), Error> {

@@ -22,9 +22,11 @@
 /// 4. Send Tx
 mod action;
 mod constants;
+mod error;
 mod utils;
 
-use crate::constants::{Error, HASH_SIZE};
+use crate::constants::HASH_SIZE;
+use crate::error::Error;
 use crate::utils::{check_output_type_hash, load_action, load_global_state};
 use alloc::format;
 use ckb_contract_std::{ckb_constants::*, setup, syscalls};
@@ -63,7 +65,12 @@ fn contract_entry() -> Result<(), Error> {
             .verify()?;
         }
         ActionUnionReader::Register(register) => {
-            crate::action::register::RegisterVerifier::new(register).verify()?;
+            crate::action::register::RegisterVerifier::new(
+                old_global_state.as_reader(),
+                new_global_state.as_reader(),
+                register,
+            )
+            .verify()?;
         }
         ActionUnionReader::SubmitBlock(submit_block) => {
             crate::action::submit_block::SubmitBlockVerifier::new(submit_block).verify()?;

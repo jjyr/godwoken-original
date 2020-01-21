@@ -1,5 +1,8 @@
 mod common;
 mod hash;
 
-pub use common::{CapacityChange, load_global_state, load_action, check_output_type_hash, fetch_capacities};
-pub use hash::{new_blake2b, HashMerge, compute_account_root};
+pub use common::{
+    check_aggregator, check_output_type_hash, fetch_capacities, load_action, load_global_state,
+    CapacityChange,
+};
+pub use hash::{compute_account_root, new_blake2b, HashMerge};
