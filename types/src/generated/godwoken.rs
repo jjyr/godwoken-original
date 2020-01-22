@@ -2534,10 +2534,10 @@ impl ::core::fmt::Display for Action {
 impl ::core::default::Default for Action {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            0, 0, 0, 0, 101, 0, 0, 0, 20, 0, 0, 0, 57, 0, 0, 0, 89, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 89, 0, 0, 0, 16, 0, 0, 0, 53, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
         ];
         Action::new_unchecked(v.into())
     }
@@ -2859,7 +2859,6 @@ impl ::core::fmt::Display for Register {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "entry", self.entry())?;
         write!(f, ", {}: {}", "last_entry_hash", self.last_entry_hash())?;
-        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
         write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
@@ -2871,16 +2870,16 @@ impl ::core::fmt::Display for Register {
 impl ::core::default::Default for Register {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            101, 0, 0, 0, 20, 0, 0, 0, 57, 0, 0, 0, 89, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            89, 0, 0, 0, 16, 0, 0, 0, 53, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
         ];
         Register::new_unchecked(v.into())
     }
 }
 impl Register {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 3;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -2912,17 +2911,11 @@ impl Register {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn mmr_size(&self) -> Uint64 {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[2][..]) as usize;
-        let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Uint64::new_unchecked(self.0.slice(start, end))
-    }
     pub fn proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[3][..]) as usize;
+        let start = molecule::unpack_number(&offsets[2][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[4][..]) as usize;
+            let end = molecule::unpack_number(&offsets[3][..]) as usize;
             Byte32Vec::new_unchecked(self.0.slice(start, end))
         } else {
             Byte32Vec::new_unchecked(self.0.slice_from(start))
@@ -2957,7 +2950,6 @@ impl molecule::prelude::Entity for Register {
         Self::new_builder()
             .entry(self.entry())
             .last_entry_hash(self.last_entry_hash())
-            .mmr_size(self.mmr_size())
             .proof(self.proof())
     }
 }
@@ -2982,7 +2974,6 @@ impl<'r> ::core::fmt::Display for RegisterReader<'r> {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "entry", self.entry())?;
         write!(f, ", {}: {}", "last_entry_hash", self.last_entry_hash())?;
-        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
         write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
@@ -2992,7 +2983,7 @@ impl<'r> ::core::fmt::Display for RegisterReader<'r> {
     }
 }
 impl<'r> RegisterReader<'r> {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 3;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3024,17 +3015,11 @@ impl<'r> RegisterReader<'r> {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn mmr_size(&self) -> Uint64Reader<'r> {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[2][..]) as usize;
-        let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
-    }
     pub fn proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[3][..]) as usize;
+        let start = molecule::unpack_number(&offsets[2][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[4][..]) as usize;
+            let end = molecule::unpack_number(&offsets[3][..]) as usize;
             Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Byte32VecReader::new_unchecked(&self.as_slice()[start..])
@@ -3094,8 +3079,7 @@ impl<'r> molecule::prelude::Reader<'r> for RegisterReader<'r> {
         }
         AccountEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         Byte32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Ok(())
     }
 }
@@ -3103,21 +3087,16 @@ impl<'r> molecule::prelude::Reader<'r> for RegisterReader<'r> {
 pub struct RegisterBuilder {
     pub(crate) entry: AccountEntry,
     pub(crate) last_entry_hash: Byte32,
-    pub(crate) mmr_size: Uint64,
     pub(crate) proof: Byte32Vec,
 }
 impl RegisterBuilder {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 3;
     pub fn entry(mut self, v: AccountEntry) -> Self {
         self.entry = v;
         self
     }
     pub fn last_entry_hash(mut self, v: Byte32) -> Self {
         self.last_entry_hash = v;
-        self
-    }
-    pub fn mmr_size(mut self, v: Uint64) -> Self {
-        self.mmr_size = v;
         self
     }
     pub fn proof(mut self, v: Byte32Vec) -> Self {
@@ -3132,7 +3111,6 @@ impl molecule::prelude::Builder for RegisterBuilder {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.entry.as_slice().len()
             + self.last_entry_hash.as_slice().len()
-            + self.mmr_size.as_slice().len()
             + self.proof.as_slice().len()
     }
     fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
@@ -3143,8 +3121,6 @@ impl molecule::prelude::Builder for RegisterBuilder {
         offsets.push(total_size);
         total_size += self.last_entry_hash.as_slice().len();
         offsets.push(total_size);
-        total_size += self.mmr_size.as_slice().len();
-        offsets.push(total_size);
         total_size += self.proof.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
@@ -3152,7 +3128,6 @@ impl molecule::prelude::Builder for RegisterBuilder {
         }
         writer.write_all(self.entry.as_slice())?;
         writer.write_all(self.last_entry_hash.as_slice())?;
-        writer.write_all(self.mmr_size.as_slice())?;
         writer.write_all(self.proof.as_slice())?;
         Ok(())
     }
@@ -3185,7 +3160,6 @@ impl ::core::fmt::Display for Deposit {
         write!(f, "{}: {}", "old_entry", self.old_entry())?;
         write!(f, ", {}: {}", "new_entry", self.new_entry())?;
         write!(f, ", {}: {}", "count", self.count())?;
-        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
         write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
@@ -3197,17 +3171,16 @@ impl ::core::fmt::Display for Deposit {
 impl ::core::default::Default for Deposit {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            114, 0, 0, 0, 24, 0, 0, 0, 61, 0, 0, 0, 98, 0, 0, 0, 102, 0, 0, 0, 110, 0, 0, 0, 0, 0,
+            102, 0, 0, 0, 20, 0, 0, 0, 57, 0, 0, 0, 94, 0, 0, 0, 98, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         Deposit::new_unchecked(v.into())
     }
 }
 impl Deposit {
-    pub const FIELD_COUNT: usize = 5;
+    pub const FIELD_COUNT: usize = 4;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3245,17 +3218,11 @@ impl Deposit {
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
         Uint32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn mmr_size(&self) -> Uint64 {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[3][..]) as usize;
-        let end = molecule::unpack_number(&offsets[4][..]) as usize;
-        Uint64::new_unchecked(self.0.slice(start, end))
-    }
     pub fn proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let start = molecule::unpack_number(&offsets[3][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[5][..]) as usize;
+            let end = molecule::unpack_number(&offsets[4][..]) as usize;
             Byte32Vec::new_unchecked(self.0.slice(start, end))
         } else {
             Byte32Vec::new_unchecked(self.0.slice_from(start))
@@ -3291,7 +3258,6 @@ impl molecule::prelude::Entity for Deposit {
             .old_entry(self.old_entry())
             .new_entry(self.new_entry())
             .count(self.count())
-            .mmr_size(self.mmr_size())
             .proof(self.proof())
     }
 }
@@ -3317,7 +3283,6 @@ impl<'r> ::core::fmt::Display for DepositReader<'r> {
         write!(f, "{}: {}", "old_entry", self.old_entry())?;
         write!(f, ", {}: {}", "new_entry", self.new_entry())?;
         write!(f, ", {}: {}", "count", self.count())?;
-        write!(f, ", {}: {}", "mmr_size", self.mmr_size())?;
         write!(f, ", {}: {}", "proof", self.proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
@@ -3327,7 +3292,7 @@ impl<'r> ::core::fmt::Display for DepositReader<'r> {
     }
 }
 impl<'r> DepositReader<'r> {
-    pub const FIELD_COUNT: usize = 5;
+    pub const FIELD_COUNT: usize = 4;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3365,17 +3330,11 @@ impl<'r> DepositReader<'r> {
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
         Uint32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn mmr_size(&self) -> Uint64Reader<'r> {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[3][..]) as usize;
-        let end = molecule::unpack_number(&offsets[4][..]) as usize;
-        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
-    }
     pub fn proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let start = molecule::unpack_number(&offsets[3][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[5][..]) as usize;
+            let end = molecule::unpack_number(&offsets[4][..]) as usize;
             Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Byte32VecReader::new_unchecked(&self.as_slice()[start..])
@@ -3436,8 +3395,7 @@ impl<'r> molecule::prelude::Reader<'r> for DepositReader<'r> {
         AccountEntryReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         AccountEntryReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
         Uint32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
         Ok(())
     }
 }
@@ -3446,11 +3404,10 @@ pub struct DepositBuilder {
     pub(crate) old_entry: AccountEntry,
     pub(crate) new_entry: AccountEntry,
     pub(crate) count: Uint32,
-    pub(crate) mmr_size: Uint64,
     pub(crate) proof: Byte32Vec,
 }
 impl DepositBuilder {
-    pub const FIELD_COUNT: usize = 5;
+    pub const FIELD_COUNT: usize = 4;
     pub fn old_entry(mut self, v: AccountEntry) -> Self {
         self.old_entry = v;
         self
@@ -3461,10 +3418,6 @@ impl DepositBuilder {
     }
     pub fn count(mut self, v: Uint32) -> Self {
         self.count = v;
-        self
-    }
-    pub fn mmr_size(mut self, v: Uint64) -> Self {
-        self.mmr_size = v;
         self
     }
     pub fn proof(mut self, v: Byte32Vec) -> Self {
@@ -3480,7 +3433,6 @@ impl molecule::prelude::Builder for DepositBuilder {
             + self.old_entry.as_slice().len()
             + self.new_entry.as_slice().len()
             + self.count.as_slice().len()
-            + self.mmr_size.as_slice().len()
             + self.proof.as_slice().len()
     }
     fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
@@ -3493,8 +3445,6 @@ impl molecule::prelude::Builder for DepositBuilder {
         offsets.push(total_size);
         total_size += self.count.as_slice().len();
         offsets.push(total_size);
-        total_size += self.mmr_size.as_slice().len();
-        offsets.push(total_size);
         total_size += self.proof.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
@@ -3503,7 +3453,6 @@ impl molecule::prelude::Builder for DepositBuilder {
         writer.write_all(self.old_entry.as_slice())?;
         writer.write_all(self.new_entry.as_slice())?;
         writer.write_all(self.count.as_slice())?;
-        writer.write_all(self.mmr_size.as_slice())?;
         writer.write_all(self.proof.as_slice())?;
         Ok(())
     }

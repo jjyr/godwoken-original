@@ -188,12 +188,10 @@ fn test_account_register() {
                 Register::new_builder().entry(entry.clone()).build()
             }
             Some(last_entry) => {
-                let (mmr_size, proof) =
-                    context.gen_account_merkle_proof(last_entry.index().unpack());
+                let (_, proof) = context.gen_account_merkle_proof(last_entry.index().unpack());
                 Register::new_builder()
                     .entry(entry.clone())
                     .last_entry_hash(blake2b_256(last_entry.as_slice()).pack())
-                    .mmr_size(mmr_size.pack())
                     .proof(
                         proof
                             .into_iter()
@@ -251,12 +249,11 @@ fn test_deposit() {
             .balance((balance + deposit_amount).pack())
             .build()
     };
-    let (mmr_size, proof) = context.gen_account_merkle_proof(entry.index().unpack());
+    let (_, proof) = context.gen_account_merkle_proof(entry.index().unpack());
     let deposit = Deposit::new_builder()
         .old_entry(entry)
         .new_entry(new_entry.clone())
         .count(1u32.pack())
-        .mmr_size(mmr_size.pack())
         .proof(
             proof
                 .into_iter()

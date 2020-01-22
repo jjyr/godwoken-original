@@ -55,7 +55,6 @@ union Action {
 table Register {
     entry: AccountEntry,
     last_entry_hash: Byte32, // used for merkle proof
-    mmr_size: Uint64, // MMR size
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 
@@ -64,7 +63,6 @@ table Deposit {
     old_entry: AccountEntry, // AccountEntry contains old state.
     new_entry: AccountEntry, // AccountEntry contains new state.
     count: Uint32, // count of entries, do not includes new_entry
-    mmr_size: Uint64, // MMR size
     proof: Byte32Vec, // merkle proof of old state address entry
 }
 

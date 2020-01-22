@@ -26,7 +26,7 @@ dependencies = [
 [[package]]
 name = "ckb-merkle-mountain-range"
 version = "0.1.0"
-source = "git+https://github.com/nervosnetwork/merkle-mountain-range.git#55a157058ac61b33b1da68f3293958de51c41c5b"
+source = "git+https://github.com/nervosnetwork/merkle-mountain-range.git#aad0eddc946de80aa67fe7096c1bebb5677a0d1a"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
