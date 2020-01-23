@@ -7,7 +7,7 @@ use godwoken_types::{bytes::Bytes, packed::*, prelude::*};
 const BUF_LEN: usize = 4096;
 
 pub fn check_aggregator<'a>(entry: &AccountEntryReader<'a>) -> Result<(), Error> {
-    if !entry.is_ag() {
+    if !entry.is_aggregator() {
         return Err(Error::InvalidAggregator);
     }
 

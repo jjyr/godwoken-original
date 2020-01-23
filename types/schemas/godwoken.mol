@@ -21,26 +21,26 @@ struct AccountEntry {
     pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
     nonce: Uint32, // nonce
     balance: Uint64, // balance
-    is_aggregator: byte, // a flag to indicates account is a aggregator
+    is_ag: byte, // a flag to indicates account is a aggregator
 }
 
-struct Tx {
-    from_index: Uint32,
-    to_index: Uint32,
-    amount: Uint64, // amount of shannons
-    fee: Uint64, // tx fee
+table Tx {
+    account_index: Uint32,
     nonce: Uint32, // nonce
-    signature: Byte65, // user signature
+    args: Bytes, // args
+    fee: Uint32, // fee
+    witness: Bytes, // tx witness
 }
 
 vector Txs <Tx>;
 
-struct AggregatorBlock {
+/* Aggregated block */
+struct AgBlock {
     number: Uint32, // block number
     tx_root: Byte32,
     old_account_root: Byte32,
     new_account_root: Byte32,
-    signature: Byte65, // Aggregator's signature
+    ag_sig: Byte65, // Aggregator's signature
 }
 
 /* contract allowed actions */
@@ -69,12 +69,12 @@ table Deposit {
 /* Submit aggregator block */
 table SubmitBlock {
     txs: Txs,
-    block: AggregatorBlock,
+    block: AgBlock,
     last_block_hash: Byte32, // last blocks hash
     block_mmr_size: Uint64, // MMR size
     block_proof: Byte32Vec, // merkle proof of block_root
-    aggregator: AccountEntry, // aggregator's account entry
-    aggregator_mmr_size: Uint64, // MMR size
-    aggregator_proof: Byte32Vec, // merkle proof of aggregator_root
+    ag_entry: AccountEntry, // aggregator's account entry
+    account_mmr_size: Uint64, // MMR size
+    account_proof: Byte32Vec, // merkle proof of aggregator_root
     account_count: Uint32,
 }

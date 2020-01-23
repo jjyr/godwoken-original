@@ -24,7 +24,7 @@ impl<'a> RegisterVerifier<'a> {
     /// verify entry state
     fn verify_entry(&self, deposit_capacity: u64) -> Result<(), Error> {
         let entry = self.action.entry();
-        if entry.is_ag() {
+        if entry.is_aggregator() {
             utils::check_aggregator(&entry)?;
         }
         let nonce: u32 = entry.nonce().unpack();

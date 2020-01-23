@@ -5,9 +5,10 @@ use ckb_contract_tool::{
     Context, TxBuilder,
 };
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
+use godwoken_types::bytes::Bytes;
 use godwoken_types::packed::{
-    AccountEntry, Action, AggregatorBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx,
-    Txs, WitnessArgs,
+    AccountEntry, Action, AgBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx, Txs,
+    WitnessArgs,
 };
 use godwoken_types::prelude::*;
 use rand::{thread_rng, Rng};
@@ -90,7 +91,7 @@ impl GlobalStateContext {
         (proof.mmr_size(), proof.proof_items().to_owned())
     }
 
-    fn submit_block(&mut self, block: AggregatorBlock, mut count: u32) {
+    fn submit_block(&mut self, block: AgBlock, mut count: u32) {
         let block_hash = blake2b_256(block.as_slice());
         self.block_mmr.push(block_hash).expect("mmr push");
         let block_mmr_root = self.block_mmr.get_root().expect("mmr root");
@@ -110,9 +111,23 @@ impl GlobalStateContext {
     }
 
     fn apply_tx(&mut self, tx: &Tx, fee_to: u32) {
-        let tx_fee: u64 = tx.fee().unpack();
-        let amount: u64 = tx.amount().unpack();
-        let from_account = &self.account_entries[Unpack::<u32>::unpack(&tx.from_index()) as usize];
+        let tx_fee: u64 = {
+            let tx_fee: u32 = tx.fee().unpack();
+            tx_fee.into()
+        };
+        let args: Bytes = tx.args().unpack();
+        let to_index: u64 = {
+            let mut buf = [0u8; 4];
+            buf.copy_from_slice(&args[..4]);
+            u32::from_le_bytes(buf).into()
+        };
+        let amount: u64 = {
+            let mut buf = [0u8; 4];
+            buf.copy_from_slice(&args[4..]);
+            u32::from_le_bytes(buf).into()
+        };
+        let from_account =
+            &self.account_entries[Unpack::<u32>::unpack(&tx.account_index()) as usize];
         let from_account = from_account
             .clone()
             .as_builder()
@@ -125,7 +140,7 @@ impl GlobalStateContext {
                 (nonce + 1).pack()
             })
             .build();
-        let to_account = &self.account_entries[Unpack::<u32>::unpack(&tx.to_index()) as usize];
+        let to_account = &self.account_entries[to_index as usize];
         let to_account = to_account
             .clone()
             .as_builder()
@@ -172,7 +187,7 @@ fn test_account_register() {
             AccountEntry::new_builder()
                 .index(index.pack())
                 .pubkey_hash(Byte20::new_unchecked(pubkey.to_vec().into()))
-                .is_aggregator({
+                .is_ag({
                     if is_aggregator {
                         1.into()
                     } else {
@@ -307,23 +322,29 @@ fn test_submit_block() {
     let entry_ag = AccountEntry::new_builder()
         .balance(AGGREGATOR_REQUIRED_BALANCE.pack())
         .index(2u32.pack())
-        .is_aggregator(1u8.into())
+        .is_ag(1u8.into())
         .build();
     context.push_account(entry_a.clone());
     context.push_account(entry_b.clone());
     context.push_account(entry_ag.clone());
     // aggregator proof
-    let (ag_mmr_size, ag_proof) = context.gen_account_merkle_proof(entry_ag.index().unpack());
+    let (account_mmr_size, account_proof) =
+        context.gen_account_merkle_proof(entry_ag.index().unpack());
 
     let global_state = context.get_global_state();
     let old_account_root = global_state.account_root();
 
     let transfer_tx = Tx::new_builder()
-        .from_index(entry_a.index())
-        .to_index(entry_b.index())
-        .amount(15u64.pack())
-        .fee(3u64.pack())
+        .account_index(entry_a.index())
+        .fee(3u32.pack())
         .nonce(1u32.pack())
+        .args({
+            let mut args = vec![0u8; 8];
+            let to_index: u32 = entry_b.index().unpack();
+            args[..4].copy_from_slice(&to_index.to_le_bytes());
+            args[4..].copy_from_slice(&15u32.to_le_bytes());
+            args.pack()
+        })
         .build();
 
     context.apply_tx(&transfer_tx, entry_ag.index().unpack());
@@ -335,7 +356,7 @@ fn test_submit_block() {
     // send money
     let tx_root = merkle_root(&[blake2b_256(transfer_tx.as_slice()).pack()]);
 
-    let block = AggregatorBlock::new_builder()
+    let block = AgBlock::new_builder()
         .number(0u32.pack())
         .tx_root(tx_root)
         .old_account_root(old_account_root)
@@ -356,15 +377,15 @@ fn test_submit_block() {
                     .pack(),
             )
             .block_mmr_size(block_mmr_size.pack())
-            .aggregator(entry_ag)
-            .aggregator_proof(
-                ag_proof
+            .ag_entry(entry_ag)
+            .account_proof(
+                account_proof
                     .into_iter()
                     .map(|i| i.pack())
                     .collect::<Vec<_>>()
                     .pack(),
             )
-            .aggregator_mmr_size(ag_mmr_size.pack())
+            .account_mmr_size(account_mmr_size.pack())
             .account_count(3u32.pack())
             .build()
     };
