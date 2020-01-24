@@ -37,7 +37,7 @@ pub fn compute_account_root(
     let proof = MerkleProof::<_, HashMerge>::new(mmr_size, proof_items);
     let root = proof
         .calculate_root(entry_pos, entry_hash)
-        .map_err(|_| Error::InvalidMerkleProof)?;
+        .map_err(|_| Error::InvalidAccountMerkleProof)?;
     // calculate account_root: H(count | account entries root)
     let mut account_root = [0u8; 32];
     let mut hasher = new_blake2b();

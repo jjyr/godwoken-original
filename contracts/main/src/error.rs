@@ -9,6 +9,7 @@ pub enum Error {
     InvalidEntryNonce = -15,
     InvalidEntryBalance = -16,
     InvalidGlobalState = -17,
-    InvalidMerkleProof = -18,
-    InvalidAggregator = -19,
+    InvalidAccountMerkleProof = -18,
+    InvalidBlockMerkleProof = -19,
+    InvalidAggregator = -20,
 }

@@ -73,7 +73,12 @@ fn contract_entry() -> Result<(), Error> {
             .verify()?;
         }
         ActionUnionReader::SubmitBlock(submit_block) => {
-            crate::action::submit_block::SubmitBlockVerifier::new(submit_block).verify()?;
+            crate::action::submit_block::SubmitBlockVerifier::new(
+                old_global_state.as_reader(),
+                new_global_state.as_reader(),
+                submit_block,
+            )
+            .verify()?;
         }
     }
     Ok(())

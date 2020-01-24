@@ -57,7 +57,7 @@ impl<'a> RegisterVerifier<'a> {
         // verify old global state
         if new_index == 0 {
             if old_account_root != [0u8; 32] || proof_items.len() != 0 {
-                return Err(Error::InvalidMerkleProof);
+                return Err(Error::InvalidAccountMerkleProof);
             }
         } else {
             let old_entries_count = new_index;
@@ -68,7 +68,7 @@ impl<'a> RegisterVerifier<'a> {
                 proof_items.clone(),
             )?;
             if old_account_root != calculated_root {
-                return Err(Error::InvalidMerkleProof);
+                return Err(Error::InvalidAccountMerkleProof);
             }
         }
 
@@ -92,7 +92,7 @@ impl<'a> RegisterVerifier<'a> {
 
         let new_account_root = self.new_state.account_root().unpack();
         if new_account_root != calculated_root {
-            return Err(Error::InvalidMerkleProof);
+            return Err(Error::InvalidAccountMerkleProof);
         }
 
         Ok(())
@@ -141,7 +141,7 @@ pub fn compute_new_account_root(
                 new_entry_hash,
                 new_mmr_size,
             )
-            .map_err(|_| Error::InvalidMerkleProof)?
+            .map_err(|_| Error::InvalidAccountMerkleProof)?
     };
     // calculate account_root: H(count | account entries root)
     let mut account_root = [0u8; 32];

@@ -107,7 +107,7 @@ fn verify_entry_state<'a>(
     let calculated_account_root =
         utils::compute_account_root(entry_hash, entry_index, entries_count, proof_items)?;
     if &calculated_account_root != account_root {
-        return Err(Error::InvalidMerkleProof);
+        return Err(Error::InvalidAccountMerkleProof);
     }
     Ok(())
 }
