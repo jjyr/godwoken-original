@@ -3679,7 +3679,6 @@ impl ::core::fmt::Display for SubmitBlock {
         write!(f, ", {}: {}", "block", self.block())?;
         write!(f, ", {}: {}", "last_block_hash", self.last_block_hash())?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(f, ", {}: {}", "block_mmr_size", self.block_mmr_size())?;
         write!(f, ", {}: {}", "ag_entry", self.ag_entry())?;
         write!(f, ", {}: {}", "account_proof", self.account_proof())?;
         write!(f, ", {}: {}", "account_count", self.account_count())?;
@@ -3693,8 +3692,8 @@ impl ::core::fmt::Display for SubmitBlock {
 impl ::core::default::Default for SubmitBlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            38, 1, 0, 0, 36, 0, 0, 0, 40, 0, 0, 0, 205, 0, 0, 0, 237, 0, 0, 0, 241, 0, 0, 0, 249,
-            0, 0, 0, 30, 1, 0, 0, 34, 1, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            26, 1, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 201, 0, 0, 0, 233, 0, 0, 0, 237, 0, 0, 0, 18, 1,
+            0, 0, 22, 1, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -3702,14 +3701,13 @@ impl ::core::default::Default for SubmitBlock {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         SubmitBlock::new_unchecked(v.into())
     }
 }
 impl SubmitBlock {
-    pub const FIELD_COUNT: usize = 8;
+    pub const FIELD_COUNT: usize = 7;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3753,29 +3751,23 @@ impl SubmitBlock {
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
-    pub fn block_mmr_size(&self) -> Uint64 {
+    pub fn ag_entry(&self) -> AccountEntry {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[4][..]) as usize;
         let end = molecule::unpack_number(&offsets[5][..]) as usize;
-        Uint64::new_unchecked(self.0.slice(start, end))
-    }
-    pub fn ag_entry(&self) -> AccountEntry {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[5][..]) as usize;
-        let end = molecule::unpack_number(&offsets[6][..]) as usize;
         AccountEntry::new_unchecked(self.0.slice(start, end))
     }
     pub fn account_proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[6][..]) as usize;
-        let end = molecule::unpack_number(&offsets[7][..]) as usize;
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
+        let end = molecule::unpack_number(&offsets[6][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
     pub fn account_count(&self) -> Uint32 {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[7][..]) as usize;
+        let start = molecule::unpack_number(&offsets[6][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[8][..]) as usize;
+            let end = molecule::unpack_number(&offsets[7][..]) as usize;
             Uint32::new_unchecked(self.0.slice(start, end))
         } else {
             Uint32::new_unchecked(self.0.slice_from(start))
@@ -3812,7 +3804,6 @@ impl molecule::prelude::Entity for SubmitBlock {
             .block(self.block())
             .last_block_hash(self.last_block_hash())
             .block_proof(self.block_proof())
-            .block_mmr_size(self.block_mmr_size())
             .ag_entry(self.ag_entry())
             .account_proof(self.account_proof())
             .account_count(self.account_count())
@@ -3841,7 +3832,6 @@ impl<'r> ::core::fmt::Display for SubmitBlockReader<'r> {
         write!(f, ", {}: {}", "block", self.block())?;
         write!(f, ", {}: {}", "last_block_hash", self.last_block_hash())?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(f, ", {}: {}", "block_mmr_size", self.block_mmr_size())?;
         write!(f, ", {}: {}", "ag_entry", self.ag_entry())?;
         write!(f, ", {}: {}", "account_proof", self.account_proof())?;
         write!(f, ", {}: {}", "account_count", self.account_count())?;
@@ -3853,7 +3843,7 @@ impl<'r> ::core::fmt::Display for SubmitBlockReader<'r> {
     }
 }
 impl<'r> SubmitBlockReader<'r> {
-    pub const FIELD_COUNT: usize = 8;
+    pub const FIELD_COUNT: usize = 7;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3897,29 +3887,23 @@ impl<'r> SubmitBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn block_mmr_size(&self) -> Uint64Reader<'r> {
+    pub fn ag_entry(&self) -> AccountEntryReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[4][..]) as usize;
         let end = molecule::unpack_number(&offsets[5][..]) as usize;
-        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
-    }
-    pub fn ag_entry(&self) -> AccountEntryReader<'r> {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[5][..]) as usize;
-        let end = molecule::unpack_number(&offsets[6][..]) as usize;
         AccountEntryReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn account_proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[6][..]) as usize;
-        let end = molecule::unpack_number(&offsets[7][..]) as usize;
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
+        let end = molecule::unpack_number(&offsets[6][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn account_count(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[7][..]) as usize;
+        let start = molecule::unpack_number(&offsets[6][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[8][..]) as usize;
+            let end = molecule::unpack_number(&offsets[7][..]) as usize;
             Uint32Reader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Uint32Reader::new_unchecked(&self.as_slice()[start..])
@@ -3981,10 +3965,9 @@ impl<'r> molecule::prelude::Reader<'r> for SubmitBlockReader<'r> {
         AgBlockReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
         Byte32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
-        AccountEntryReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
+        AccountEntryReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
         Ok(())
     }
 }
@@ -3994,13 +3977,12 @@ pub struct SubmitBlockBuilder {
     pub(crate) block: AgBlock,
     pub(crate) last_block_hash: Byte32,
     pub(crate) block_proof: Byte32Vec,
-    pub(crate) block_mmr_size: Uint64,
     pub(crate) ag_entry: AccountEntry,
     pub(crate) account_proof: Byte32Vec,
     pub(crate) account_count: Uint32,
 }
 impl SubmitBlockBuilder {
-    pub const FIELD_COUNT: usize = 8;
+    pub const FIELD_COUNT: usize = 7;
     pub fn txs(mut self, v: Txs) -> Self {
         self.txs = v;
         self
@@ -4015,10 +3997,6 @@ impl SubmitBlockBuilder {
     }
     pub fn block_proof(mut self, v: Byte32Vec) -> Self {
         self.block_proof = v;
-        self
-    }
-    pub fn block_mmr_size(mut self, v: Uint64) -> Self {
-        self.block_mmr_size = v;
         self
     }
     pub fn ag_entry(mut self, v: AccountEntry) -> Self {
@@ -4043,7 +4021,6 @@ impl molecule::prelude::Builder for SubmitBlockBuilder {
             + self.block.as_slice().len()
             + self.last_block_hash.as_slice().len()
             + self.block_proof.as_slice().len()
-            + self.block_mmr_size.as_slice().len()
             + self.ag_entry.as_slice().len()
             + self.account_proof.as_slice().len()
             + self.account_count.as_slice().len()
@@ -4060,8 +4037,6 @@ impl molecule::prelude::Builder for SubmitBlockBuilder {
         offsets.push(total_size);
         total_size += self.block_proof.as_slice().len();
         offsets.push(total_size);
-        total_size += self.block_mmr_size.as_slice().len();
-        offsets.push(total_size);
         total_size += self.ag_entry.as_slice().len();
         offsets.push(total_size);
         total_size += self.account_proof.as_slice().len();
@@ -4075,7 +4050,6 @@ impl molecule::prelude::Builder for SubmitBlockBuilder {
         writer.write_all(self.block.as_slice())?;
         writer.write_all(self.last_block_hash.as_slice())?;
         writer.write_all(self.block_proof.as_slice())?;
-        writer.write_all(self.block_mmr_size.as_slice())?;
         writer.write_all(self.ag_entry.as_slice())?;
         writer.write_all(self.account_proof.as_slice())?;
         writer.write_all(self.account_count.as_slice())?;

@@ -10,5 +10,8 @@ pub use common::{
 };
 pub use hash::new_blake2b;
 pub use merkle_tree::{merkle_root, CBMT};
-pub use mmr::{compute_account_root, HashMerge};
+pub use mmr::{
+    compute_account_root, compute_block_root, compute_new_account_root, compute_new_block_root,
+    HashMerge,
+};
 pub use signature::verify_ag_signature;

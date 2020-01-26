@@ -91,11 +91,10 @@ impl GlobalStateContext {
         (proof.mmr_size(), proof.proof_items().to_owned())
     }
 
-    fn submit_block(&mut self, block: AgBlock, mut count: u32) {
+    fn submit_block(&mut self, block: AgBlock, count: u32) {
         let block_hash = blake2b_256(block.as_slice());
         self.block_mmr.push(block_hash).expect("mmr push");
         let block_mmr_root = self.block_mmr.get_root().expect("mmr root");
-        count += 1;
         let mut hasher = new_blake2b();
         hasher.update(&count.to_le_bytes());
         hasher.update(&block_mmr_root);
@@ -363,7 +362,7 @@ fn test_submit_block() {
         .new_account_root(new_account_root.pack())
         .build();
 
-    let (block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
+    let (_block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
     let submit_block = {
         let txs = Txs::new_builder().set(vec![transfer_tx]).build();
         SubmitBlock::new_builder()
@@ -376,7 +375,6 @@ fn test_submit_block() {
                     .collect::<Vec<_>>()
                     .pack(),
             )
-            .block_mmr_size(block_mmr_size.pack())
             .ag_entry(entry_ag)
             .account_proof(
                 account_proof
@@ -391,7 +389,7 @@ fn test_submit_block() {
     let action = Action::new_builder().set(submit_block).build();
 
     // submit block
-    context.submit_block(block, 0);
+    context.submit_block(block, 1);
     let new_global_state = context.get_global_state();
 
     // update tx witness

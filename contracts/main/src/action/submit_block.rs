@@ -81,6 +81,15 @@ impl<'a> SubmitBlockVerifier<'a> {
     }
 
     fn check_block(&self) -> Result<(), Error> {
+        let block = self.action.block();
+        // verify block account_root
+        if block.old_account_root().as_slice() != self.old_state.account_root().as_slice() {
+            return Err(Error::InvalidAccountRoot);
+        }
+        if block.new_account_root().as_slice() != self.new_state.account_root().as_slice() {
+            return Err(Error::InvalidAccountRoot);
+        }
+        // verify tx root
         let tx_hashes: Vec<[u8; 32]> = self
             .action
             .txs()
@@ -102,6 +111,52 @@ impl<'a> SubmitBlockVerifier<'a> {
     }
 
     fn check_state_transition(&self) -> Result<(), Error> {
+        // verify old state merkle proof
+        let block = self.action.block();
+        let block_number: u32 = block.number().unpack();
+        let block_proof: Vec<[u8; 32]> = self
+            .action
+            .block_proof()
+            .iter()
+            .map(|item| item.unpack())
+            .collect();
+        let last_block_hash = self.action.last_block_hash().unpack();
+        let old_block_root = self.old_state.block_root().unpack();
+        if block_number == 0 {
+            if old_block_root != [0u8; 32] || block_proof.len() != 0 {
+                return Err(Error::InvalidAccountMerkleProof);
+            }
+        } else {
+            let calculated_root = utils::compute_block_root(
+                last_block_hash,
+                block_number - 1,
+                block_number + 1,
+                block_proof.clone(),
+            )?;
+            if old_block_root != calculated_root {
+                return Err(Error::InvalidBlockMerkleProof);
+            }
+        }
+        // verify new state merkle proof
+        let block_hash = {
+            let mut hasher = utils::new_blake2b();
+            hasher.update(block.as_slice());
+            let mut hash = [0u8; 32];
+            hasher.finalize(&mut hash);
+            hash
+        };
+        let new_block_root = self.new_state.block_root().unpack();
+        let calculated_root = utils::compute_new_block_root(
+            last_block_hash,
+            block_number - 1,
+            block_hash,
+            block_number,
+            block_number + 1,
+            block_proof,
+        )?;
+        if new_block_root != calculated_root {
+            return Err(Error::InvalidBlockMerkleProof);
+        }
         Ok(())
     }
 

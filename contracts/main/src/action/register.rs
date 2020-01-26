@@ -81,7 +81,7 @@ impl<'a> RegisterVerifier<'a> {
             hash
         };
 
-        let calculated_root = compute_new_account_root(
+        let calculated_root = utils::compute_new_account_root(
             last_entry_hash,
             last_index,
             new_entry_hash,
@@ -113,41 +113,4 @@ fn deposit_capacity() -> Result<u64, Error> {
         .output
         .checked_sub(capacities.input)
         .ok_or(Error::IncorrectCapacity)
-}
-
-/// Compute new account root from merkle proof
-pub fn compute_new_account_root(
-    entry_hash: [u8; 32],
-    entry_index: u32,
-    new_entry_hash: [u8; 32],
-    new_entry_index: u32,
-    entries_count: u32,
-    proof_items: Vec<[u8; 32]>,
-) -> Result<[u8; 32], Error> {
-    use ckb_merkle_mountain_range::{leaf_index_to_mmr_size, leaf_index_to_pos, MerkleProof};
-    let root = if new_entry_index == 0 {
-        new_entry_hash
-    } else {
-        let mmr_size = leaf_index_to_mmr_size((entries_count - 1) as u64);
-        let new_mmr_size = leaf_index_to_mmr_size(new_entry_index as u64);
-        let entry_pos = leaf_index_to_pos(entry_index as u64);
-        let new_entry_pos = leaf_index_to_pos(new_entry_index as u64);
-        let proof = MerkleProof::<_, utils::HashMerge>::new(mmr_size, proof_items);
-        proof
-            .calculate_root_with_new_leaf(
-                entry_pos,
-                entry_hash,
-                new_entry_pos,
-                new_entry_hash,
-                new_mmr_size,
-            )
-            .map_err(|_| Error::InvalidAccountMerkleProof)?
-    };
-    // calculate account_root: H(count | account entries root)
-    let mut account_root = [0u8; 32];
-    let mut hasher = utils::new_blake2b();
-    hasher.update(&entries_count.to_le_bytes());
-    hasher.update(&root);
-    hasher.finalize(&mut account_root);
-    Ok(account_root)
 }
