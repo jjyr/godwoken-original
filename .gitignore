@@ -1,8 +1,12 @@
 # C files
 *.gch
 *.o
-contract/binary/*
-!contract/binary/.keep
+contracts/binaries/*
+!contracts/binaries/.keep
+contracts-test/binary/
 
 # Rust files
 target/
+
+# GDB
+.gdb_history

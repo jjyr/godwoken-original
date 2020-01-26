@@ -1,19 +1,16 @@
-use super::utils::{build_resolved_tx, ContractCallTxBuilder};
-use super::{DummyDataLoader, MAIN_CONTRACT_BIN, MAX_CYCLES};
-use ckb_error::Error as CKBError;
-use ckb_hash::{blake2b_256, new_blake2b};
+use super::{types_utils::merkle_root, MAX_CYCLES};
+use super::{DUMMY_LOCK_BIN, MAIN_CONTRACT_BIN};
+use ckb_contract_tool::{
+    ckb_hash::{blake2b_256, new_blake2b},
+    Context, TxBuilder,
+};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
-use ckb_script::TransactionScriptsVerifier;
-use ckb_types::{
-    core::{Cycle, TransactionView},
-    packed::WitnessArgs,
-    prelude::*,
-    utilities::merkle_root,
-};
+use godwoken_types::bytes::Bytes;
 use godwoken_types::packed::{
-    AccountEntry, Action, AggregatorBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx,
-    Txs,
+    AccountEntry, Action, AgBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx, Txs,
+    WitnessArgs,
 };
+use godwoken_types::prelude::*;
 use rand::{thread_rng, Rng};
 
 const AGGREGATOR_REQUIRED_BALANCE: u64 = 2000;
@@ -94,11 +91,10 @@ impl GlobalStateContext {
         (proof.mmr_size(), proof.proof_items().to_owned())
     }
 
-    fn submit_block(&mut self, block: AggregatorBlock, mut count: u32) {
+    fn submit_block(&mut self, block: AgBlock, count: u32) {
         let block_hash = blake2b_256(block.as_slice());
         self.block_mmr.push(block_hash).expect("mmr push");
         let block_mmr_root = self.block_mmr.get_root().expect("mmr root");
-        count += 1;
         let mut hasher = new_blake2b();
         hasher.update(&count.to_le_bytes());
         hasher.update(&block_mmr_root);
@@ -114,9 +110,23 @@ impl GlobalStateContext {
     }
 
     fn apply_tx(&mut self, tx: &Tx, fee_to: u32) {
-        let tx_fee: u64 = tx.fee().unpack();
-        let amount: u64 = tx.amount().unpack();
-        let from_account = &self.account_entries[Unpack::<u32>::unpack(&tx.from_index()) as usize];
+        let tx_fee: u64 = {
+            let tx_fee: u32 = tx.fee().unpack();
+            tx_fee.into()
+        };
+        let args: Bytes = tx.args().unpack();
+        let to_index: u64 = {
+            let mut buf = [0u8; 4];
+            buf.copy_from_slice(&args[..4]);
+            u32::from_le_bytes(buf).into()
+        };
+        let amount: u64 = {
+            let mut buf = [0u8; 4];
+            buf.copy_from_slice(&args[4..]);
+            u32::from_le_bytes(buf).into()
+        };
+        let from_account =
+            &self.account_entries[Unpack::<u32>::unpack(&tx.account_index()) as usize];
         let from_account = from_account
             .clone()
             .as_builder()
@@ -129,7 +139,7 @@ impl GlobalStateContext {
                 (nonce + 1).pack()
             })
             .build();
-        let to_account = &self.account_entries[Unpack::<u32>::unpack(&tx.to_index()) as usize];
+        let to_account = &self.account_entries[to_index as usize];
         let to_account = to_account
             .clone()
             .as_builder()
@@ -153,24 +163,14 @@ impl GlobalStateContext {
     }
 }
 
-fn verify_tx(data_loader: &DummyDataLoader, tx: &TransactionView) -> Result<Cycle, CKBError> {
-    let resolved_tx = build_resolved_tx(data_loader, tx);
-    let mut verifier = TransactionScriptsVerifier::new(&resolved_tx, data_loader);
-    verifier.set_debug_printer(|_id, msg| {
-        println!("[contract debug] {}", msg);
-    });
-    verifier.verify(MAX_CYCLES)
-}
-
 #[test]
 fn test_account_register() {
-    let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
     let global_state = context.get_global_state();
     // insert few entries
     let mut last_entry: Option<AccountEntry> = None;
     let mut global_state = global_state;
-    let mut contract_amount = 0;
+    let mut original_amount = 0;
     for index in 0u32..=5u32 {
         let is_aggregator = index < 2;
         let deposit_amount = if is_aggregator {
@@ -178,13 +178,7 @@ fn test_account_register() {
         } else {
             NEW_ACCOUNT_REQUIRED_BALANCE
         };
-        let tx = ContractCallTxBuilder::default()
-            .type_bin(MAIN_CONTRACT_BIN.clone())
-            .previous_output_data(global_state.as_bytes())
-            .input_capacity(contract_amount)
-            .output_capacity(contract_amount + deposit_amount)
-            .build(&mut data_loader);
-        contract_amount += deposit_amount;
+        original_amount += deposit_amount;
         let entry = {
             let mut pubkey = [0u8; 20];
             let mut rng = thread_rng();
@@ -192,7 +186,7 @@ fn test_account_register() {
             AccountEntry::new_builder()
                 .index(index.pack())
                 .pubkey_hash(Byte20::new_unchecked(pubkey.to_vec().into()))
-                .is_aggregator({
+                .is_ag({
                     if is_aggregator {
                         1.into()
                     } else {
@@ -208,12 +202,10 @@ fn test_account_register() {
                 Register::new_builder().entry(entry.clone()).build()
             }
             Some(last_entry) => {
-                let (mmr_size, proof) =
-                    context.gen_account_merkle_proof(last_entry.index().unpack());
+                let (_, proof) = context.gen_account_merkle_proof(last_entry.index().unpack());
                 Register::new_builder()
                     .entry(entry.clone())
                     .last_entry_hash(blake2b_256(last_entry.as_slice()).pack())
-                    .mmr_size(mmr_size.pack())
                     .proof(
                         proof
                             .into_iter()
@@ -230,12 +222,22 @@ fn test_account_register() {
         let witness = WitnessArgs::new_builder()
             .output_type(Some(action.as_bytes()).pack())
             .build();
-        let tx = tx
-            .as_advanced_builder()
-            .witnesses(vec![witness.as_bytes().pack()].pack())
-            .set_outputs_data(vec![new_global_state.as_bytes().pack()])
-            .build();
-        verify_tx(&data_loader, &tx).expect("pass verification");
+        let contract_bin = MAIN_CONTRACT_BIN.to_owned();
+        let mut context = Context::default();
+        context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
+        context.deploy_contract(contract_bin.clone());
+        let tx = TxBuilder::default()
+            .lock_bin(DUMMY_LOCK_BIN.to_owned())
+            .type_bin(contract_bin)
+            .previous_output_data(global_state.as_slice().into())
+            .input_capacity(original_amount)
+            .output_capacity(original_amount + deposit_amount)
+            .witnesses(vec![witness.as_slice().into()])
+            .outputs_data(vec![new_global_state.as_slice().into()])
+            .inject_and_build(&mut context)
+            .expect("build tx");
+        let verify_result = context.verify_tx(&tx, MAX_CYCLES);
+        verify_result.expect("pass verification");
         last_entry = Some(entry);
         global_state = new_global_state;
     }
@@ -243,7 +245,6 @@ fn test_account_register() {
 
 #[test]
 fn test_deposit() {
-    let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
     // prepare a account entry
     let entry = AccountEntry::new_builder().build();
@@ -254,12 +255,6 @@ fn test_deposit() {
     let deposit_amount = 42u64;
 
     // deposit money
-    let tx = ContractCallTxBuilder::default()
-        .type_bin(MAIN_CONTRACT_BIN.clone())
-        .previous_output_data(global_state.as_bytes())
-        .input_capacity(original_amount)
-        .output_capacity(original_amount + deposit_amount)
-        .build(&mut data_loader);
     let new_entry = {
         let balance: u64 = entry.balance().unpack();
         entry
@@ -268,12 +263,11 @@ fn test_deposit() {
             .balance((balance + deposit_amount).pack())
             .build()
     };
-    let (mmr_size, proof) = context.gen_account_merkle_proof(entry.index().unpack());
+    let (_, proof) = context.gen_account_merkle_proof(entry.index().unpack());
     let deposit = Deposit::new_builder()
-        .old_entry(entry.clone())
+        .old_entry(entry)
         .new_entry(new_entry.clone())
         .count(1u32.pack())
-        .mmr_size(mmr_size.pack())
         .proof(
             proof
                 .into_iter()
@@ -285,7 +279,7 @@ fn test_deposit() {
     let action = Action::new_builder().set(deposit).build();
     let new_global_state = {
         let mut new_context = GlobalStateContext::new();
-        new_context.push_account(new_entry.clone());
+        new_context.push_account(new_entry);
         new_context.get_global_state()
     };
 
@@ -293,17 +287,26 @@ fn test_deposit() {
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
-    let tx = tx
-        .as_advanced_builder()
-        .witnesses(vec![witness.as_bytes().pack()].pack())
-        .set_outputs_data(vec![new_global_state.as_bytes().pack()])
-        .build();
-    verify_tx(&data_loader, &tx).expect("pass verification");
+    let contract_bin = MAIN_CONTRACT_BIN.to_owned();
+    let mut context = Context::default();
+    context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
+    context.deploy_contract(contract_bin.clone());
+    let tx = TxBuilder::default()
+        .lock_bin(DUMMY_LOCK_BIN.to_owned())
+        .type_bin(contract_bin)
+        .previous_output_data(global_state.as_slice().into())
+        .input_capacity(original_amount)
+        .output_capacity(original_amount + deposit_amount)
+        .witnesses(vec![witness.as_slice().into()])
+        .outputs_data(vec![new_global_state.as_slice().into()])
+        .inject_and_build(&mut context)
+        .expect("build tx");
+    let verify_result = context.verify_tx(&tx, MAX_CYCLES);
+    verify_result.expect("pass verification");
 }
 
 #[test]
 fn test_submit_block() {
-    let mut data_loader = DummyDataLoader::new();
     let mut context = GlobalStateContext::new();
 
     // prepare account entries
@@ -318,23 +321,29 @@ fn test_submit_block() {
     let entry_ag = AccountEntry::new_builder()
         .balance(AGGREGATOR_REQUIRED_BALANCE.pack())
         .index(2u32.pack())
-        .is_aggregator(1u8.into())
+        .is_ag(1u8.into())
         .build();
     context.push_account(entry_a.clone());
     context.push_account(entry_b.clone());
     context.push_account(entry_ag.clone());
     // aggregator proof
-    let (ag_mmr_size, ag_proof) = context.gen_account_merkle_proof(entry_ag.index().unpack());
+    let (_account_mmr_size, account_proof) =
+        context.gen_account_merkle_proof(entry_ag.index().unpack());
 
     let global_state = context.get_global_state();
     let old_account_root = global_state.account_root();
 
     let transfer_tx = Tx::new_builder()
-        .from_index(entry_a.index())
-        .to_index(entry_b.index())
-        .amount(15u64.pack())
-        .fee(3u64.pack())
+        .account_index(entry_a.index())
+        .fee(3u32.pack())
         .nonce(1u32.pack())
+        .args({
+            let mut args = vec![0u8; 8];
+            let to_index: u32 = entry_b.index().unpack();
+            args[..4].copy_from_slice(&to_index.to_le_bytes());
+            args[4..].copy_from_slice(&15u32.to_le_bytes());
+            args.pack()
+        })
         .build();
 
     context.apply_tx(&transfer_tx, entry_ag.index().unpack());
@@ -344,25 +353,18 @@ fn test_submit_block() {
 
     let original_amount = 120u64;
     // send money
-    let tx = ContractCallTxBuilder::default()
-        .type_bin(MAIN_CONTRACT_BIN.clone())
-        .previous_output_data(global_state.as_bytes())
-        .input_capacity(original_amount)
-        .output_capacity(original_amount)
-        .build(&mut data_loader);
-
     let tx_root = merkle_root(&[blake2b_256(transfer_tx.as_slice()).pack()]);
 
-    let block = AggregatorBlock::new_builder()
+    let block = AgBlock::new_builder()
         .number(0u32.pack())
         .tx_root(tx_root)
-        .old_account_root(old_account_root.clone())
+        .old_account_root(old_account_root)
         .new_account_root(new_account_root.pack())
         .build();
 
-    let (block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
+    let (_block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
     let submit_block = {
-        let txs = Txs::new_builder().set(vec![transfer_tx.clone()]).build();
+        let txs = Txs::new_builder().set(vec![transfer_tx]).build();
         SubmitBlock::new_builder()
             .txs(txs)
             .block(block.clone())
@@ -373,33 +375,41 @@ fn test_submit_block() {
                     .collect::<Vec<_>>()
                     .pack(),
             )
-            .block_mmr_size(block_mmr_size.pack())
-            .aggregator(entry_ag.clone())
-            .aggregator_proof(
-                ag_proof
+            .ag_entry(entry_ag)
+            .account_proof(
+                account_proof
                     .into_iter()
                     .map(|i| i.pack())
                     .collect::<Vec<_>>()
                     .pack(),
             )
-            .aggregator_mmr_size(ag_mmr_size.pack())
             .account_count(3u32.pack())
             .build()
     };
     let action = Action::new_builder().set(submit_block).build();
 
     // submit block
-    context.submit_block(block.clone(), 0);
+    context.submit_block(block, 1);
     let new_global_state = context.get_global_state();
 
     // update tx witness
     let witness = WitnessArgs::new_builder()
         .output_type(Some(action.as_bytes()).pack())
         .build();
-    let tx = tx
-        .as_advanced_builder()
-        .witnesses(vec![witness.as_bytes().pack()].pack())
-        .set_outputs_data(vec![new_global_state.as_bytes().pack()])
-        .build();
-    verify_tx(&data_loader, &tx).expect("pass verification");
+    let contract_bin = MAIN_CONTRACT_BIN.to_owned();
+    let mut context = Context::default();
+    context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
+    context.deploy_contract(contract_bin.clone());
+    let tx = TxBuilder::default()
+        .lock_bin(DUMMY_LOCK_BIN.to_owned())
+        .type_bin(contract_bin)
+        .previous_output_data(global_state.as_slice().into())
+        .input_capacity(original_amount)
+        .output_capacity(original_amount)
+        .witnesses(vec![witness.as_slice().into()])
+        .outputs_data(vec![new_global_state.as_slice().into()])
+        .inject_and_build(&mut context)
+        .expect("build tx");
+    let verify_result = context.verify_tx(&tx, MAX_CYCLES);
+    verify_result.expect("pass verification");
 }

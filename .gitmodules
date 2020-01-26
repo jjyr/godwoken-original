@@ -1,6 +1,9 @@
-[submodule "contract/ckb-c-stdlib"]
-	path = contract/ckb-c-stdlib
+[submodule "contracts-test/ckb-c-stdlib"]
+	path = contracts-test/ckb-c-stdlib
 	url = https://github.com/nervosnetwork/ckb-c-stdlib.git
-[submodule "contract/deps/mmr-c"]
-	path = contract/deps/mmr-c
+[submodule "contracts-test/deps/mmr-c"]
+	path = contracts-test/deps/mmr-c
 	url = https://github.com/jjyr/mmr-c.git
+[submodule "molecule"]
+	path = molecule
+	url = https://github.com/nervosnetwork/molecule.git
