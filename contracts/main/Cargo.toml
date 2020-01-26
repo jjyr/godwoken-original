@@ -9,3 +9,4 @@ godwoken-types = { path = "../../types", default-features = false }
 blake2b-ref = "0.1"
 ckb-contract-std = "0.1.1"
 ckb-merkle-mountain-range = { git = "https://github.com/nervosnetwork/merkle-mountain-range.git", branch = "master", default-features = false }
+merkle-cbt = { git = "https://github.com/nervosnetwork/merkle-tree.git", branch = "support-no-std", default-features = false }

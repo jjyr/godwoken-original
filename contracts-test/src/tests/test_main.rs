@@ -328,7 +328,7 @@ fn test_submit_block() {
     context.push_account(entry_b.clone());
     context.push_account(entry_ag.clone());
     // aggregator proof
-    let (account_mmr_size, account_proof) =
+    let (_account_mmr_size, account_proof) =
         context.gen_account_merkle_proof(entry_ag.index().unpack());
 
     let global_state = context.get_global_state();
@@ -385,7 +385,6 @@ fn test_submit_block() {
                     .collect::<Vec<_>>()
                     .pack(),
             )
-            .account_mmr_size(account_mmr_size.pack())
             .account_count(3u32.pack())
             .build()
     };

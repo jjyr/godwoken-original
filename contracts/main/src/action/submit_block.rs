@@ -40,7 +40,6 @@ impl<'a> SubmitBlockVerifier<'a> {
         utils::check_aggregator(&ag_entry)?;
         // verify merkle proof of aggregator
         let account_count: u32 = self.action.account_count().unpack();
-        let account_mmr_size: u64 = self.action.account_mmr_size().unpack();
         let account_proof: Vec<[u8; 32]> = self
             .action
             .account_proof()
@@ -82,6 +81,23 @@ impl<'a> SubmitBlockVerifier<'a> {
     }
 
     fn check_block(&self) -> Result<(), Error> {
+        let tx_hashes: Vec<[u8; 32]> = self
+            .action
+            .txs()
+            .iter()
+            .map(|tx| {
+                let mut hasher = utils::new_blake2b();
+                hasher.update(tx.as_slice());
+                let mut hash = [0u8; 32];
+                hasher.finalize(&mut hash);
+                hash
+            })
+            .collect();
+        let calculated_tx_root = utils::merkle_root(&tx_hashes);
+        let tx_root = self.action.block().tx_root().unpack();
+        if tx_root != calculated_tx_root {
+            return Err(Error::InvalidTxRoot);
+        }
         Ok(())
     }
 

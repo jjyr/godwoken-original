@@ -12,4 +12,5 @@ pub enum Error {
     InvalidAccountMerkleProof = -18,
     InvalidBlockMerkleProof = -19,
     InvalidAggregator = -20,
+    InvalidTxRoot = -21,
 }

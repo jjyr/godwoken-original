@@ -71,10 +71,9 @@ table SubmitBlock {
     txs: Txs,
     block: AgBlock,
     last_block_hash: Byte32, // last blocks hash
-    block_mmr_size: Uint64, // MMR size
     block_proof: Byte32Vec, // merkle proof of block_root
+    block_mmr_size: Uint64, // MMR size
     ag_entry: AccountEntry, // aggregator's account entry
-    account_mmr_size: Uint64, // MMR size
     account_proof: Byte32Vec, // merkle proof of aggregator_root
     account_count: Uint32,
 }
