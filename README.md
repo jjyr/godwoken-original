@@ -1,15 +1,18 @@
 # Godwoken
 
-An experimental optimistic rollup implementation for Nervos CKB.
+An experimental optimistic rollup implementation, to provide a generalized account-based programming layer upon Nervos CKB.
 
-We can foresee this project will be under WIP for a long time(if not eternal).
+This project is still WIP.
 
 ## Details
 
-Godwoken constructed by 2 contracts:
+Godwoken contract maintains a global state cell, allows following actions to modify the state:
 
-* Aggregator List - contract maintains an aggregator queue, handle the join/leave logic for aggregators.
-* Main contract - contract maintains a global state of all user and past blocks.
+* `Register` - register a new account on Godwoken.
+* `Deposit` - deposit layer 1 assets to a Godwoken account.
+* `SubmitBlock` - submit a aggregated block.
+* `InvalidBlock` - invalid a aggregated block.
+* `Withdraw` - withdraw assets from Godwoken account to layer1.
 
 ## LICENSE
 
