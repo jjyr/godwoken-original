@@ -1,6 +1,6 @@
 # Rust compile
 RUST_TARGET := riscv64imac-unknown-none-elf
-# RUSTFLAGS := "-C link-arg=-s"
+RUSTFLAGS := "-C link-arg=-s"
 CARGO_PROJS := main dummy-lock
 
 # CKB binary patcher 
