@@ -39,7 +39,7 @@ dependencies = [
  "ckb-contract-std 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range.git?rev=aad0edd)",
  "godwoken-types 0.1.0-pre",
- "merkle-cbt 0.2.1 (git+https://github.com/nervosnetwork/merkle-tree.git?rev=c9e605d)",
+ "merkle-cbt 0.2.1 (git+https://github.com/nervosnetwork/merkle-tree.git?rev=b67f696)",
 ]
 
 [[package]]
@@ -52,7 +52,7 @@ dependencies = [
 [[package]]
 name = "merkle-cbt"
 version = "0.2.1"
-source = "git+https://github.com/nervosnetwork/merkle-tree.git?rev=c9e605d#c9e605d9d548a6a5a60a36ddc6c9955f9a48b16c"
+source = "git+https://github.com/nervosnetwork/merkle-tree.git?rev=b67f696#b67f6961e5681a800af59d50018798f73ebdb7b8"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -70,4 +70,4 @@ dependencies = [
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 "checksum ckb-contract-std 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7bcb486d40a39c3021acfe17635e13e09427c50d1cb27ef5bbf5a7c9a751ac0a"
 "checksum ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range.git?rev=aad0edd)" = "<none>"
-"checksum merkle-cbt 0.2.1 (git+https://github.com/nervosnetwork/merkle-tree.git?rev=c9e605d)" = "<none>"
+"checksum merkle-cbt 0.2.1 (git+https://github.com/nervosnetwork/merkle-tree.git?rev=b67f696)" = "<none>"
