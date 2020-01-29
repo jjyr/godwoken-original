@@ -2,6 +2,8 @@
 
 An experimental optimistic rollup implementation, to provide a generalized account-based programming layer upon Nervos CKB.
 
+This [design documentation](https://github.com/jjyr/godwoken/blob/master/docs/design.md) explains the design from a high-level overview.
+
 This project is still WIP.
 
 ## Details
