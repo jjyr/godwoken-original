@@ -18,7 +18,7 @@ Godwoken contract maintains a global state cell, allows following actions to mod
 
 ## LICENSE
 
-Please see [LICENSE](https://github.com/jjyr/godwoken/blob/master/LICENSE.txt) for details.
+[MIT LICENSE](https://github.com/jjyr/godwoken/blob/master/LICENSE.txt)
 
 ## Author
 
