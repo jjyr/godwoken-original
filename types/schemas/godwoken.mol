@@ -2,7 +2,6 @@ import blockchain;
 
 /* contract types */
 
-array Byte20 [byte; 20];
 array Byte65 [byte; 65];
 
 /* Global state
@@ -16,9 +15,14 @@ struct GlobalState {
     block_root: Byte32, // merkle root of godwoken blocks
 }
 
-struct AccountEntry {
+table AccountScript {
+    code_hash: Byte32,
+    args: Bytes,
+}
+
+table AccountEntry {
     index: Uint32, // address index
-    pubkey_hash: Byte20, // pubkey hash -> blake2b160(secp256k1 pubkey)
+    script: AccountScript, // account's code
     nonce: Uint32, // nonce
     balance: Uint64, // balance
     is_ag: byte, // a flag to indicates account is a aggregator

@@ -61,7 +61,7 @@ impl<'a> SubmitBlockVerifier<'a> {
             return Err(Error::InvalidAccountMerkleProof);
         }
         // verify aggregator's signature
-        let ag_pubkey_hash = ag_entry.pubkey_hash().unpack();
+        let ag_pubkey_hash = ag_entry.script().args().raw_data();
         let block = self.action.block();
         let sig_message = {
             let sig_block = block

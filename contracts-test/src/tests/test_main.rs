@@ -7,8 +7,8 @@ use ckb_contract_tool::{
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
 use godwoken_types::bytes::Bytes;
 use godwoken_types::packed::{
-    AccountEntry, Action, AgBlock, Byte20, Deposit, GlobalState, Register, SubmitBlock, Tx, Txs,
-    WitnessArgs,
+    AccountEntry, AccountScript, Action, AgBlock, Deposit, GlobalState, Register, SubmitBlock, Tx,
+    Txs, WitnessArgs,
 };
 use godwoken_types::prelude::*;
 use rand::{thread_rng, Rng};
@@ -185,7 +185,11 @@ fn test_account_register() {
             rng.fill(&mut pubkey);
             AccountEntry::new_builder()
                 .index(index.pack())
-                .pubkey_hash(Byte20::new_unchecked(pubkey.to_vec().into()))
+                .script(
+                    AccountScript::new_builder()
+                        .args(Bytes::from(pubkey.to_vec()).pack())
+                        .build(),
+                )
                 .is_ag({
                     if is_aggregator {
                         1.into()
@@ -318,9 +322,28 @@ fn test_submit_block() {
         .balance(100u64.pack())
         .index(1u32.pack())
         .build();
+    let (privkey, pubkey) = {
+        let mut rng = thread_rng();
+        let privkey = secp256k1::SecretKey::random(&mut rng);
+        let pubkey = secp256k1::PublicKey::from_secret_key(&privkey);
+        (privkey, pubkey)
+    };
+    let pubkey_hash = {
+        let pubkey_bytes = pubkey.serialize_compressed();
+        let mut hasher = new_blake2b();
+        hasher.update(&pubkey_bytes);
+        let mut hash = [0u8; 20];
+        hasher.finalize(&mut hash);
+        hash
+    };
     let entry_ag = AccountEntry::new_builder()
         .balance(AGGREGATOR_REQUIRED_BALANCE.pack())
         .index(2u32.pack())
+        .script(
+            AccountScript::new_builder()
+                .args(Bytes::from(pubkey_hash.to_vec()).pack())
+                .build(),
+        )
         .is_ag(1u8.into())
         .build();
     context.push_account(entry_a.clone());
@@ -361,6 +384,19 @@ fn test_submit_block() {
         .old_account_root(old_account_root)
         .new_account_root(new_account_root.pack())
         .build();
+    let ag_sig = {
+        let mut hasher = new_blake2b();
+        hasher.update(block.as_slice());
+        let mut block_hash = [0u8; 32];
+        hasher.finalize(&mut block_hash);
+        let msg = secp256k1::Message::parse(&block_hash);
+        let (signature, rec_id) = secp256k1::sign(&msg, &privkey);
+        let mut sig = [0u8; 65];
+        sig[..64].copy_from_slice(&signature.serialize());
+        sig[64] = rec_id.serialize();
+        sig
+    };
+    let block = block.as_builder().ag_sig(ag_sig.pack()).build();
 
     let (_block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
     let submit_block = {

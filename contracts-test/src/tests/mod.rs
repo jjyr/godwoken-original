@@ -14,7 +14,7 @@ lazy_static! {
         std::fs::read(MAIN_CONTRACT_PATH).expect("read").into();
 }
 
-pub const MAX_CYCLES: u64 = 500_0000;
+pub const MAX_CYCLES: u64 = 30_000_000;
 
 #[test]
 fn test_dummy_lock() {

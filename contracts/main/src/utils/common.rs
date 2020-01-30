@@ -1,4 +1,4 @@
-use crate::constants::{AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
+use crate::constants::{AGGREGATOR_CODE_HASH, AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
 use crate::error::Error;
 use ckb_contract_std::{ckb_constants::*, syscalls};
 use core::mem::size_of;
@@ -13,6 +13,11 @@ pub fn check_aggregator<'a>(entry: &AccountEntryReader<'a>) -> Result<(), Error>
 
     let balance: u64 = entry.balance().unpack();
     if balance < AGGREGATOR_REQUIRED_BALANCE {
+        return Err(Error::InvalidAggregator);
+    }
+
+    let code_hash: [u8; 32] = entry.script().code_hash().unpack();
+    if code_hash != AGGREGATOR_CODE_HASH {
         return Err(Error::InvalidAggregator);
     }
     Ok(())

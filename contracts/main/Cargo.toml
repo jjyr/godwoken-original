@@ -10,3 +10,4 @@ blake2b-ref = "0.1"
 ckb-contract-std = "0.1.2"
 ckb-merkle-mountain-range = { git = "https://github.com/nervosnetwork/merkle-mountain-range.git", rev = "aad0edd", default-features = false }
 merkle-cbt = { git = "https://github.com/nervosnetwork/merkle-tree.git", rev = "b67f696", default-features = false }
+libsecp256k1 = { version = "0.3", default-features = false }

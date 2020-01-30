@@ -17,8 +17,8 @@ impl<'a> DepositVerifier<'a> {
         if entry_index != new_entry.index().unpack() {
             Err(Error::InvalidEntryIndex)?;
         }
-        if old_entry.pubkey_hash().as_slice() != new_entry.pubkey_hash().as_slice() {
-            Err(Error::InvalidEntryPubkeyHash)?;
+        if old_entry.script().as_slice() != new_entry.script().as_slice() {
+            Err(Error::InvalidEntryScript)?;
         }
         let nonce: u32 = old_entry.nonce().unpack();
         if nonce != new_entry.nonce().unpack() {
