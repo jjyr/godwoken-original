@@ -5,3 +5,5 @@ pub const NEW_ACCOUNT_REQUIRED_BALANCE: u64 = 1000;
 pub const AGGREGATOR_REQUIRED_BALANCE: u64 = 2000;
 /// aggregator's code hash
 pub const AGGREGATOR_CODE_HASH: [u8; 32] = [0u8; 32];
+/// interval of account checkpoint, each 10 txs take a checkpoint
+pub const STATE_CHECKPOINTS_INTERVAL: usize = 10;

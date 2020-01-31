@@ -19,4 +19,5 @@ pub enum Error {
     InvalidSignatureRecoverId = -25,
     RecoveryPubkey = -26,
     WrongPubkeyHash = -27,
+    IncorrectNumberOfCheckpoints = -28,
 }

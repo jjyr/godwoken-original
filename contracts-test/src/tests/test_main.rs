@@ -354,7 +354,7 @@ fn test_submit_block() {
         context.gen_account_merkle_proof(entry_ag.index().unpack());
 
     let global_state = context.get_global_state();
-    let old_account_root = global_state.account_root();
+    let old_account_root = global_state.account_root().unpack();
 
     let transfer_tx = Tx::new_builder()
         .account_index(entry_a.index())
@@ -377,12 +377,18 @@ fn test_submit_block() {
     let original_amount = 120u64;
     // send money
     let tx_root = merkle_root(&[blake2b_256(transfer_tx.as_slice()).pack()]);
+    let state_checkpoints: Vec<[u8; 32]> = vec![old_account_root, new_account_root];
 
     let block = AgBlock::new_builder()
         .number(0u32.pack())
         .tx_root(tx_root)
-        .old_account_root(old_account_root)
-        .new_account_root(new_account_root.pack())
+        .state_checkpoints(
+            state_checkpoints
+                .iter()
+                .map(|cp| cp.pack())
+                .collect::<Vec<_>>()
+                .pack(),
+        )
         .build();
     let ag_sig = {
         let mut hasher = new_blake2b();

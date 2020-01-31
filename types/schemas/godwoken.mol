@@ -39,11 +39,10 @@ table Tx {
 vector Txs <Tx>;
 
 /* Aggregated block */
-struct AgBlock {
+table AgBlock {
     number: Uint32, // block number
     tx_root: Byte32,
-    old_account_root: Byte32,
-    new_account_root: Byte32,
+    state_checkpoints: Byte32Vec, // account root check points
     ag_sig: Byte65, // Aggregator's signature
 }
 

@@ -1,3 +1,4 @@
+use crate::constants::STATE_CHECKPOINTS_INTERVAL;
 use crate::error::Error;
 use crate::utils;
 use alloc::vec;
@@ -82,11 +83,29 @@ impl<'a> SubmitBlockVerifier<'a> {
 
     fn check_block(&self) -> Result<(), Error> {
         let block = self.action.block();
-        // verify block account_root
-        if block.old_account_root().as_slice() != self.old_state.account_root().as_slice() {
+        // verify block state checkpoints
+        let checkpoints_count = state_checkpoints_count(self.action.txs().len());
+        use ckb_contract_std::debug;
+        debug!("required checkpoints {}  count {}", checkpoints_count, block.state_checkpoints().len());
+        if block.state_checkpoints().len() != checkpoints_count {
+            return Err(Error::IncorrectNumberOfCheckpoints);
+        }
+        if block
+            .state_checkpoints()
+            .get(0)
+            .expect("old account root")
+            .as_slice()
+            != self.old_state.account_root().as_slice()
+        {
             return Err(Error::InvalidAccountRoot);
         }
-        if block.new_account_root().as_slice() != self.new_state.account_root().as_slice() {
+        if block
+            .state_checkpoints()
+            .get(checkpoints_count - 1)
+            .expect("new account root")
+            .as_slice()
+            != self.new_state.account_root().as_slice()
+        {
             return Err(Error::InvalidAccountRoot);
         }
         // verify tx root
@@ -167,4 +186,12 @@ impl<'a> SubmitBlockVerifier<'a> {
         self.check_state_transition()?;
         Ok(())
     }
+}
+
+/// required count of checkpoints for txs_len
+/// checkpoints: old_state | cp1 | cp2 ....
+fn state_checkpoints_count(txs_len: usize) -> usize {
+    let cp_count = txs_len.saturating_sub(1) / STATE_CHECKPOINTS_INTERVAL + 1;
+    // plus 1 for old_state
+    cp_count + 1
 }
