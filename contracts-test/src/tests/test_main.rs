@@ -7,8 +7,8 @@ use ckb_contract_tool::{
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
 use godwoken_types::bytes::Bytes;
 use godwoken_types::packed::{
-    AccountEntry, AccountScript, Action, AgBlock, Deposit, GlobalState, Register, SubmitBlock, Tx,
-    Txs, WitnessArgs,
+    Account, AccountScript, Action, AgBlock, Deposit, GlobalState, Register, SubmitBlock, Tx,
+    TxVec, WitnessArgs,
 };
 use godwoken_types::prelude::*;
 use rand::{thread_rng, Rng};
@@ -34,7 +34,7 @@ type HashMMR = MemMMR<[u8; 32], HashMerge>;
 
 #[derive(Default)]
 struct GlobalStateContext {
-    account_entries: Vec<AccountEntry>,
+    account_entries: Vec<Account>,
     block_root: [u8; 32],
     block_mmr: HashMMR,
 }
@@ -67,19 +67,19 @@ impl GlobalStateContext {
 
     fn build_account_mmr(&self) -> HashMMR {
         let mut mmr = HashMMR::default();
-        for entry in &self.account_entries {
-            let entry_hash = blake2b_256(entry.as_slice());
-            mmr.push(entry_hash).expect("mmr push");
+        for account in &self.account_entries {
+            let account_hash = blake2b_256(account.as_slice());
+            mmr.push(account_hash).expect("mmr push");
         }
         mmr
     }
 
-    fn push_account(&mut self, entry: AccountEntry) {
-        let index = Unpack::<u32>::unpack(&entry.index()) as usize;
+    fn push_account(&mut self, account: Account) {
+        let index = Unpack::<u32>::unpack(&account.index()) as usize;
         if index == self.account_entries.len() {
-            self.account_entries.push(entry);
+            self.account_entries.push(account);
         } else {
-            self.account_entries[index] = entry;
+            self.account_entries[index] = account;
         }
     }
 
@@ -168,7 +168,7 @@ fn test_account_register() {
     let mut context = GlobalStateContext::new();
     let global_state = context.get_global_state();
     // insert few entries
-    let mut last_entry: Option<AccountEntry> = None;
+    let mut last_account: Option<Account> = None;
     let mut global_state = global_state;
     let mut original_amount = 0;
     for index in 0u32..=5u32 {
@@ -179,11 +179,11 @@ fn test_account_register() {
             NEW_ACCOUNT_REQUIRED_BALANCE
         };
         original_amount += deposit_amount;
-        let entry = {
+        let account = {
             let mut pubkey = [0u8; 20];
             let mut rng = thread_rng();
             rng.fill(&mut pubkey);
-            AccountEntry::new_builder()
+            Account::new_builder()
                 .index(index.pack())
                 .script(
                     AccountScript::new_builder()
@@ -200,16 +200,16 @@ fn test_account_register() {
                 .balance(deposit_amount.pack())
                 .build()
         };
-        let register = match last_entry {
+        let register = match last_account {
             None => {
-                // first entry
-                Register::new_builder().entry(entry.clone()).build()
+                // first account
+                Register::new_builder().account(account.clone()).build()
             }
-            Some(last_entry) => {
-                let (_, proof) = context.gen_account_merkle_proof(last_entry.index().unpack());
+            Some(last_account) => {
+                let (_, proof) = context.gen_account_merkle_proof(last_account.index().unpack());
                 Register::new_builder()
-                    .entry(entry.clone())
-                    .last_entry_hash(blake2b_256(last_entry.as_slice()).pack())
+                    .account(account.clone())
+                    .last_account_hash(blake2b_256(last_account.as_slice()).pack())
                     .proof(
                         proof
                             .into_iter()
@@ -221,7 +221,7 @@ fn test_account_register() {
             }
         };
         let action = Action::new_builder().set(register).build();
-        context.push_account(entry.clone());
+        context.push_account(account.clone());
         let new_global_state = context.get_global_state();
         let witness = WitnessArgs::new_builder()
             .output_type(Some(action.as_bytes()).pack())
@@ -242,7 +242,7 @@ fn test_account_register() {
             .expect("build tx");
         let verify_result = context.verify_tx(&tx, MAX_CYCLES);
         verify_result.expect("pass verification");
-        last_entry = Some(entry);
+        last_account = Some(account);
         global_state = new_global_state;
     }
 }
@@ -250,27 +250,27 @@ fn test_account_register() {
 #[test]
 fn test_deposit() {
     let mut context = GlobalStateContext::new();
-    // prepare a account entry
-    let entry = AccountEntry::new_builder().build();
-    context.push_account(entry.clone());
+    // prepare a account account
+    let account = Account::new_builder().build();
+    context.push_account(account.clone());
     let global_state = context.get_global_state();
 
     let original_amount = 12u64;
     let deposit_amount = 42u64;
 
     // deposit money
-    let new_entry = {
-        let balance: u64 = entry.balance().unpack();
-        entry
+    let new_account = {
+        let balance: u64 = account.balance().unpack();
+        account
             .clone()
             .as_builder()
             .balance((balance + deposit_amount).pack())
             .build()
     };
-    let (_, proof) = context.gen_account_merkle_proof(entry.index().unpack());
+    let (_, proof) = context.gen_account_merkle_proof(account.index().unpack());
     let deposit = Deposit::new_builder()
-        .old_entry(entry)
-        .new_entry(new_entry.clone())
+        .old_account(account)
+        .new_account(new_account.clone())
         .count(1u32.pack())
         .proof(
             proof
@@ -283,7 +283,7 @@ fn test_deposit() {
     let action = Action::new_builder().set(deposit).build();
     let new_global_state = {
         let mut new_context = GlobalStateContext::new();
-        new_context.push_account(new_entry);
+        new_context.push_account(new_account);
         new_context.get_global_state()
     };
 
@@ -314,11 +314,11 @@ fn test_submit_block() {
     let mut context = GlobalStateContext::new();
 
     // prepare account entries
-    let entry_a = AccountEntry::new_builder()
+    let account_a = Account::new_builder()
         .balance(20u64.pack())
         .index(0u32.pack())
         .build();
-    let entry_b = AccountEntry::new_builder()
+    let account_b = Account::new_builder()
         .balance(100u64.pack())
         .index(1u32.pack())
         .build();
@@ -336,7 +336,7 @@ fn test_submit_block() {
         hasher.finalize(&mut hash);
         hash
     };
-    let entry_ag = AccountEntry::new_builder()
+    let account_ag = Account::new_builder()
         .balance(AGGREGATOR_REQUIRED_BALANCE.pack())
         .index(2u32.pack())
         .script(
@@ -346,30 +346,30 @@ fn test_submit_block() {
         )
         .is_ag(1u8.into())
         .build();
-    context.push_account(entry_a.clone());
-    context.push_account(entry_b.clone());
-    context.push_account(entry_ag.clone());
+    context.push_account(account_a.clone());
+    context.push_account(account_b.clone());
+    context.push_account(account_ag.clone());
     // aggregator proof
     let (_account_mmr_size, account_proof) =
-        context.gen_account_merkle_proof(entry_ag.index().unpack());
+        context.gen_account_merkle_proof(account_ag.index().unpack());
 
     let global_state = context.get_global_state();
     let old_account_root = global_state.account_root().unpack();
 
     let transfer_tx = Tx::new_builder()
-        .account_index(entry_a.index())
+        .account_index(account_a.index())
         .fee(3u32.pack())
         .nonce(1u32.pack())
         .args({
             let mut args = vec![0u8; 8];
-            let to_index: u32 = entry_b.index().unpack();
+            let to_index: u32 = account_b.index().unpack();
             args[..4].copy_from_slice(&to_index.to_le_bytes());
             args[4..].copy_from_slice(&15u32.to_le_bytes());
             args.pack()
         })
         .build();
 
-    context.apply_tx(&transfer_tx, entry_ag.index().unpack());
+    context.apply_tx(&transfer_tx, account_ag.index().unpack());
 
     // new account root
     let new_account_root = context.account_root();
@@ -406,7 +406,7 @@ fn test_submit_block() {
 
     let (_block_mmr_size, block_proof) = context.gen_block_merkle_proof(0);
     let submit_block = {
-        let txs = Txs::new_builder().set(vec![transfer_tx]).build();
+        let txs = TxVec::new_builder().set(vec![transfer_tx]).build();
         SubmitBlock::new_builder()
             .txs(txs)
             .block(block.clone())
@@ -417,7 +417,7 @@ fn test_submit_block() {
                     .collect::<Vec<_>>()
                     .pack(),
             )
-            .ag_entry(entry_ag)
+            .ag_account(account_ag)
             .account_proof(
                 account_proof
                     .into_iter()

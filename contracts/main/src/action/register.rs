@@ -21,19 +21,19 @@ impl<'a> RegisterVerifier<'a> {
         }
     }
 
-    /// verify entry state
-    fn verify_entry(&self, deposit_capacity: u64) -> Result<(), Error> {
-        let entry = self.action.entry();
-        if entry.is_aggregator() {
-            utils::check_aggregator(&entry)?;
+    /// verify account state
+    fn verify_account(&self, deposit_capacity: u64) -> Result<(), Error> {
+        let account = self.action.account();
+        if account.is_aggregator() {
+            utils::check_aggregator(&account)?;
         }
-        let nonce: u32 = entry.nonce().unpack();
+        let nonce: u32 = account.nonce().unpack();
         if nonce != 0 {
-            Err(Error::InvalidEntryNonce)?;
+            Err(Error::InvalidAccountNonce)?;
         }
-        let balance = entry.balance().unpack();
+        let balance = account.balance().unpack();
         if balance != deposit_capacity || balance < NEW_ACCOUNT_REQUIRED_BALANCE {
-            Err(Error::InvalidEntryBalance)?;
+            Err(Error::InvalidAccountBalance)?;
         }
         Ok(())
     }
@@ -43,11 +43,11 @@ impl<'a> RegisterVerifier<'a> {
             return Err(Error::InvalidGlobalState);
         }
 
-        let entry = self.action.entry();
-        let new_index: u32 = entry.index().unpack();
+        let account = self.action.account();
+        let new_index: u32 = account.index().unpack();
         let old_account_root = self.old_state.account_root().unpack();
         let last_index = new_index - 1;
-        let last_entry_hash = self.action.last_entry_hash().unpack();
+        let last_account_hash = self.action.last_account_hash().unpack();
         let proof_items: Vec<[u8; 32]> = self
             .action
             .proof()
@@ -62,7 +62,7 @@ impl<'a> RegisterVerifier<'a> {
         } else {
             let old_entries_count = new_index;
             let calculated_root = utils::compute_account_root(
-                last_entry_hash,
+                last_account_hash,
                 last_index,
                 old_entries_count,
                 proof_items.clone(),
@@ -73,18 +73,18 @@ impl<'a> RegisterVerifier<'a> {
         }
 
         // verify new global state
-        let new_entry_hash = {
+        let new_account_hash = {
             let mut hasher = utils::new_blake2b();
-            hasher.update(entry.as_slice());
+            hasher.update(account.as_slice());
             let mut hash = [0u8; 32];
             hasher.finalize(&mut hash);
             hash
         };
 
         let calculated_root = utils::compute_new_account_root(
-            last_entry_hash,
+            last_account_hash,
             last_index,
-            new_entry_hash,
+            new_account_hash,
             new_index,
             new_index + 1,
             proof_items,
@@ -100,7 +100,7 @@ impl<'a> RegisterVerifier<'a> {
 
     pub fn verify(&self) -> Result<(), Error> {
         let deposit_capacity = deposit_capacity()?;
-        self.verify_entry(deposit_capacity)?;
+        self.verify_account(deposit_capacity)?;
         self.verify_state_transition()?;
         Ok(())
     }

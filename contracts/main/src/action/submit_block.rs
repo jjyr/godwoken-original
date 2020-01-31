@@ -37,8 +37,8 @@ impl<'a> SubmitBlockVerifier<'a> {
     /// 2. aggregator exsits in account root
     /// 3. aggregator's signature is according to pubkey hash
     fn check_aggregator(&self) -> Result<(), Error> {
-        let ag_entry = self.action.ag_entry();
-        utils::check_aggregator(&ag_entry)?;
+        let ag_account = self.action.ag_account();
+        utils::check_aggregator(&ag_account)?;
         // verify merkle proof of aggregator
         let account_count: u32 = self.action.account_count().unpack();
         let account_proof: Vec<[u8; 32]> = self
@@ -47,22 +47,22 @@ impl<'a> SubmitBlockVerifier<'a> {
             .iter()
             .map(|item| item.unpack())
             .collect();
-        let ag_index: u32 = ag_entry.index().unpack();
-        let entry_hash = {
+        let ag_index: u32 = ag_account.index().unpack();
+        let account_hash = {
             let mut hasher = utils::new_blake2b();
-            hasher.update(ag_entry.as_slice());
+            hasher.update(ag_account.as_slice());
             let mut hash = [0u8; 32];
             hasher.finalize(&mut hash);
             hash
         };
         let calculated_root =
-            utils::compute_account_root(entry_hash, ag_index, account_count, account_proof)?;
+            utils::compute_account_root(account_hash, ag_index, account_count, account_proof)?;
         let old_account_root = self.old_state.account_root().unpack();
         if calculated_root != old_account_root {
             return Err(Error::InvalidAccountMerkleProof);
         }
         // verify aggregator's signature
-        let ag_pubkey_hash = ag_entry.script().args().raw_data();
+        let ag_pubkey_hash = ag_account.script().args().raw_data();
         let block = self.action.block();
         let sig_message = {
             let sig_block = block
@@ -85,8 +85,6 @@ impl<'a> SubmitBlockVerifier<'a> {
         let block = self.action.block();
         // verify block state checkpoints
         let checkpoints_count = state_checkpoints_count(self.action.txs().len());
-        use ckb_contract_std::debug;
-        debug!("required checkpoints {}  count {}", checkpoints_count, block.state_checkpoints().len());
         if block.state_checkpoints().len() != checkpoints_count {
             return Err(Error::IncorrectNumberOfCheckpoints);
         }

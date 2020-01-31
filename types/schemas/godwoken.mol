@@ -20,13 +20,15 @@ table AccountScript {
     args: Bytes,
 }
 
-table AccountEntry {
+table Account {
     index: Uint32, // address index
     script: AccountScript, // account's code
     nonce: Uint32, // nonce
     balance: Uint64, // balance
     is_ag: byte, // a flag to indicates account is a aggregator
 }
+
+vector AccountVec <Account>;
 
 table Tx {
     account_index: Uint32,
@@ -36,7 +38,7 @@ table Tx {
     witness: Bytes, // tx witness
 }
 
-vector Txs <Tx>;
+vector TxVec <Tx>;
 
 /* Aggregated block */
 table AgBlock {
@@ -52,30 +54,42 @@ union Action {
     Register,
     Deposit,
     SubmitBlock,
+    InvalidBlock,
 }
 
-/* Register a new entry */
+/* Register a new account */
 table Register {
-    entry: AccountEntry,
-    last_entry_hash: Byte32, // used for merkle proof
-    proof: Byte32Vec, // merkle proof of old state address entry
+    account: Account,
+    last_account_hash: Byte32, // used for merkle proof
+    proof: Byte32Vec, // merkle proof of old state
 }
 
 /* Deposit coins */
 table Deposit {
-    old_entry: AccountEntry, // AccountEntry contains old state.
-    new_entry: AccountEntry, // AccountEntry contains new state.
-    count: Uint32, // count of entries, do not includes new_entry
-    proof: Byte32Vec, // merkle proof of old state address entry
+    old_account: Account, // Account contains old state.
+    new_account: Account, // Account contains new state.
+    count: Uint32, // count of entries, do not includes new_account
+    proof: Byte32Vec, // merkle proof of old state
 }
 
 /* Submit aggregator block */
 table SubmitBlock {
-    txs: Txs,
+    txs: TxVec,
     block: AgBlock,
     last_block_hash: Byte32, // last blocks hash
     block_proof: Byte32Vec, // merkle proof of block_root
-    ag_entry: AccountEntry, // aggregator's account entry
+    ag_account: Account, // aggregator's account
     account_proof: Byte32Vec, // merkle proof of aggregator_root
     account_count: Uint32,
+}
+
+/* Invalid a block */
+table InvalidBlock {
+    block: AgBlock, // invalid block
+    block_proof: Byte32, // merkle proof of block exists
+    invalid_checkpoint: Uint32, // index of invalid checkpoint
+    touched_accounts: AccountVec, // touch accounts previous state
+    touched_accounts_proof: Byte32, // proof of touched account state
+    txs: TxVec, // transactions during invalid checkpoint
+    txs_proof: Byte32Vec, // merkle proof txs exists
 }
