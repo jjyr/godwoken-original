@@ -1,6 +1,5 @@
 mod common;
 mod hash;
-mod merkle_tree;
 mod mmr;
 mod signature;
 
@@ -9,9 +8,8 @@ pub use common::{
     CapacityChange,
 };
 pub use hash::new_blake2b;
-pub use merkle_tree::{merkle_root, CBMT};
 pub use mmr::{
     compute_account_root, compute_block_root, compute_new_account_root, compute_new_block_root,
-    HashMerge,
+    compute_tx_root, merkle_root, HashMerge,
 };
 pub use signature::verify_ag_signature;

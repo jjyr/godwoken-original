@@ -86,10 +86,12 @@ table SubmitBlock {
 /* Invalid a block */
 table InvalidBlock {
     block: AgBlock, // invalid block
-    block_proof: Byte32, // merkle proof of block exists
+    block_proof: Byte32Vec, // merkle proof of block exists
     invalid_checkpoint: Uint32, // index of invalid checkpoint
     touched_accounts: AccountVec, // touch accounts previous state
-    touched_accounts_proof: Byte32, // proof of touched account state
+    touched_accounts_proof: Byte32Vec, // proof of touched account state
+    accounts_count: Uint32,
     txs: TxVec, // transactions during invalid checkpoint
     txs_proof: Byte32Vec, // merkle proof txs exists
+    txs_count: Uint32,
 }

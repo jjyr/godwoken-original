@@ -1,4 +1,4 @@
-use crate::constants::STATE_CHECKPOINTS_INTERVAL;
+use crate::constants::STATE_CHECKPOINT_SIZE;
 use crate::error::Error;
 use crate::utils;
 use alloc::vec;
@@ -55,8 +55,11 @@ impl<'a> SubmitBlockVerifier<'a> {
             hasher.finalize(&mut hash);
             hash
         };
-        let calculated_root =
-            utils::compute_account_root(account_hash, ag_index, account_count, account_proof)?;
+        let calculated_root = utils::compute_account_root(
+            vec![(ag_index as usize, account_hash)],
+            account_count,
+            account_proof,
+        )?;
         let old_account_root = self.old_state.account_root().unpack();
         if calculated_root != old_account_root {
             return Err(Error::InvalidAccountMerkleProof);
@@ -119,7 +122,7 @@ impl<'a> SubmitBlockVerifier<'a> {
                 hash
             })
             .collect();
-        let calculated_tx_root = utils::merkle_root(&tx_hashes);
+        let calculated_tx_root = utils::merkle_root(tx_hashes);
         let tx_root = self.action.block().tx_root().unpack();
         if tx_root != calculated_tx_root {
             return Err(Error::InvalidTxRoot);
@@ -145,8 +148,7 @@ impl<'a> SubmitBlockVerifier<'a> {
             }
         } else {
             let calculated_root = utils::compute_block_root(
-                last_block_hash,
-                block_number - 1,
+                vec![(block_number as usize - 1, last_block_hash)],
                 block_number + 1,
                 block_proof.clone(),
             )?;
@@ -189,7 +191,7 @@ impl<'a> SubmitBlockVerifier<'a> {
 /// required count of checkpoints for txs_len
 /// checkpoints: old_state | cp1 | cp2 ....
 fn state_checkpoints_count(txs_len: usize) -> usize {
-    let cp_count = txs_len.saturating_sub(1) / STATE_CHECKPOINTS_INTERVAL + 1;
+    let cp_count = txs_len.saturating_sub(1) / STATE_CHECKPOINT_SIZE + 1;
     // plus 1 for old_state
     cp_count + 1
 }

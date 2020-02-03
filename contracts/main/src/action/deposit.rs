@@ -1,4 +1,5 @@
 use crate::{error::Error, utils};
+use alloc::vec;
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
 
@@ -103,9 +104,12 @@ fn verify_account_state<'a>(
         hasher.finalize(&mut hash);
         hash
     };
-    let account_index = account.index().unpack();
-    let calculated_account_root =
-        utils::compute_account_root(account_hash, account_index, entries_count, proof_items)?;
+    let account_index: u32 = account.index().unpack();
+    let calculated_account_root = utils::compute_account_root(
+        vec![(account_index as usize, account_hash)],
+        entries_count,
+        proof_items,
+    )?;
     if &calculated_account_root != account_root {
         return Err(Error::InvalidAccountMerkleProof);
     }

@@ -20,4 +20,7 @@ pub enum Error {
     RecoveryPubkey = -26,
     WrongPubkeyHash = -27,
     IncorrectNumberOfCheckpoints = -28,
+    OutOfIndexCheckpoint = -29,
+    IncorrectInvalidTxsSize = -30,
+    InvalidTxMerkleProof = -31,
 }

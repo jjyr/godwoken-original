@@ -1,4 +1,5 @@
 use crate::{constants::NEW_ACCOUNT_REQUIRED_BALANCE, error::Error, utils};
+use alloc::vec;
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
 
@@ -62,8 +63,7 @@ impl<'a> RegisterVerifier<'a> {
         } else {
             let old_entries_count = new_index;
             let calculated_root = utils::compute_account_root(
-                last_account_hash,
-                last_index,
+                vec![(last_index as usize, last_account_hash)],
                 old_entries_count,
                 proof_items.clone(),
             )?;

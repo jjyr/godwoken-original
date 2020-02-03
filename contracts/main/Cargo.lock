@@ -117,7 +117,6 @@ dependencies = [
  "ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range.git?rev=592a7a5)",
  "godwoken-types 0.1.0-pre",
  "libsecp256k1 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "merkle-cbt 0.2.1 (git+https://github.com/nervosnetwork/merkle-tree.git?rev=b67f696)",
 ]
 
 [[package]]
@@ -159,14 +158,6 @@ dependencies = [
  "sha2 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "subtle 2.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "typenum 1.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "merkle-cbt"
-version = "0.2.1"
-source = "git+https://github.com/nervosnetwork/merkle-tree.git?rev=b67f696#b67f6961e5681a800af59d50018798f73ebdb7b8"
-dependencies = [
- "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -264,7 +255,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum hmac 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
 "checksum hmac-drbg 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c6e570451493f10f6581b48cdd530413b63ea9e780f544bfd3bdcaa0d89d1a7b"
 "checksum libsecp256k1 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "df6edf84fd62aad1c93932b39324eaeda3912c1d26bc18dfaee6293848e49a50"
-"checksum merkle-cbt 0.2.1 (git+https://github.com/nervosnetwork/merkle-tree.git?rev=b67f696)" = "<none>"
 "checksum opaque-debug 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2839e79665f131bdb5782e51f2c6c9599c133c6098982a54c794358bf432529c"
 "checksum ppv-lite86 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "74490b50b9fbe561ac330df47c08f3f33073d2d00c150f719147d7c54522fa1b"
 "checksum rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
