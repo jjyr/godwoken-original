@@ -22,4 +22,4 @@ Godwoken contract maintains a global state cell, allows following actions to mod
 
 ## Author
 
-[Jiang Jinyang](jjyruby@gmail.com)
+[Jiang Jinyang](https://justjjy.com)
