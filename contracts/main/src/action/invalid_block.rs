@@ -31,7 +31,7 @@ impl<'a> InvalidBlockVerifier<'a> {
     fn verify_block(
         &self,
         block: &AgBlockReader<'a>,
-        invalid_checkpoint: u32,
+        checkpoint_index: u32,
     ) -> Result<(), Error> {
         let block_index: u32 = block.number().unpack();
         let block_hash = {
@@ -55,20 +55,20 @@ impl<'a> InvalidBlockVerifier<'a> {
         if &blocks_root != self.old_state.block_root().raw_data() {
             return Err(Error::InvalidBlockMerkleProof);
         }
-        if invalid_checkpoint as usize >= block.state_checkpoints().len() {
+        if checkpoint_index as usize >= block.state_checkpoints().len() {
             return Err(Error::OutOfIndexCheckpoint);
         }
         Ok(())
     }
 
-    fn verify_txs(&self, block: &AgBlockReader<'a>, invalid_checkpoint: u32) -> Result<(), Error> {
+    fn verify_txs(&self, block: &AgBlockReader<'a>, checkpoint_index: u32) -> Result<(), Error> {
         let txs = self.action.txs();
         if txs.len() > STATE_CHECKPOINT_SIZE || txs.len() == 0 {
             return Err(Error::IncorrectInvalidTxsSize);
         }
 
         let leaves: Vec<_> = {
-            let base_index = invalid_checkpoint as usize * STATE_CHECKPOINT_SIZE;
+            let base_index = checkpoint_index as usize * STATE_CHECKPOINT_SIZE;
             txs.iter()
                 .enumerate()
                 .map(|(i, tx)| {
@@ -93,6 +93,7 @@ impl<'a> InvalidBlockVerifier<'a> {
         }
         Ok(())
     }
+
     fn verify_account(&self, block: &AgBlockReader<'a>) -> Result<(), Error> {
         let leaves: Vec<_> = {
             let accounts = self.action.touched_accounts();
@@ -127,15 +128,20 @@ impl<'a> InvalidBlockVerifier<'a> {
         }
         Ok(())
     }
+
     fn verify_state_transition(&self) -> Result<(), Error> {
+        // 1. run txs, ensure that txs is invalid
+        // 2. generate a reverted block to instead the invalid block
+        // 3. generate penalize tx in reverted block
+        // 4. verify account root and block root
         Ok(())
     }
 
     pub fn verify(&self) -> Result<(), Error> {
         let block = self.action.block();
-        let invalid_checkpoint: u32 = self.action.invalid_checkpoint().unpack();
-        self.verify_block(&block, invalid_checkpoint)?;
-        self.verify_txs(&block, invalid_checkpoint)?;
+        let checkpoint_index: u32 = self.action.checkpoint_index().unpack();
+        self.verify_block(&block, checkpoint_index)?;
+        self.verify_txs(&block, checkpoint_index)?;
         self.verify_account(&block)?;
         self.verify_state_transition()?;
         Ok(())

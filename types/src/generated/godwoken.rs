@@ -4570,12 +4570,7 @@ impl ::core::fmt::Display for InvalidBlock {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "block", self.block())?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(
-            f,
-            ", {}: {}",
-            "invalid_checkpoint",
-            self.invalid_checkpoint()
-        )?;
+        write!(f, ", {}: {}", "checkpoint_index", self.checkpoint_index())?;
         write!(f, ", {}: {}", "touched_accounts", self.touched_accounts())?;
         write!(
             f,
@@ -4642,7 +4637,7 @@ impl InvalidBlock {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
-    pub fn invalid_checkpoint(&self) -> Uint32 {
+    pub fn checkpoint_index(&self) -> Uint32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
@@ -4717,7 +4712,7 @@ impl molecule::prelude::Entity for InvalidBlock {
         Self::new_builder()
             .block(self.block())
             .block_proof(self.block_proof())
-            .invalid_checkpoint(self.invalid_checkpoint())
+            .checkpoint_index(self.checkpoint_index())
             .touched_accounts(self.touched_accounts())
             .touched_accounts_proof(self.touched_accounts_proof())
             .accounts_count(self.accounts_count())
@@ -4747,12 +4742,7 @@ impl<'r> ::core::fmt::Display for InvalidBlockReader<'r> {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "block", self.block())?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(
-            f,
-            ", {}: {}",
-            "invalid_checkpoint",
-            self.invalid_checkpoint()
-        )?;
+        write!(f, ", {}: {}", "checkpoint_index", self.checkpoint_index())?;
         write!(f, ", {}: {}", "touched_accounts", self.touched_accounts())?;
         write!(
             f,
@@ -4804,7 +4794,7 @@ impl<'r> InvalidBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn invalid_checkpoint(&self) -> Uint32Reader<'r> {
+    pub fn checkpoint_index(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
@@ -4918,7 +4908,7 @@ impl<'r> molecule::prelude::Reader<'r> for InvalidBlockReader<'r> {
 pub struct InvalidBlockBuilder {
     pub(crate) block: AgBlock,
     pub(crate) block_proof: Byte32Vec,
-    pub(crate) invalid_checkpoint: Uint32,
+    pub(crate) checkpoint_index: Uint32,
     pub(crate) touched_accounts: AccountVec,
     pub(crate) touched_accounts_proof: Byte32Vec,
     pub(crate) accounts_count: Uint32,
@@ -4936,8 +4926,8 @@ impl InvalidBlockBuilder {
         self.block_proof = v;
         self
     }
-    pub fn invalid_checkpoint(mut self, v: Uint32) -> Self {
-        self.invalid_checkpoint = v;
+    pub fn checkpoint_index(mut self, v: Uint32) -> Self {
+        self.checkpoint_index = v;
         self
     }
     pub fn touched_accounts(mut self, v: AccountVec) -> Self {
@@ -4972,7 +4962,7 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.block.as_slice().len()
             + self.block_proof.as_slice().len()
-            + self.invalid_checkpoint.as_slice().len()
+            + self.checkpoint_index.as_slice().len()
             + self.touched_accounts.as_slice().len()
             + self.touched_accounts_proof.as_slice().len()
             + self.accounts_count.as_slice().len()
@@ -4988,7 +4978,7 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         offsets.push(total_size);
         total_size += self.block_proof.as_slice().len();
         offsets.push(total_size);
-        total_size += self.invalid_checkpoint.as_slice().len();
+        total_size += self.checkpoint_index.as_slice().len();
         offsets.push(total_size);
         total_size += self.touched_accounts.as_slice().len();
         offsets.push(total_size);
@@ -5007,7 +4997,7 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         }
         writer.write_all(self.block.as_slice())?;
         writer.write_all(self.block_proof.as_slice())?;
-        writer.write_all(self.invalid_checkpoint.as_slice())?;
+        writer.write_all(self.checkpoint_index.as_slice())?;
         writer.write_all(self.touched_accounts.as_slice())?;
         writer.write_all(self.touched_accounts_proof.as_slice())?;
         writer.write_all(self.accounts_count.as_slice())?;
