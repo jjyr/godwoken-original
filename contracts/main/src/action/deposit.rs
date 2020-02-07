@@ -1,7 +1,8 @@
-use crate::{error::Error, utils};
+use crate::{common, error::Error};
 use alloc::vec;
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
+use godwoken_utils::{hash::new_blake2b, mmr::compute_account_root};
 
 pub struct DepositVerifier<'a> {
     old_state: GlobalStateReader<'a>,
@@ -83,7 +84,7 @@ impl<'a> DepositVerifier<'a> {
 
 /// deposit capacity
 fn deposit_capacity() -> Result<u64, Error> {
-    let capacities = utils::fetch_capacities();
+    let capacities = common::fetch_capacities();
     capacities
         .output
         .checked_sub(capacities.input)
@@ -99,17 +100,18 @@ fn verify_account_state<'a>(
 ) -> Result<(), Error> {
     let account_hash = {
         let mut hash = [0u8; 32];
-        let mut hasher = utils::new_blake2b();
+        let mut hasher = new_blake2b();
         hasher.update(account.as_slice());
         hasher.finalize(&mut hash);
         hash
     };
     let account_index: u32 = account.index().unpack();
-    let calculated_account_root = utils::compute_account_root(
+    let calculated_account_root = compute_account_root(
         vec![(account_index as usize, account_hash)],
         entries_count,
         proof_items,
-    )?;
+    )
+    .map_err(|_| Error::InvalidAccountMerkleProof)?;
     if &calculated_account_root != account_root {
         return Err(Error::InvalidAccountMerkleProof);
     }

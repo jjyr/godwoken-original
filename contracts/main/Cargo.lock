@@ -67,8 +67,8 @@ dependencies = [
 
 [[package]]
 name = "ckb-merkle-mountain-range"
-version = "0.1.0"
-source = "git+https://github.com/nervosnetwork/merkle-mountain-range.git?rev=592a7a5#592a7a5437359980a1a32494128b032f35eefa02"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -109,14 +109,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "godwoken-executor"
+version = "0.1.0"
+dependencies = [
+ "godwoken-types 0.1.0-pre",
+ "godwoken-utils 0.1.0",
+]
+
+[[package]]
 name = "godwoken-main"
 version = "0.1.0"
 dependencies = [
- "blake2b-ref 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ckb-contract-std 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range.git?rev=592a7a5)",
+ "ckb-merkle-mountain-range 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "godwoken-executor 0.1.0",
  "godwoken-types 0.1.0-pre",
- "libsecp256k1 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "godwoken-utils 0.1.0",
 ]
 
 [[package]]
@@ -124,6 +132,15 @@ name = "godwoken-types"
 version = "0.1.0-pre"
 dependencies = [
  "molecule 0.4.0",
+]
+
+[[package]]
+name = "godwoken-utils"
+version = "0.1.0"
+dependencies = [
+ "blake2b-ref 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ckb-merkle-mountain-range 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libsecp256k1 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -246,7 +263,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum c2-chacha 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "214238caa1bf3a496ec3392968969cab8549f96ff30652c9e56885329315f6bb"
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 "checksum ckb-contract-std 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7bcb486d40a39c3021acfe17635e13e09427c50d1cb27ef5bbf5a7c9a751ac0a"
-"checksum ckb-merkle-mountain-range 0.1.0 (git+https://github.com/nervosnetwork/merkle-mountain-range.git?rev=592a7a5)" = "<none>"
+"checksum ckb-merkle-mountain-range 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e4882b6f6cbb90ffeba3b437c6fd66f344557729428626e6f796ef1c97ee5c63"
 "checksum crunchy 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 "checksum crypto-mac 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4434400df11d95d556bac068ddfedd482915eb18fe8bea89bc80b6e4b1c179e5"
 "checksum digest 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"

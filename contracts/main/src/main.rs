@@ -21,13 +21,13 @@
 /// 3. Witdraw
 /// 4. Send Tx
 mod action;
+mod common;
 mod constants;
 mod error;
-mod utils;
 
+use crate::common::{check_output_type_hash, load_action, load_global_state};
 use crate::constants::HASH_SIZE;
 use crate::error::Error;
-use crate::utils::{check_output_type_hash, load_action, load_global_state};
 use alloc::format;
 use ckb_contract_std::{ckb_constants::*, setup, syscalls};
 use godwoken_types::{packed::*, prelude::*};

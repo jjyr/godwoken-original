@@ -382,6 +382,7 @@ fn test_submit_block() {
     let block = AgBlock::new_builder()
         .number(0u32.pack())
         .tx_root(tx_root)
+        .ag_index(account_ag.index())
         .state_checkpoints(
             state_checkpoints
                 .iter()

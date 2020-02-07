@@ -18,7 +18,7 @@ pub const MAX_CYCLES: u64 = 30_000_000;
 
 #[test]
 fn test_dummy_lock() {
-    const EXPECTED_CYCLES: u64 = 6514;
+    const EXPECTED_CYCLES: u64 = 6288;
     let contract_bin = DUMMY_LOCK_BIN.to_owned();
     let mut context = Context::default();
     context.deploy_contract(contract_bin.clone());

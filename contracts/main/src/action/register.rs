@@ -1,7 +1,11 @@
-use crate::{constants::NEW_ACCOUNT_REQUIRED_BALANCE, error::Error, utils};
+use crate::{common, constants::NEW_ACCOUNT_REQUIRED_BALANCE, error::Error};
 use alloc::vec;
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
+use godwoken_utils::{
+    hash::new_blake2b,
+    mmr::{compute_account_root, compute_new_account_root},
+};
 
 pub struct RegisterVerifier<'a> {
     action: RegisterReader<'a>,
@@ -26,7 +30,7 @@ impl<'a> RegisterVerifier<'a> {
     fn verify_account(&self, deposit_capacity: u64) -> Result<(), Error> {
         let account = self.action.account();
         if account.is_aggregator() {
-            utils::check_aggregator(&account)?;
+            common::check_aggregator(&account)?;
         }
         let nonce: u32 = account.nonce().unpack();
         if nonce != 0 {
@@ -62,11 +66,12 @@ impl<'a> RegisterVerifier<'a> {
             }
         } else {
             let old_entries_count = new_index;
-            let calculated_root = utils::compute_account_root(
+            let calculated_root = compute_account_root(
                 vec![(last_index as usize, last_account_hash)],
                 old_entries_count,
                 proof_items.clone(),
-            )?;
+            )
+            .map_err(|_| Error::InvalidAccountMerkleProof)?;
             if old_account_root != calculated_root {
                 return Err(Error::InvalidAccountMerkleProof);
             }
@@ -74,21 +79,22 @@ impl<'a> RegisterVerifier<'a> {
 
         // verify new global state
         let new_account_hash = {
-            let mut hasher = utils::new_blake2b();
+            let mut hasher = new_blake2b();
             hasher.update(account.as_slice());
             let mut hash = [0u8; 32];
             hasher.finalize(&mut hash);
             hash
         };
 
-        let calculated_root = utils::compute_new_account_root(
+        let calculated_root = compute_new_account_root(
             last_account_hash,
             last_index,
             new_account_hash,
             new_index,
             new_index + 1,
             proof_items,
-        )?;
+        )
+        .map_err(|_| Error::InvalidAccountMerkleProof)?;
 
         let new_account_root = self.new_state.account_root().unpack();
         if new_account_root != calculated_root {
@@ -108,7 +114,7 @@ impl<'a> RegisterVerifier<'a> {
 
 /// deposit capacity
 fn deposit_capacity() -> Result<u64, Error> {
-    let capacities = utils::fetch_capacities();
+    let capacities = common::fetch_capacities();
     capacities
         .output
         .checked_sub(capacities.input)

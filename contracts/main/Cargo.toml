@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 godwoken-types = { path = "../../types", default-features = false }
-blake2b-ref = "0.1"
+godwoken-utils = { path = "../../utils", default-features = false }
+godwoken-executor = { path = "../../executor", default-features = false }
 ckb-contract-std = "0.1.2"
-ckb-merkle-mountain-range = { git = "https://github.com/nervosnetwork/merkle-mountain-range.git", rev = "592a7a5", default-features = false }
-libsecp256k1 = { version = "0.3", default-features = false }
+ckb-merkle-mountain-range = { version = "0.2.0", default-features = false }

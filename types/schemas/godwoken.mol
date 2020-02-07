@@ -46,6 +46,7 @@ table AgBlock {
     tx_root: Byte32,
     state_checkpoints: Byte32Vec, // account root check points
     ag_sig: Byte65, // Aggregator's signature
+    ag_index: Uint32, // Aggregator's index
 }
 
 /* contract allowed actions */
@@ -94,4 +95,16 @@ table InvalidBlock {
     txs: TxVec, // transactions during invalid checkpoint
     txs_proof: Byte32Vec, // merkle proof txs exists
     txs_count: Uint32,
+    challenger_index: Uint32, // reward will send to this account
+}
+
+/* Godwoken contract */
+
+union BasicAccountArgs {
+    BATransfer,
+}
+
+struct BATransfer {
+    to: Uint32,
+    amount: Uint64,
 }

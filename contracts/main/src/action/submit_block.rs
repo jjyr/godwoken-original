@@ -1,9 +1,14 @@
+use crate::common;
 use crate::constants::STATE_CHECKPOINT_SIZE;
 use crate::error::Error;
-use crate::utils;
 use alloc::vec;
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
+use godwoken_utils::{
+    hash::new_blake2b,
+    mmr::{compute_account_root, compute_block_root, compute_new_block_root, merkle_root},
+    secp256k1::verify_signature,
+};
 
 pub struct SubmitBlockVerifier<'a> {
     action: SubmitBlockReader<'a>,
@@ -25,7 +30,7 @@ impl<'a> SubmitBlockVerifier<'a> {
     }
 
     fn check_balance(&self) -> Result<(), Error> {
-        let changes = utils::fetch_capacities();
+        let changes = common::fetch_capacities();
         if changes.input != changes.output {
             return Err(Error::IncorrectCapacity);
         }
@@ -38,7 +43,7 @@ impl<'a> SubmitBlockVerifier<'a> {
     /// 3. aggregator's signature is according to pubkey hash
     fn check_aggregator(&self) -> Result<(), Error> {
         let ag_account = self.action.ag_account();
-        utils::check_aggregator(&ag_account)?;
+        common::check_aggregator(&ag_account)?;
         // verify merkle proof of aggregator
         let account_count: u32 = self.action.account_count().unpack();
         let account_proof: Vec<[u8; 32]> = self
@@ -49,17 +54,18 @@ impl<'a> SubmitBlockVerifier<'a> {
             .collect();
         let ag_index: u32 = ag_account.index().unpack();
         let account_hash = {
-            let mut hasher = utils::new_blake2b();
+            let mut hasher = new_blake2b();
             hasher.update(ag_account.as_slice());
             let mut hash = [0u8; 32];
             hasher.finalize(&mut hash);
             hash
         };
-        let calculated_root = utils::compute_account_root(
+        let calculated_root = compute_account_root(
             vec![(ag_index as usize, account_hash)],
             account_count,
             account_proof,
-        )?;
+        )
+        .map_err(|_| Error::InvalidAccountMerkleProof)?;
         let old_account_root = self.old_state.account_root().unpack();
         if calculated_root != old_account_root {
             return Err(Error::InvalidAccountMerkleProof);
@@ -73,19 +79,25 @@ impl<'a> SubmitBlockVerifier<'a> {
                 .as_builder()
                 .ag_sig(Byte65::default())
                 .build();
-            let mut hasher = utils::new_blake2b();
+            let mut hasher = new_blake2b();
             hasher.update(sig_block.as_slice());
             let mut hash = [0u8; 32];
             hasher.finalize(&mut hash);
             hash
         };
         let ag_sig = block.ag_sig().unpack();
-        utils::verify_ag_signature(ag_sig, sig_message, ag_pubkey_hash)?;
+        verify_signature(&ag_sig[..], &sig_message[..], ag_pubkey_hash)
+            .map_err(|_| Error::InvalidSignature)?;
         Ok(())
     }
 
     fn check_block(&self) -> Result<(), Error> {
         let block = self.action.block();
+        let block_ag_index: u32 = block.ag_index().unpack();
+        let ag_index: u32 = self.action.ag_account().index().unpack();
+        if block_ag_index != ag_index {
+            return Err(Error::IncorrectAgIndex);
+        }
         // verify block state checkpoints
         let checkpoints_count = state_checkpoints_count(self.action.txs().len());
         if block.state_checkpoints().len() != checkpoints_count {
@@ -115,14 +127,14 @@ impl<'a> SubmitBlockVerifier<'a> {
             .txs()
             .iter()
             .map(|tx| {
-                let mut hasher = utils::new_blake2b();
+                let mut hasher = new_blake2b();
                 hasher.update(tx.as_slice());
                 let mut hash = [0u8; 32];
                 hasher.finalize(&mut hash);
                 hash
             })
             .collect();
-        let calculated_tx_root = utils::merkle_root(tx_hashes);
+        let calculated_tx_root = merkle_root(tx_hashes);
         let tx_root = self.action.block().tx_root().unpack();
         if tx_root != calculated_tx_root {
             return Err(Error::InvalidTxRoot);
@@ -147,32 +159,34 @@ impl<'a> SubmitBlockVerifier<'a> {
                 return Err(Error::InvalidAccountMerkleProof);
             }
         } else {
-            let calculated_root = utils::compute_block_root(
+            let calculated_root = compute_block_root(
                 vec![(block_number as usize - 1, last_block_hash)],
                 block_number + 1,
                 block_proof.clone(),
-            )?;
+            )
+            .map_err(|_| Error::InvalidBlockMerkleProof)?;
             if old_block_root != calculated_root {
                 return Err(Error::InvalidBlockMerkleProof);
             }
         }
         // verify new state merkle proof
         let block_hash = {
-            let mut hasher = utils::new_blake2b();
+            let mut hasher = new_blake2b();
             hasher.update(block.as_slice());
             let mut hash = [0u8; 32];
             hasher.finalize(&mut hash);
             hash
         };
         let new_block_root = self.new_state.block_root().unpack();
-        let calculated_root = utils::compute_new_block_root(
+        let calculated_root = compute_new_block_root(
             last_block_hash,
             block_number - 1,
             block_hash,
             block_number,
             block_number + 1,
             block_proof,
-        )?;
+        )
+        .map_err(|_| Error::InvalidBlockMerkleProof)?;
         if new_block_root != calculated_root {
             return Err(Error::InvalidBlockMerkleProof);
         }

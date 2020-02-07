@@ -1,10 +1,11 @@
-use crate::error::Error;
-use crate::utils::hash::new_blake2b;
+use crate::hash::new_blake2b;
 use alloc::vec;
 use alloc::vec::Vec;
 use ckb_merkle_mountain_range::{
     leaf_index_to_mmr_size, leaf_index_to_pos, util::MemMMR, Merge, MerkleProof,
 };
+
+pub use ckb_merkle_mountain_range::Error;
 
 pub struct HashMerge;
 
@@ -28,17 +29,15 @@ pub fn compute_account_root(
 ) -> Result<[u8; 32], Error> {
     let mmr_size = leaf_index_to_mmr_size((accounts_count - 1) as u64);
     let proof = MerkleProof::<_, HashMerge>::new(mmr_size, proof_items);
-    let root = proof
-        .calculate_root(
-            accounts
-                .into_iter()
-                .map(|(i, hash)| {
-                    let pos = leaf_index_to_pos(i as u64);
-                    (pos, hash)
-                })
-                .collect(),
-        )
-        .map_err(|_| Error::InvalidAccountMerkleProof)?;
+    let root = proof.calculate_root(
+        accounts
+            .into_iter()
+            .map(|(i, hash)| {
+                let pos = leaf_index_to_pos(i as u64);
+                (pos, hash)
+            })
+            .collect(),
+    )?;
     // calculate account_root: H(count | account entries root)
     let mut account_root = [0u8; 32];
     let mut hasher = new_blake2b();
@@ -65,14 +64,12 @@ pub fn compute_new_account_root(
         let entry_pos = leaf_index_to_pos(entry_index as u64);
         let new_entry_pos = leaf_index_to_pos(new_entry_index as u64);
         let proof = MerkleProof::<_, HashMerge>::new(mmr_size, proof_items);
-        proof
-            .calculate_root_with_new_leaf(
-                vec![(entry_pos, entry_hash)],
-                new_entry_pos,
-                new_entry_hash,
-                new_mmr_size,
-            )
-            .map_err(|_| Error::InvalidAccountMerkleProof)?
+        proof.calculate_root_with_new_leaf(
+            vec![(entry_pos, entry_hash)],
+            new_entry_pos,
+            new_entry_hash,
+            new_mmr_size,
+        )?
     };
     // calculate account_root: H(count | account entries root)
     let mut account_root = [0u8; 32];
@@ -91,17 +88,15 @@ pub fn compute_block_root(
 ) -> Result<[u8; 32], Error> {
     let mmr_size = leaf_index_to_mmr_size((blocks_count - 1) as u64);
     let proof = MerkleProof::<_, HashMerge>::new(mmr_size, proof_items);
-    let root = proof
-        .calculate_root(
-            blocks
-                .into_iter()
-                .map(|(i, hash)| {
-                    let pos = leaf_index_to_pos(i as u64);
-                    (pos, hash)
-                })
-                .collect(),
-        )
-        .map_err(|_| Error::InvalidBlockMerkleProof)?;
+    let root = proof.calculate_root(
+        blocks
+            .into_iter()
+            .map(|(i, hash)| {
+                let pos = leaf_index_to_pos(i as u64);
+                (pos, hash)
+            })
+            .collect(),
+    )?;
     // calculate block_root: H(count | root)
     let mut block_root = [0u8; 32];
     let mut hasher = new_blake2b();
@@ -128,14 +123,12 @@ pub fn compute_new_block_root(
         let entry_pos = leaf_index_to_pos(block_index as u64);
         let new_entry_pos = leaf_index_to_pos(new_block_index as u64);
         let proof = MerkleProof::<_, HashMerge>::new(mmr_size, proof_items);
-        proof
-            .calculate_root_with_new_leaf(
-                vec![(entry_pos, block_hash)],
-                new_entry_pos,
-                new_block_hash,
-                new_mmr_size,
-            )
-            .map_err(|_| Error::InvalidAccountMerkleProof)?
+        proof.calculate_root_with_new_leaf(
+            vec![(entry_pos, block_hash)],
+            new_entry_pos,
+            new_block_hash,
+            new_mmr_size,
+        )?
     };
     // calculate account_root: H(count | account entries root)
     let mut account_root = [0u8; 32];
@@ -161,9 +154,7 @@ pub fn compute_tx_root(
             (pos, tx_hash)
         })
         .collect();
-    proof
-        .calculate_root(leaves)
-        .map_err(|_| Error::InvalidBlockMerkleProof)
+    proof.calculate_root(leaves)
 }
 
 /// Compute txs root from merkle proof

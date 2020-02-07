@@ -3,7 +3,9 @@
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
+pub mod cache;
 mod conversion;
+mod extension;
 #[doc(hidden)]
 mod generated;
 pub mod prelude;

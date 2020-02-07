@@ -9,7 +9,7 @@ install-binary-patcher:
 		cargo install --force --git https://github.com/xxuejie/ckb-binary-patcher.git
 
 # Docker
-BUILDER_DOCKER := jjy0/ckb-riscv-rust-toolchain:2019-12-30
+BUILDER_DOCKER := jjy0/ckb-riscv-rust-toolchain:2020-2-6
 
 build-image:
 	docker build -t ${BUILDER_DOCKER} .

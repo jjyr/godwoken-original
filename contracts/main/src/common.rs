@@ -1,3 +1,4 @@
+/// common module contains serveral reusable functions
 use crate::constants::{AGGREGATOR_CODE_HASH, AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
 use crate::error::Error;
 use ckb_contract_std::{ckb_constants::*, syscalls};
