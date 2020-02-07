@@ -16,8 +16,6 @@ pub enum Error {
     InvalidAccountRoot = -22,
     InvalidSignature = -23,
     IncorrectAgIndex = -27,
-    IncorrectNumberOfCheckpoints = -28,
-    OutOfIndexCheckpoint = -29,
     IncorrectInvalidTxsSize = -30,
     InvalidTxMerkleProof = -31,
     TryRevertValidBlock = -32,

@@ -44,7 +44,8 @@ vector TxVec <Tx>;
 table AgBlock {
     number: Uint32, // block number
     tx_root: Byte32,
-    state_checkpoints: Byte32Vec, // account root check points
+    previous_account_root: Byte32, // account root before this block
+    current_account_root: Byte32, // account root after this block
     ag_sig: Byte65, // Aggregator's signature
     ag_index: Uint32, // Aggregator's index
 }
@@ -88,11 +89,10 @@ table SubmitBlock {
 table InvalidBlock {
     block: AgBlock, // invalid block
     block_proof: Byte32Vec, // merkle proof of block exists
-    checkpoint_index: Uint32, // checkpoint which contains the initial state
     touched_accounts: AccountVec, // touch accounts previous state
     touched_accounts_proof: Byte32Vec, // proof of touched account state
     accounts_count: Uint32,
-    txs: TxVec, // transactions during invalid checkpoint
+    txs: TxVec, // transactions
     txs_proof: Byte32Vec, // merkle proof txs exists
     txs_count: Uint32,
     challenger_index: Uint32, // reward will send to this account

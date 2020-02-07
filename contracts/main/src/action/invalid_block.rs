@@ -1,5 +1,4 @@
-use crate::common;
-use crate::constants::{CHALLENGE_REWARD_RATE, STATE_CHECKPOINT_SIZE};
+use crate::constants::CHALLENGE_REWARD_RATE;
 /// Invalid Block
 /// 1. proof block exists
 /// 2. re-run block txs from previous state to invalid state
@@ -38,6 +37,10 @@ impl<'a> InvalidBlockVerifier<'a> {
         block: &AgBlockReader<'a>,
         block_proof: Vec<[u8; 32]>,
     ) -> Result<(), Error> {
+        if block.is_penalized_block() {
+            // A penalized block can't be invalid since it is generated on-chain
+            return Err(Error::TryRevertPenalizedBlock);
+        }
         let block_index: u32 = block.number().unpack();
         let block_hash = {
             let mut hasher = new_blake2b();
@@ -58,16 +61,8 @@ impl<'a> InvalidBlockVerifier<'a> {
         Ok(())
     }
 
-    fn verify_checkpoint_and_txs_len(
-        &self,
-        checkpoint_index: u32,
-        block: &AgBlockReader<'a>,
-        txs: &TxVecReader<'a>,
-    ) -> Result<(), Error> {
-        if checkpoint_index as usize >= block.state_checkpoints().len() {
-            return Err(Error::OutOfIndexCheckpoint);
-        }
-        if txs.len() > STATE_CHECKPOINT_SIZE || txs.len() == 0 {
+    fn verify_txs_len(&self, txs: &TxVecReader<'a>) -> Result<(), Error> {
+        if txs.len() == 0 {
             return Err(Error::IncorrectInvalidTxsSize);
         }
         Ok(())
@@ -75,17 +70,11 @@ impl<'a> InvalidBlockVerifier<'a> {
 
     /// verify txs
     /// return tx_with_hashes for later use
-    fn verify_txs_root(
-        &self,
-        block: &AgBlockReader<'a>,
-        checkpoint_index: u32,
-        txs: &[TxWithHash],
-    ) -> Result<(), Error> {
+    fn verify_txs_root(&self, block: &AgBlockReader<'a>, txs: &[TxWithHash]) -> Result<(), Error> {
         let leaves: Vec<_> = {
-            let base_index = checkpoint_index as usize * STATE_CHECKPOINT_SIZE;
             txs.iter()
                 .enumerate()
-                .map(|(i, tx)| (base_index + i, tx.tx_hash.clone()))
+                .map(|(i, tx)| (i, tx.tx_hash.clone()))
                 .collect()
         };
         let txs_count: u32 = self.action.txs_count().unpack();
@@ -112,13 +101,7 @@ impl<'a> InvalidBlockVerifier<'a> {
         let leaves = accounts_to_proof_leaves(self.action.touched_accounts().iter());
         let calculated_root = compute_account_root(leaves, accounts_count, accounts_proof)
             .map_err(|_| Error::InvalidAccountMerkleProof)?;
-        if &calculated_root
-            != block
-                .state_checkpoints()
-                .get(0)
-                .expect("account root")
-                .raw_data()
-        {
+        if &calculated_root != block.previous_account_root().raw_data() {
             return Err(Error::InvalidAccountMerkleProof);
         }
         Ok(())
@@ -128,7 +111,6 @@ impl<'a> InvalidBlockVerifier<'a> {
     fn verify_invalid_state(
         &self,
         block: &AgBlockReader<'a>,
-        checkpoint_index: u32,
         tx_with_hashes: Vec<TxWithHash>,
         accounts_count: u32,
         accounts_proof: Vec<[u8; 32]>,
@@ -153,13 +135,7 @@ impl<'a> InvalidBlockVerifier<'a> {
             accounts_to_proof_leaves(state.iter().map(|account| account.as_reader()));
         let calculated_root = compute_account_root(leaves, accounts_count, accounts_proof)
             .map_err(|_| Error::InvalidAccountMerkleProof)?;
-        if &calculated_root
-            != block
-                .state_checkpoints()
-                .get((checkpoint_index + 1) as usize)
-                .expect("get invalid checkpoint")
-                .raw_data()
-        {
+        if &calculated_root != block.current_account_root().raw_data() {
             // block is invalid
             return Ok(());
         }
@@ -168,7 +144,6 @@ impl<'a> InvalidBlockVerifier<'a> {
 
     pub fn calculate_reverted_account_root(
         &self,
-        block: &AgBlockReader<'a>,
         ag_index: u32,
         challenger_index: u32,
         accounts_count: u32,
@@ -190,11 +165,15 @@ impl<'a> InvalidBlockVerifier<'a> {
             ag_balance.saturating_mul(CHALLENGE_REWARD_RATE.0) / CHALLENGE_REWARD_RATE.1
         };
         let challenger_balance: u64 = challenger_account.balance().unpack();
-        state.update_account_balance(ag_index, 0);
-        state.update_account_balance(
-            challenger_index,
-            challenger_balance.saturating_add(reward_amount),
-        );
+        state
+            .update_account_balance(ag_index, 0)
+            .expect("update ag balance");
+        state
+            .update_account_balance(
+                challenger_index,
+                challenger_balance.saturating_add(reward_amount),
+            )
+            .expect("update challenger balance");
         let leaves = accounts_to_proof_leaves(state.iter().map(|account| account.as_reader()));
         let account_root = compute_account_root(leaves, accounts_count, accounts_proof)
             .map_err(|_| Error::InvalidAccountMerkleProof)?;
@@ -211,7 +190,6 @@ impl<'a> InvalidBlockVerifier<'a> {
         let ag_index: u32 = block.ag_index().unpack();
         let challenger_index: u32 = self.action.challenger_index().unpack();
         let account_root = self.calculate_reverted_account_root(
-            block,
             ag_index,
             challenger_index,
             accounts_count,
@@ -251,7 +229,6 @@ impl<'a> InvalidBlockVerifier<'a> {
     pub fn verify(&self) -> Result<(), Error> {
         let block = self.action.block();
         let txs = self.action.txs();
-        let checkpoint_index: u32 = self.action.checkpoint_index().unpack();
         let accounts_count: u32 = self.action.accounts_count().unpack();
         let accounts_proof: Vec<[u8; 32]> = self
             .action
@@ -266,13 +243,12 @@ impl<'a> InvalidBlockVerifier<'a> {
             .map(|item| item.unpack())
             .collect();
         self.verify_block(&block, block_proof.clone())?;
-        self.verify_checkpoint_and_txs_len(checkpoint_index, &block, &txs)?;
+        self.verify_txs_len(&txs)?;
         let tx_with_hashes = build_tx_hashes(&txs);
-        self.verify_txs_root(&block, checkpoint_index, &tx_with_hashes)?;
+        self.verify_txs_root(&block, &tx_with_hashes)?;
         self.verify_accounts(&block, accounts_count, accounts_proof.clone())?;
         self.verify_invalid_state(
             &block,
-            checkpoint_index,
             tx_with_hashes,
             accounts_count,
             accounts_proof.clone(),
@@ -284,8 +260,7 @@ impl<'a> InvalidBlockVerifier<'a> {
 
 fn build_tx_hashes<'a>(txs: &'a TxVecReader<'a>) -> Vec<TxWithHash<'a>> {
     txs.iter()
-        .enumerate()
-        .map(|(i, tx)| {
+        .map(|tx| {
             let mut hasher = new_blake2b();
             hasher.update(tx.as_slice());
             let mut hash = [0u8; 32];

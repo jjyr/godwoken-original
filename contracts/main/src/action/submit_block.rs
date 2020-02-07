@@ -1,5 +1,4 @@
 use crate::common;
-use crate::constants::STATE_CHECKPOINT_SIZE;
 use crate::error::Error;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -98,27 +97,11 @@ impl<'a> SubmitBlockVerifier<'a> {
         if block_ag_index != ag_index {
             return Err(Error::IncorrectAgIndex);
         }
-        // verify block state checkpoints
-        let checkpoints_count = state_checkpoints_count(self.action.txs().len());
-        if block.state_checkpoints().len() != checkpoints_count {
-            return Err(Error::IncorrectNumberOfCheckpoints);
-        }
-        if block
-            .state_checkpoints()
-            .get(0)
-            .expect("old account root")
-            .as_slice()
-            != self.old_state.account_root().as_slice()
-        {
+        // verify block state
+        if block.previous_account_root().as_slice() != self.old_state.account_root().as_slice() {
             return Err(Error::InvalidAccountRoot);
         }
-        if block
-            .state_checkpoints()
-            .get(checkpoints_count - 1)
-            .expect("new account root")
-            .as_slice()
-            != self.new_state.account_root().as_slice()
-        {
+        if block.current_account_root().as_slice() != self.new_state.account_root().as_slice() {
             return Err(Error::InvalidAccountRoot);
         }
         // verify tx root
@@ -200,12 +183,4 @@ impl<'a> SubmitBlockVerifier<'a> {
         self.check_state_transition()?;
         Ok(())
     }
-}
-
-/// required count of checkpoints for txs_len
-/// checkpoints: old_state | cp1 | cp2 ....
-fn state_checkpoints_count(txs_len: usize) -> usize {
-    let cp_count = txs_len.saturating_sub(1) / STATE_CHECKPOINT_SIZE + 1;
-    // plus 1 for old_state
-    cp_count + 1
 }

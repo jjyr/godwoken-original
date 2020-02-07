@@ -2843,7 +2843,18 @@ impl ::core::fmt::Display for AgBlock {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "number", self.number())?;
         write!(f, ", {}: {}", "tx_root", self.tx_root())?;
-        write!(f, ", {}: {}", "state_checkpoints", self.state_checkpoints())?;
+        write!(
+            f,
+            ", {}: {}",
+            "previous_account_root",
+            self.previous_account_root()
+        )?;
+        write!(
+            f,
+            ", {}: {}",
+            "current_account_root",
+            self.current_account_root()
+        )?;
         write!(f, ", {}: {}", "ag_sig", self.ag_sig())?;
         write!(f, ", {}: {}", "ag_index", self.ag_index())?;
         let extra_count = self.count_extra_fields();
@@ -2856,17 +2867,19 @@ impl ::core::fmt::Display for AgBlock {
 impl ::core::default::Default for AgBlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            133, 0, 0, 0, 24, 0, 0, 0, 28, 0, 0, 0, 60, 0, 0, 0, 64, 0, 0, 0, 129, 0, 0, 0, 0, 0,
+            197, 0, 0, 0, 28, 0, 0, 0, 32, 0, 0, 0, 64, 0, 0, 0, 96, 0, 0, 0, 128, 0, 0, 0, 193, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         AgBlock::new_unchecked(v.into())
     }
 }
 impl AgBlock {
-    pub const FIELD_COUNT: usize = 5;
+    pub const FIELD_COUNT: usize = 6;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -2898,23 +2911,29 @@ impl AgBlock {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn state_checkpoints(&self) -> Byte32Vec {
+    pub fn previous_account_root(&self) -> Byte32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Byte32Vec::new_unchecked(self.0.slice(start, end))
+        Byte32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn ag_sig(&self) -> Byte65 {
+    pub fn current_account_root(&self) -> Byte32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
+        Byte32::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn ag_sig(&self) -> Byte65 {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let end = molecule::unpack_number(&offsets[5][..]) as usize;
         Byte65::new_unchecked(self.0.slice(start, end))
     }
     pub fn ag_index(&self) -> Uint32 {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[5][..]) as usize;
+            let end = molecule::unpack_number(&offsets[6][..]) as usize;
             Uint32::new_unchecked(self.0.slice(start, end))
         } else {
             Uint32::new_unchecked(self.0.slice_from(start))
@@ -2949,7 +2968,8 @@ impl molecule::prelude::Entity for AgBlock {
         Self::new_builder()
             .number(self.number())
             .tx_root(self.tx_root())
-            .state_checkpoints(self.state_checkpoints())
+            .previous_account_root(self.previous_account_root())
+            .current_account_root(self.current_account_root())
             .ag_sig(self.ag_sig())
             .ag_index(self.ag_index())
     }
@@ -2975,7 +2995,18 @@ impl<'r> ::core::fmt::Display for AgBlockReader<'r> {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "number", self.number())?;
         write!(f, ", {}: {}", "tx_root", self.tx_root())?;
-        write!(f, ", {}: {}", "state_checkpoints", self.state_checkpoints())?;
+        write!(
+            f,
+            ", {}: {}",
+            "previous_account_root",
+            self.previous_account_root()
+        )?;
+        write!(
+            f,
+            ", {}: {}",
+            "current_account_root",
+            self.current_account_root()
+        )?;
         write!(f, ", {}: {}", "ag_sig", self.ag_sig())?;
         write!(f, ", {}: {}", "ag_index", self.ag_index())?;
         let extra_count = self.count_extra_fields();
@@ -2986,7 +3017,7 @@ impl<'r> ::core::fmt::Display for AgBlockReader<'r> {
     }
 }
 impl<'r> AgBlockReader<'r> {
-    pub const FIELD_COUNT: usize = 5;
+    pub const FIELD_COUNT: usize = 6;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -3018,23 +3049,29 @@ impl<'r> AgBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn state_checkpoints(&self) -> Byte32VecReader<'r> {
+    pub fn previous_account_root(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
+        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn ag_sig(&self) -> Byte65Reader<'r> {
+    pub fn current_account_root(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
+        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn ag_sig(&self) -> Byte65Reader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let end = molecule::unpack_number(&offsets[5][..]) as usize;
         Byte65Reader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn ag_index(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[5][..]) as usize;
+            let end = molecule::unpack_number(&offsets[6][..]) as usize;
             Uint32Reader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Uint32Reader::new_unchecked(&self.as_slice()[start..])
@@ -3094,9 +3131,10 @@ impl<'r> molecule::prelude::Reader<'r> for AgBlockReader<'r> {
         }
         Uint32Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         Byte32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        Byte65Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        Byte32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Byte32Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        Byte65Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
         Ok(())
     }
 }
@@ -3104,12 +3142,13 @@ impl<'r> molecule::prelude::Reader<'r> for AgBlockReader<'r> {
 pub struct AgBlockBuilder {
     pub(crate) number: Uint32,
     pub(crate) tx_root: Byte32,
-    pub(crate) state_checkpoints: Byte32Vec,
+    pub(crate) previous_account_root: Byte32,
+    pub(crate) current_account_root: Byte32,
     pub(crate) ag_sig: Byte65,
     pub(crate) ag_index: Uint32,
 }
 impl AgBlockBuilder {
-    pub const FIELD_COUNT: usize = 5;
+    pub const FIELD_COUNT: usize = 6;
     pub fn number(mut self, v: Uint32) -> Self {
         self.number = v;
         self
@@ -3118,8 +3157,12 @@ impl AgBlockBuilder {
         self.tx_root = v;
         self
     }
-    pub fn state_checkpoints(mut self, v: Byte32Vec) -> Self {
-        self.state_checkpoints = v;
+    pub fn previous_account_root(mut self, v: Byte32) -> Self {
+        self.previous_account_root = v;
+        self
+    }
+    pub fn current_account_root(mut self, v: Byte32) -> Self {
+        self.current_account_root = v;
         self
     }
     pub fn ag_sig(mut self, v: Byte65) -> Self {
@@ -3138,7 +3181,8 @@ impl molecule::prelude::Builder for AgBlockBuilder {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.number.as_slice().len()
             + self.tx_root.as_slice().len()
-            + self.state_checkpoints.as_slice().len()
+            + self.previous_account_root.as_slice().len()
+            + self.current_account_root.as_slice().len()
             + self.ag_sig.as_slice().len()
             + self.ag_index.as_slice().len()
     }
@@ -3150,7 +3194,9 @@ impl molecule::prelude::Builder for AgBlockBuilder {
         offsets.push(total_size);
         total_size += self.tx_root.as_slice().len();
         offsets.push(total_size);
-        total_size += self.state_checkpoints.as_slice().len();
+        total_size += self.previous_account_root.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.current_account_root.as_slice().len();
         offsets.push(total_size);
         total_size += self.ag_sig.as_slice().len();
         offsets.push(total_size);
@@ -3161,7 +3207,8 @@ impl molecule::prelude::Builder for AgBlockBuilder {
         }
         writer.write_all(self.number.as_slice())?;
         writer.write_all(self.tx_root.as_slice())?;
-        writer.write_all(self.state_checkpoints.as_slice())?;
+        writer.write_all(self.previous_account_root.as_slice())?;
+        writer.write_all(self.current_account_root.as_slice())?;
         writer.write_all(self.ag_sig.as_slice())?;
         writer.write_all(self.ag_index.as_slice())?;
         Ok(())
@@ -4203,17 +4250,19 @@ impl ::core::fmt::Display for SubmitBlock {
 impl ::core::default::Default for SubmitBlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            46, 1, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 169, 0, 0, 0, 201, 0, 0, 0, 205, 0, 0, 0, 38, 1,
-            0, 0, 42, 1, 0, 0, 4, 0, 0, 0, 133, 0, 0, 0, 24, 0, 0, 0, 28, 0, 0, 0, 60, 0, 0, 0, 64,
-            0, 0, 0, 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            110, 1, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 233, 0, 0, 0, 9, 1, 0, 0, 13, 1, 0, 0, 102, 1,
+            0, 0, 106, 1, 0, 0, 4, 0, 0, 0, 197, 0, 0, 0, 28, 0, 0, 0, 32, 0, 0, 0, 64, 0, 0, 0,
+            96, 0, 0, 0, 128, 0, 0, 0, 193, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 24, 0, 0, 0, 28, 0, 0, 0, 76, 0, 0, 0, 80, 0, 0,
-            0, 88, 0, 0, 0, 0, 0, 0, 0, 48, 0, 0, 0, 12, 0, 0, 0, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 24, 0, 0, 0, 28, 0, 0, 0,
+            76, 0, 0, 0, 80, 0, 0, 0, 88, 0, 0, 0, 0, 0, 0, 0, 48, 0, 0, 0, 12, 0, 0, 0, 44, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         SubmitBlock::new_unchecked(v.into())
     }
@@ -4595,7 +4644,6 @@ impl ::core::fmt::Display for InvalidBlock {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "block", self.block())?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(f, ", {}: {}", "checkpoint_index", self.checkpoint_index())?;
         write!(f, ", {}: {}", "touched_accounts", self.touched_accounts())?;
         write!(
             f,
@@ -4618,20 +4666,22 @@ impl ::core::fmt::Display for InvalidBlock {
 impl ::core::default::Default for InvalidBlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            213, 0, 0, 0, 44, 0, 0, 0, 177, 0, 0, 0, 181, 0, 0, 0, 185, 0, 0, 0, 189, 0, 0, 0, 193,
-            0, 0, 0, 197, 0, 0, 0, 201, 0, 0, 0, 205, 0, 0, 0, 209, 0, 0, 0, 133, 0, 0, 0, 24, 0,
-            0, 0, 28, 0, 0, 0, 60, 0, 0, 0, 64, 0, 0, 0, 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            13, 1, 0, 0, 40, 0, 0, 0, 237, 0, 0, 0, 241, 0, 0, 0, 245, 0, 0, 0, 249, 0, 0, 0, 253,
+            0, 0, 0, 1, 1, 0, 0, 5, 1, 0, 0, 9, 1, 0, 0, 197, 0, 0, 0, 28, 0, 0, 0, 32, 0, 0, 0,
+            64, 0, 0, 0, 96, 0, 0, 0, 128, 0, 0, 0, 193, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         InvalidBlock::new_unchecked(v.into())
     }
 }
 impl InvalidBlock {
-    pub const FIELD_COUNT: usize = 10;
+    pub const FIELD_COUNT: usize = 9;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -4663,53 +4713,47 @@ impl InvalidBlock {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
-    pub fn checkpoint_index(&self) -> Uint32 {
+    pub fn touched_accounts(&self) -> AccountVec {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Uint32::new_unchecked(self.0.slice(start, end))
-    }
-    pub fn touched_accounts(&self) -> AccountVec {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[3][..]) as usize;
-        let end = molecule::unpack_number(&offsets[4][..]) as usize;
         AccountVec::new_unchecked(self.0.slice(start, end))
     }
     pub fn touched_accounts_proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[4][..]) as usize;
-        let end = molecule::unpack_number(&offsets[5][..]) as usize;
+        let start = molecule::unpack_number(&offsets[3][..]) as usize;
+        let end = molecule::unpack_number(&offsets[4][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
     pub fn accounts_count(&self) -> Uint32 {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[5][..]) as usize;
-        let end = molecule::unpack_number(&offsets[6][..]) as usize;
+        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let end = molecule::unpack_number(&offsets[5][..]) as usize;
         Uint32::new_unchecked(self.0.slice(start, end))
     }
     pub fn txs(&self) -> TxVec {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[6][..]) as usize;
-        let end = molecule::unpack_number(&offsets[7][..]) as usize;
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
+        let end = molecule::unpack_number(&offsets[6][..]) as usize;
         TxVec::new_unchecked(self.0.slice(start, end))
     }
     pub fn txs_proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[7][..]) as usize;
-        let end = molecule::unpack_number(&offsets[8][..]) as usize;
+        let start = molecule::unpack_number(&offsets[6][..]) as usize;
+        let end = molecule::unpack_number(&offsets[7][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
     pub fn txs_count(&self) -> Uint32 {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[8][..]) as usize;
-        let end = molecule::unpack_number(&offsets[9][..]) as usize;
+        let start = molecule::unpack_number(&offsets[7][..]) as usize;
+        let end = molecule::unpack_number(&offsets[8][..]) as usize;
         Uint32::new_unchecked(self.0.slice(start, end))
     }
     pub fn challenger_index(&self) -> Uint32 {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[9][..]) as usize;
+        let start = molecule::unpack_number(&offsets[8][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[10][..]) as usize;
+            let end = molecule::unpack_number(&offsets[9][..]) as usize;
             Uint32::new_unchecked(self.0.slice(start, end))
         } else {
             Uint32::new_unchecked(self.0.slice_from(start))
@@ -4744,7 +4788,6 @@ impl molecule::prelude::Entity for InvalidBlock {
         Self::new_builder()
             .block(self.block())
             .block_proof(self.block_proof())
-            .checkpoint_index(self.checkpoint_index())
             .touched_accounts(self.touched_accounts())
             .touched_accounts_proof(self.touched_accounts_proof())
             .accounts_count(self.accounts_count())
@@ -4775,7 +4818,6 @@ impl<'r> ::core::fmt::Display for InvalidBlockReader<'r> {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "block", self.block())?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(f, ", {}: {}", "checkpoint_index", self.checkpoint_index())?;
         write!(f, ", {}: {}", "touched_accounts", self.touched_accounts())?;
         write!(
             f,
@@ -4796,7 +4838,7 @@ impl<'r> ::core::fmt::Display for InvalidBlockReader<'r> {
     }
 }
 impl<'r> InvalidBlockReader<'r> {
-    pub const FIELD_COUNT: usize = 10;
+    pub const FIELD_COUNT: usize = 9;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -4828,53 +4870,47 @@ impl<'r> InvalidBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn checkpoint_index(&self) -> Uint32Reader<'r> {
+    pub fn touched_accounts(&self) -> AccountVecReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        Uint32Reader::new_unchecked(&self.as_slice()[start..end])
-    }
-    pub fn touched_accounts(&self) -> AccountVecReader<'r> {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[3][..]) as usize;
-        let end = molecule::unpack_number(&offsets[4][..]) as usize;
         AccountVecReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn touched_accounts_proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[4][..]) as usize;
-        let end = molecule::unpack_number(&offsets[5][..]) as usize;
+        let start = molecule::unpack_number(&offsets[3][..]) as usize;
+        let end = molecule::unpack_number(&offsets[4][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn accounts_count(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[5][..]) as usize;
-        let end = molecule::unpack_number(&offsets[6][..]) as usize;
+        let start = molecule::unpack_number(&offsets[4][..]) as usize;
+        let end = molecule::unpack_number(&offsets[5][..]) as usize;
         Uint32Reader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn txs(&self) -> TxVecReader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[6][..]) as usize;
-        let end = molecule::unpack_number(&offsets[7][..]) as usize;
+        let start = molecule::unpack_number(&offsets[5][..]) as usize;
+        let end = molecule::unpack_number(&offsets[6][..]) as usize;
         TxVecReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn txs_proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[7][..]) as usize;
-        let end = molecule::unpack_number(&offsets[8][..]) as usize;
+        let start = molecule::unpack_number(&offsets[6][..]) as usize;
+        let end = molecule::unpack_number(&offsets[7][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn txs_count(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[8][..]) as usize;
-        let end = molecule::unpack_number(&offsets[9][..]) as usize;
+        let start = molecule::unpack_number(&offsets[7][..]) as usize;
+        let end = molecule::unpack_number(&offsets[8][..]) as usize;
         Uint32Reader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn challenger_index(&self) -> Uint32Reader<'r> {
         let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[9][..]) as usize;
+        let start = molecule::unpack_number(&offsets[8][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[10][..]) as usize;
+            let end = molecule::unpack_number(&offsets[9][..]) as usize;
             Uint32Reader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Uint32Reader::new_unchecked(&self.as_slice()[start..])
@@ -4934,14 +4970,13 @@ impl<'r> molecule::prelude::Reader<'r> for InvalidBlockReader<'r> {
         }
         AgBlockReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        AccountVecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
-        TxVecReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
+        AccountVecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        TxVecReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        Byte32VecReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
         Uint32Reader::verify(&slice[offsets[8]..offsets[9]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[9]..offsets[10]], compatible)?;
         Ok(())
     }
 }
@@ -4949,7 +4984,6 @@ impl<'r> molecule::prelude::Reader<'r> for InvalidBlockReader<'r> {
 pub struct InvalidBlockBuilder {
     pub(crate) block: AgBlock,
     pub(crate) block_proof: Byte32Vec,
-    pub(crate) checkpoint_index: Uint32,
     pub(crate) touched_accounts: AccountVec,
     pub(crate) touched_accounts_proof: Byte32Vec,
     pub(crate) accounts_count: Uint32,
@@ -4959,17 +4993,13 @@ pub struct InvalidBlockBuilder {
     pub(crate) challenger_index: Uint32,
 }
 impl InvalidBlockBuilder {
-    pub const FIELD_COUNT: usize = 10;
+    pub const FIELD_COUNT: usize = 9;
     pub fn block(mut self, v: AgBlock) -> Self {
         self.block = v;
         self
     }
     pub fn block_proof(mut self, v: Byte32Vec) -> Self {
         self.block_proof = v;
-        self
-    }
-    pub fn checkpoint_index(mut self, v: Uint32) -> Self {
-        self.checkpoint_index = v;
         self
     }
     pub fn touched_accounts(mut self, v: AccountVec) -> Self {
@@ -5008,7 +5038,6 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.block.as_slice().len()
             + self.block_proof.as_slice().len()
-            + self.checkpoint_index.as_slice().len()
             + self.touched_accounts.as_slice().len()
             + self.touched_accounts_proof.as_slice().len()
             + self.accounts_count.as_slice().len()
@@ -5024,8 +5053,6 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         total_size += self.block.as_slice().len();
         offsets.push(total_size);
         total_size += self.block_proof.as_slice().len();
-        offsets.push(total_size);
-        total_size += self.checkpoint_index.as_slice().len();
         offsets.push(total_size);
         total_size += self.touched_accounts.as_slice().len();
         offsets.push(total_size);
@@ -5046,7 +5073,6 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         }
         writer.write_all(self.block.as_slice())?;
         writer.write_all(self.block_proof.as_slice())?;
-        writer.write_all(self.checkpoint_index.as_slice())?;
         writer.write_all(self.touched_accounts.as_slice())?;
         writer.write_all(self.touched_accounts_proof.as_slice())?;
         writer.write_all(self.accounts_count.as_slice())?;

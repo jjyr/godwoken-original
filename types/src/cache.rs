@@ -1,4 +1,4 @@
-use crate::{packed::*, prelude::*};
+use crate::packed::*;
 
 pub struct TxWithHash<'a> {
     pub raw: TxReader<'a>,
