@@ -25,7 +25,7 @@ mod common;
 mod constants;
 mod error;
 
-use crate::common::{check_output_type_hash, load_action, load_global_state};
+use crate::common::{check_output, load_action, load_global_state};
 use crate::constants::HASH_SIZE;
 use crate::error::Error;
 use alloc::format;
@@ -47,9 +47,12 @@ fn contract_entry() -> Result<(), Error> {
     if let Ok(type_hash) =
         syscalls::load_cell_by_field(HASH_SIZE, 0, 0, Source::GroupInput, CellField::TypeHash)
     {
+        let lock_hash =
+            syscalls::load_cell_by_field(HASH_SIZE, 0, 0, Source::GroupInput, CellField::LockHash)
+                .expect("get lock hash");
         // do input verification
         // just check the output has same type constraint
-        return check_output_type_hash(&type_hash);
+        return check_output(&type_hash, &lock_hash);
     }
     // do output verification
     let action = load_action()?;

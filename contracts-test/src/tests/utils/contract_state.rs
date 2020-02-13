@@ -1,8 +1,12 @@
+use crate::tests::{DUMMY_LOCK_HASH, MAIN_CONTRACT_HASH};
 use ckb_contract_tool::ckb_hash::{blake2b_256, new_blake2b};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
 use godwoken_types::bytes::Bytes;
-use godwoken_types::packed::{Account, AgBlock, GlobalState, Tx};
 use godwoken_types::prelude::*;
+use godwoken_types::{
+    core::ScriptHashType,
+    packed::{Account, AgBlock, GlobalState, Script, Tx},
+};
 
 pub struct HashMerge;
 
@@ -20,16 +24,43 @@ impl Merge for HashMerge {
 
 type HashMMR = MemMMR<[u8; 32], HashMerge>;
 
-#[derive(Default)]
-pub struct GlobalStateContext {
+pub struct ContractState {
     account_entries: Vec<Account>,
     block_root: [u8; 32],
     block_mmr: HashMMR,
+    lock_data_hash: [u8; 32],
+    type_data_hash: [u8; 32],
+    block_count: u32,
 }
 
-impl GlobalStateContext {
+impl ContractState {
     pub fn new() -> Self {
-        Default::default()
+        ContractState {
+            account_entries: Vec::new(),
+            block_root: [0u8; 32],
+            block_mmr: Default::default(),
+            lock_data_hash: *DUMMY_LOCK_HASH,
+            type_data_hash: *MAIN_CONTRACT_HASH,
+            block_count: 0,
+        }
+    }
+
+    pub fn balance(&self) -> u64 {
+        0
+    }
+
+    pub fn type_script(&self) -> Script {
+        Script::new_builder()
+            .code_hash(self.type_data_hash.pack())
+            .hash_type(ScriptHashType::Data.into())
+            .build()
+    }
+
+    pub fn lock_script(&self) -> Script {
+        Script::new_builder()
+            .code_hash(self.lock_data_hash.pack())
+            .hash_type(ScriptHashType::Data.into())
+            .build()
     }
 
     pub fn get_global_state(&self) -> GlobalState {
@@ -37,6 +68,18 @@ impl GlobalStateContext {
             .account_root(self.account_root().pack())
             .block_root(self.block_root.pack())
             .build()
+    }
+
+    pub fn account_count(&self) -> u32 {
+        self.account_entries.len() as u32
+    }
+
+    pub fn block_count(&self) -> u32 {
+        self.block_count
+    }
+
+    pub fn get_account(&self, index: u32) -> Option<&Account> {
+        self.account_entries.get(index as usize)
     }
 
     pub fn account_root(&self) -> [u8; 32] {
@@ -53,7 +96,7 @@ impl GlobalStateContext {
         account_root
     }
 
-    pub fn build_account_mmr(&self) -> HashMMR {
+    fn build_account_mmr(&self) -> HashMMR {
         let mut mmr = HashMMR::default();
         for account in &self.account_entries {
             let account_hash = blake2b_256(account.as_slice());
@@ -87,6 +130,7 @@ impl GlobalStateContext {
         hasher.update(&count.to_le_bytes());
         hasher.update(&block_mmr_root);
         hasher.finalize(&mut self.block_root);
+        self.block_count += 1;
     }
 
     pub fn gen_block_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {

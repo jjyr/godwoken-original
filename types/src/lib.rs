@@ -5,6 +5,7 @@ extern crate alloc;
 
 pub mod cache;
 mod conversion;
+pub mod core;
 mod extension;
 #[doc(hidden)]
 mod generated;

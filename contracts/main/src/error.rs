@@ -2,6 +2,7 @@
 #[repr(i8)]
 pub enum Error {
     InvalidOutputTypeHash = -6,
+    InvalidOutputLockHash = -7,
     InvalidWitness = -11,
     IncorrectCapacity = -12,
     InvalidAccountIndex = -13,

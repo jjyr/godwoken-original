@@ -1,11 +1,12 @@
 use crate::tests::{
     utils::{
         constants::{AGGREGATOR_REQUIRED_BALANCE, NEW_ACCOUNT_REQUIRED_BALANCE},
-        global_state::GlobalStateContext,
+        contract_state::ContractState,
+        shortcut::{default_context, default_tx_builder},
     },
-    DUMMY_LOCK_BIN, MAIN_CONTRACT_BIN, MAX_CYCLES,
+    MAX_CYCLES,
 };
-use ckb_contract_tool::{ckb_hash::blake2b_256, Context, TxBuilder};
+use ckb_contract_tool::ckb_hash::blake2b_256;
 use godwoken_types::bytes::Bytes;
 use godwoken_types::packed::{Account, AccountScript, Action, Register, WitnessArgs};
 use godwoken_types::prelude::*;
@@ -13,7 +14,7 @@ use rand::{thread_rng, Rng};
 
 #[test]
 fn test_account_register() {
-    let mut context = GlobalStateContext::new();
+    let mut context = ContractState::new();
     let global_state = context.get_global_state();
     // insert few entries
     let mut last_account: Option<Account> = None;
@@ -74,13 +75,8 @@ fn test_account_register() {
         let witness = WitnessArgs::new_builder()
             .output_type(Some(action.as_bytes()).pack())
             .build();
-        let contract_bin = MAIN_CONTRACT_BIN.to_owned();
-        let mut context = Context::default();
-        context.deploy_contract(DUMMY_LOCK_BIN.to_owned());
-        context.deploy_contract(contract_bin.clone());
-        let tx = TxBuilder::default()
-            .lock_bin(DUMMY_LOCK_BIN.to_owned())
-            .type_bin(contract_bin)
+        let mut context = default_context();
+        let tx = default_tx_builder()
             .previous_output_data(global_state.as_slice().into())
             .input_capacity(original_amount)
             .output_capacity(original_amount + deposit_amount)

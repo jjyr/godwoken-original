@@ -36,7 +36,7 @@ pub fn verify_signature(signature: &[u8], message: &[u8], pubkey_hash: &[u8]) ->
         hasher.finalize(&mut hash);
         hash
     };
-    if &pubkey_hash[..] != pubkey_hash {
+    if pubkey_hash[..] != pubkey_hash {
         return Err(Error::IncorrectPubkeyHash);
     }
     Ok(())

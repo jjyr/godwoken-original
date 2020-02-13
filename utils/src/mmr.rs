@@ -159,6 +159,9 @@ pub fn compute_tx_root(
 
 /// Compute txs root from merkle proof
 pub fn merkle_root(leaves: Vec<[u8; 32]>) -> [u8; 32] {
+    if leaves.is_empty() {
+        return [0u8; 32];
+    }
     let mut mmr: MemMMR<[u8; 32], HashMerge> = MemMMR::default();
     for leaf in leaves {
         mmr.push(leaf).expect("push leaf");

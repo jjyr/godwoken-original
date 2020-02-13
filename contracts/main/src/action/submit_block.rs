@@ -139,7 +139,7 @@ impl<'a> SubmitBlockVerifier<'a> {
         let old_block_root = self.old_state.block_root().unpack();
         if block_number == 0 {
             if old_block_root != [0u8; 32] || block_proof.len() != 0 {
-                return Err(Error::InvalidAccountMerkleProof);
+                return Err(Error::InvalidBlockMerkleProof);
             }
         } else {
             let calculated_root = compute_block_root(

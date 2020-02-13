@@ -90,6 +90,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a606a02debe2813760609f57a64a2ffd27d9fdf5b2f133eaca0b248dd92cdd2"
 
 [[package]]
+name = "blake2b-ref"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9f6b7b71e3097ed6ee470bab30e1025dd1327eee94ab1e3040b5b5c3f992117"
+
+[[package]]
 name = "blake2b-rs"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -200,7 +206,7 @@ dependencies = [
 [[package]]
 name = "ckb-contract-tool"
 version = "0.1.0"
-source = "git+https://github.com/jjyr/ckb-contract-tool#174b9d0053226598e5958a6908b09118e086847d"
+source = "git+https://github.com/jjyr/ckb-contract-tool#ed48c79151f8c2fecd8806c52f4df0ed4cfadaf9"
 dependencies = [
  "ckb-error",
  "ckb-hash",
@@ -324,6 +330,15 @@ version = "0.1.0"
 source = "git+https://github.com/nervosnetwork/merkle-mountain-range#c18c09923497e940701526c32ebf536a64145989"
 dependencies = [
  "failure",
+]
+
+[[package]]
+name = "ckb-merkle-mountain-range"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4882b6f6cbb90ffeba3b437c6fd66f344557729428626e6f796ef1c97ee5c63"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -869,8 +884,9 @@ name = "godwoken"
 version = "0.1.0"
 dependencies = [
  "ckb-contract-tool",
- "ckb-merkle-mountain-range",
+ "ckb-merkle-mountain-range 0.1.0",
  "godwoken-types",
+ "godwoken-utils",
  "hex",
  "lazy_static",
  "libsecp256k1",
@@ -882,6 +898,15 @@ name = "godwoken-types"
 version = "0.1.0-pre"
 dependencies = [
  "molecule 0.4.0",
+]
+
+[[package]]
+name = "godwoken-utils"
+version = "0.1.0"
+dependencies = [
+ "blake2b-ref",
+ "ckb-merkle-mountain-range 0.2.0",
+ "libsecp256k1",
 ]
 
 [[package]]

@@ -11,6 +11,7 @@ lazy_static = "1.4"
 rand = "0.7"
 hex = "0.4"
 godwoken-types = { path = "../types" }
+godwoken-utils = { path = "../utils" }
 ckb-merkle-mountain-range = { git = "https://github.com/nervosnetwork/merkle-mountain-range", branch = "master" }
 ckb-contract-tool = { git = "https://github.com/jjyr/ckb-contract-tool", branch = "master" }
 libsecp256k1 = "0.3"

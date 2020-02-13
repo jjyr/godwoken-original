@@ -25,15 +25,18 @@ pub fn check_aggregator<'a>(entry: &AccountReader<'a>) -> Result<(), Error> {
 }
 
 /// check output type hash, make sure there is exactly one contract in output
-pub fn check_output_type_hash(type_hash: &[u8]) -> Result<(), Error> {
-    let mut output_contracts = 0;
+pub fn check_output(type_hash: &[u8], lock_hash: &[u8]) -> Result<(), Error> {
+    let mut n = 0;
+    let mut contract_index = 0;
+    // make sure there only 1 output has contract type hash
     for i in 0.. {
         match syscalls::load_cell_by_field(HASH_SIZE, 0, i, Source::Output, CellField::TypeHash) {
             Ok(output_type_hash) => {
                 if type_hash == &output_type_hash[..] {
-                    output_contracts += 1;
+                    n += 1;
+                    contract_index = i;
                 }
-                if output_contracts > 1 {
+                if n > 1 {
                     return Err(Error::InvalidOutputTypeHash);
                 }
             }
@@ -41,10 +44,22 @@ pub fn check_output_type_hash(type_hash: &[u8]) -> Result<(), Error> {
             Err(_) => continue,
         }
     }
-    if output_contracts != 1 {
+    if n != 1 {
         return Err(Error::InvalidOutputTypeHash);
     }
-    Ok(())
+    // check the lock hash
+    if let Ok(output_lock_hash) = syscalls::load_cell_by_field(
+        HASH_SIZE,
+        0,
+        contract_index,
+        Source::Output,
+        CellField::LockHash,
+    ) {
+        if &output_lock_hash[..] == lock_hash {
+            return Ok(());
+        }
+    }
+    Err(Error::InvalidOutputLockHash)
 }
 
 pub fn load_action() -> Result<Action, Error> {
