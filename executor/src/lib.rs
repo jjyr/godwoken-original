@@ -3,7 +3,6 @@
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
-mod contracts;
 pub mod error;
 mod execution_context;
 pub mod executor;

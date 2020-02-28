@@ -11,3 +11,4 @@ std = []
 
 [dependencies]
 molecule = { path = "../molecule/bindings/rust", default-features = false }
+cfg-if = "0.1"

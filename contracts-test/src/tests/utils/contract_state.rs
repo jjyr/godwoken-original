@@ -1,12 +1,12 @@
 use crate::tests::{DUMMY_LOCK_HASH, MAIN_CONTRACT_HASH};
 use ckb_contract_tool::ckb_hash::{blake2b_256, new_blake2b};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
-use godwoken_types::bytes::Bytes;
-use godwoken_types::prelude::*;
 use godwoken_types::{
     core::ScriptHashType,
     packed::{Account, AgBlock, GlobalState, Script, Tx},
+    prelude::*,
 };
+use godwoken_utils::smt::SMT;
 
 pub struct HashMerge;
 
@@ -25,7 +25,7 @@ impl Merge for HashMerge {
 type HashMMR = MemMMR<[u8; 32], HashMerge>;
 
 pub struct ContractState {
-    account_entries: Vec<Account>,
+    accounts: Vec<(Account, SMT)>,
     block_root: [u8; 32],
     block_mmr: HashMMR,
     lock_data_hash: [u8; 32],
@@ -36,7 +36,7 @@ pub struct ContractState {
 impl ContractState {
     pub fn new() -> Self {
         ContractState {
-            account_entries: Vec::new(),
+            accounts: Vec::new(),
             block_root: [0u8; 32],
             block_mmr: Default::default(),
             lock_data_hash: *DUMMY_LOCK_HASH,
@@ -71,24 +71,24 @@ impl ContractState {
     }
 
     pub fn account_count(&self) -> u32 {
-        self.account_entries.len() as u32
+        self.accounts.len() as u32
     }
 
     pub fn block_count(&self) -> u32 {
         self.block_count
     }
 
-    pub fn get_account(&self, index: u32) -> Option<&Account> {
-        self.account_entries.get(index as usize)
+    pub fn get_account(&self, index: u32) -> Option<&(Account, SMT)> {
+        self.accounts.get(index as usize)
     }
 
     pub fn account_root(&self) -> [u8; 32] {
         let mut account_root = [0u8; 32];
-        if self.account_entries.is_empty() {
+        if self.accounts.is_empty() {
             return account_root;
         }
         let account_mmr_root = self.build_account_mmr().get_root().expect("mmr root");
-        let entries_count: u32 = self.account_entries.len() as u32;
+        let entries_count: u32 = self.accounts.len() as u32;
         let mut hasher = new_blake2b();
         hasher.update(&entries_count.to_le_bytes());
         hasher.update(&account_mmr_root);
@@ -98,7 +98,7 @@ impl ContractState {
 
     fn build_account_mmr(&self) -> HashMMR {
         let mut mmr = HashMMR::default();
-        for account in &self.account_entries {
+        for (account, _kv_map) in &self.accounts {
             let account_hash = blake2b_256(account.as_slice());
             mmr.push(account_hash).expect("mmr push");
         }
@@ -107,10 +107,10 @@ impl ContractState {
 
     pub fn push_account(&mut self, account: Account) {
         let index = Unpack::<u32>::unpack(&account.index()) as usize;
-        if index == self.account_entries.len() {
-            self.account_entries.push(account);
+        if index == self.accounts.len() {
+            self.accounts.push((account, SMT::default()));
         } else {
-            self.account_entries[index] = account;
+            self.accounts[index].0 = account;
         }
     }
 
@@ -141,56 +141,37 @@ impl ContractState {
         (proof.mmr_size(), proof.proof_items().to_owned())
     }
 
+    pub fn update_account(&mut self, index: u32, token_type: [u8; 32], amount: i128) {
+        let balance: u64 = self.accounts[index as usize]
+            .1
+            .get(&token_type.into())
+            .expect("get")
+            .into();
+        let new_balance = (balance as i128 + amount) as u64;
+        let new_state_root: [u8; 32] = (*self.accounts[index as usize]
+            .1
+            .update(token_type.into(), new_balance.into())
+            .expect("update"))
+        .into();
+        let account = self.accounts[index as usize].0.clone();
+        let nonce: u32 = account.nonce().unpack();
+        let account = account
+            .as_builder()
+            .state_root(new_state_root.pack())
+            .nonce((nonce + 1).pack())
+            .build();
+        self.push_account(account);
+    }
+
     pub fn apply_tx(&mut self, tx: &Tx, fee_to: u32) {
-        let tx_fee: u64 = {
-            let tx_fee: u32 = tx.fee().unpack();
-            tx_fee.into()
-        };
-        let args: Bytes = tx.args().unpack();
-        let to_index: u64 = {
-            let mut buf = [0u8; 4];
-            buf.copy_from_slice(&args[..4]);
-            u32::from_le_bytes(buf).into()
-        };
-        let amount: u64 = {
-            let mut buf = [0u8; 4];
-            buf.copy_from_slice(&args[4..]);
-            u32::from_le_bytes(buf).into()
-        };
-        let from_account =
-            &self.account_entries[Unpack::<u32>::unpack(&tx.account_index()) as usize];
-        let from_account = from_account
-            .clone()
-            .as_builder()
-            .balance({
-                let balance: u64 = from_account.balance().unpack();
-                (balance - amount - tx_fee).pack()
-            })
-            .nonce({
-                let nonce: u32 = from_account.nonce().unpack();
-                (nonce + 1).pack()
-            })
-            .build();
-        let to_account = &self.account_entries[to_index as usize];
-        let to_account = to_account
-            .clone()
-            .as_builder()
-            .balance({
-                let balance: u64 = to_account.balance().unpack();
-                (balance + amount).pack()
-            })
-            .build();
-        let fee_account = &self.account_entries[fee_to as usize];
-        let fee_account = fee_account
-            .clone()
-            .as_builder()
-            .balance({
-                let balance: u64 = fee_account.balance().unpack();
-                (balance + tx_fee).pack()
-            })
-            .build();
-        self.push_account(from_account);
-        self.push_account(to_account);
-        self.push_account(fee_account);
+        let (_tx_fee_token_type, tx_fee): ([u8; 32], u64) = tx.fee().unpack();
+        let (token_type, amount): ([u8; 32], u64) = tx.amount().unpack();
+
+        let sender_index: u32 = tx.sender_index().unpack();
+        let to_index: u32 = tx.to_index().unpack();
+
+        self.update_account(sender_index, token_type, -((amount + tx_fee) as i128));
+        self.update_account(to_index, token_type, amount as i128);
+        self.update_account(fee_to, token_type, tx_fee as i128);
     }
 }

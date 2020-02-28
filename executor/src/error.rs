@@ -4,6 +4,9 @@ pub enum Error {
     MissingAccount(u32),
     /// balance, required_amount
     BalanceNotEnough(u64, u64),
+    /// expected nonce, tx's nonce
+    InvalidNonce(u32, u32),
     BalanceOverflow,
     InvalidSignature,
+    InvalidMerkleProof,
 }

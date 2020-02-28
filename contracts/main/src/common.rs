@@ -1,5 +1,5 @@
 /// common module contains serveral reusable functions
-use crate::constants::{AGGREGATOR_CODE_HASH, AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
+use crate::constants::{AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
 use crate::error::Error;
 use ckb_contract_std::{ckb_constants::*, syscalls};
 use core::mem::size_of;
@@ -7,18 +7,11 @@ use godwoken_types::{bytes::Bytes, packed::*, prelude::*};
 
 const BUF_LEN: usize = 4096;
 
-pub fn check_aggregator<'a>(entry: &AccountReader<'a>) -> Result<(), Error> {
-    if !entry.is_aggregator() {
-        return Err(Error::InvalidAggregator);
-    }
-
-    let balance: u64 = entry.balance().unpack();
+pub fn check_aggregator<'a>(account: &AccountReader<'a>, balance: u64) -> Result<(), Error> {
     if balance < AGGREGATOR_REQUIRED_BALANCE {
         return Err(Error::InvalidAggregator);
     }
-
-    let code_hash: [u8; 32] = entry.script().code_hash().unpack();
-    if code_hash != AGGREGATOR_CODE_HASH {
+    if account.script().to_opt().is_some() {
         return Err(Error::InvalidAggregator);
     }
     Ok(())

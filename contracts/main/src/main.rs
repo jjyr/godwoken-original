@@ -30,7 +30,7 @@ use crate::constants::HASH_SIZE;
 use crate::error::Error;
 use alloc::format;
 use ckb_contract_std::{ckb_constants::*, setup, syscalls};
-use godwoken_types::{packed::*, prelude::*};
+use godwoken_types::packed::*;
 
 #[no_mangle]
 fn main() -> i8 {

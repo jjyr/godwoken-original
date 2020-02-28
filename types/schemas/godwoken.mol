@@ -2,6 +2,7 @@ import blockchain;
 
 /* contract types */
 
+array Byte20 [byte; 20];
 array Byte65 [byte; 65];
 
 /* Global state
@@ -20,22 +21,58 @@ table AccountScript {
     args: Bytes,
 }
 
-table Account {
-    index: Uint32, // address index
-    script: AccountScript, // account's code
-    nonce: Uint32, // nonce
-    balance: Uint64, // balance
-    is_ag: byte, // a flag to indicates account is a aggregator
+option AccountScriptOpt (AccountScript);
+
+struct KeyValue {
+    key: Byte32,
+    value: Uint64,
 }
 
-vector AccountVec <Account>;
+vector KeyValueMap <KeyValue>;
+
+vector TreePath <byte>;
+vector TreePathVec <TreePath>;
+struct SMTBranch {
+    node: Byte32,
+    height: byte,
+}
+
+vector SMTBranchVec <SMTBranch>;
+
+table SMTProof {
+    leaves_path: TreePathVec,
+    proof: SMTBranchVec,
+}
+
+table Account {
+    index: Uint32, // address index
+    script: AccountScriptOpt, // account's code
+    nonce: Uint32, // nonce
+    state_root: Byte32, // state root
+    pubkey_hash: Byte20, // pubkey hash
+}
+
+/* Payment
+ * support describe UDT or native token
+ */
+union Payment {
+    Uint32,
+    UDTPayment,
+}
+
+struct UDTPayment {
+    type_hash: Byte32,
+    amount: Uint32,
+}
 
 table Tx {
-    account_index: Uint32,
+    sender_index: Uint32,
+    to_index: Uint32,
     nonce: Uint32, // nonce
-    args: Bytes, // args
-    fee: Uint32, // fee
-    witness: Bytes, // tx witness
+    amount: Payment, // amount
+    fee: Payment, // fee
+    args: Bytes, // pass args to contract
+    witness: Bytes, // tx's signature
 }
 
 vector TxVec <Tx>;
@@ -69,6 +106,8 @@ table Register {
 /* Deposit coins */
 table Deposit {
     old_account: Account, // Account contains old state.
+    old_kv: KeyValueMap,
+    kv_proof: SMTProof,
     new_account: Account, // Account contains new state.
     count: Uint32, // count of entries, do not includes new_account
     proof: Byte32Vec, // merkle proof of old state
@@ -81,30 +120,28 @@ table SubmitBlock {
     last_block_hash: Byte32, // last blocks hash
     block_proof: Byte32Vec, // merkle proof of block_root
     ag_account: Account, // aggregator's account
+    kv: KeyValueMap, // aggregator's kv map
+    kv_proof: SMTProof, // aggregator's kv proof
     account_proof: Byte32Vec, // merkle proof of aggregator_root
     account_count: Uint32,
 }
+
+
+vector AccountVec <Account>;
+vector KeyValueMapVec <KeyValueMap>;
+vector SMTProofVec <SMTProof>;
 
 /* Invalid a block */
 table InvalidBlock {
     block: AgBlock, // invalid block
     block_proof: Byte32Vec, // merkle proof of block exists
     touched_accounts: AccountVec, // touch accounts previous state
-    touched_accounts_proof: Byte32Vec, // proof of touched account state
+    touched_accounts_kv: KeyValueMapVec, // kv
+    touched_accounts_kv_proof: SMTProofVec, // kv state proof
+    touched_accounts_proof: Byte32Vec, // inclusion proof of touched accounts
     accounts_count: Uint32,
     txs: TxVec, // transactions
     txs_proof: Byte32Vec, // merkle proof txs exists
     txs_count: Uint32,
     challenger_index: Uint32, // reward will send to this account
-}
-
-/* Godwoken contract */
-
-union BasicAccountArgs {
-    BATransfer,
-}
-
-struct BATransfer {
-    to: Uint32,
-    amount: Uint64,
 }

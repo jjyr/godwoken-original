@@ -1,8 +1,4 @@
-use crate::{
-    contracts::BasicAccount, error::Error, execution_context::ExecutionContext, state::State,
-    traits::Contract,
-};
-use alloc::boxed::Box;
+use crate::{error::Error, execution_context::ExecutionContext, state::State};
 use godwoken_types::{cache::TxWithHash, packed::*, prelude::*};
 
 pub struct Executor;
@@ -12,48 +8,37 @@ impl Executor {
         Executor {}
     }
 
-    fn load_contract(&self, code_hash: [u8; 32]) -> Option<Box<dyn Contract>> {
-        // currently, only support one contract
-        if code_hash == [0u8; 32] {
-            return Some(Box::new(BasicAccount::default()));
-        }
-        None
-    }
-
-    fn verify_tx<'a>(&self, sender: &Account, tx: &TxReader<'a>) -> Result<(), Error> {
+    fn verify_tx<'a>(&self, sender: &Account, tx: &TxWithHash) -> Result<(), Error> {
+        // check nonce
         let nonce: u32 = sender.nonce().unpack();
-        if nonce + 1 != tx.nonce().unpack() {
-            return Ok(());
+        let tx_nonce = tx.raw.nonce().unpack();
+        if nonce + 1 != tx_nonce {
+            return Err(Error::InvalidNonce(nonce + 1, tx_nonce));
         }
+        // check signature
+        let pubkey_hash = sender.pubkey_hash().raw_data();
+        let witness = tx.raw.witness().raw_data();
+        godwoken_utils::secp256k1::verify_signature(&witness, &tx.tx_hash, &pubkey_hash)
+            .map_err(|_| Error::InvalidSignature)?;
         Ok(())
     }
 
-    fn charge_fee<'a>(
-        &self,
-        context: &mut ExecutionContext,
-        tx: &TxReader<'a>,
-        ag_index: u32,
-    ) -> Result<(), Error> {
-        let fee: u32 = tx.fee().unpack();
-        context.transfer(ag_index, fee.into())
-    }
-
     pub fn run(&self, state: &mut State, tx: TxWithHash, ag_index: u32) -> Result<(), Error> {
-        // 1. find account
-        // 2. load contract
-        // 3. execute and update state
-        let sender_index: u32 = tx.raw.account_index().unpack();
-        let sender_account = state.get_account(sender_index).unwrap();
-        // .ok_or(Error::MissingAccount)?;
-        self.verify_tx(&sender_account, &tx.raw)?;
-        // load contract
-        let script = sender_account.script();
-        let code_hash: [u8; 32] = script.code_hash().unpack();
-        let mut contract = self.load_contract(code_hash).unwrap();
+        let sender_index: u32 = tx.raw.sender_index().unpack();
+        let to_index: u32 = tx.raw.to_index().unpack();
+        let (sender, _kv) = state
+            .get_account(sender_index)
+            .ok_or(Error::MissingAccount(sender_index))?;
+        self.verify_tx(&sender, &tx)?;
+        if sender.script().to_opt().is_some() {
+            // do not support contract yet
+            return Err(Error::ContractCall(1));
+        }
         let mut context = ExecutionContext::new(state, sender_index);
-        // carge tx fee then call contract
-        self.charge_fee(&mut context, &tx.raw, ag_index)?;
-        contract.call(&mut context, &tx)?;
+        // charge tx fee
+        context.transfer(ag_index, tx.raw.fee())?;
+        // transfer
+        context.transfer(to_index, tx.raw.amount())?;
         state.inc_nonce(sender_index)?;
         Ok(())
     }

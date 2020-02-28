@@ -8,7 +8,8 @@ pub enum Error {
     InvalidAccountIndex = -13,
     InvalidAccountScript = -14,
     InvalidAccountNonce = -15,
-    InvalidAccountBalance = -16,
+    InvalidAccountStateRoot = -38,
+    InvalidDepositAmount = -16,
     InvalidGlobalState = -17,
     InvalidAccountMerkleProof = -18,
     InvalidBlockMerkleProof = -19,
@@ -25,4 +26,5 @@ pub enum Error {
     MissingChallengerAccount = -35,
     InvalidNewAccountRoot = -36,
     InvalidNewBlockRoot = -37,
+    InvalidKVMerkleProof = -39,
 }

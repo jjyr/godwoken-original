@@ -121,6 +121,7 @@ dependencies = [
 name = "godwoken-types"
 version = "0.1.0-pre"
 dependencies = [
+ "cfg-if",
  "molecule",
 ]
 
@@ -131,6 +132,7 @@ dependencies = [
  "blake2b-ref",
  "ckb-merkle-mountain-range",
  "libsecp256k1",
+ "sparse-merkle-tree",
 ]
 
 [[package]]
@@ -235,6 +237,15 @@ dependencies = [
  "digest",
  "fake-simd",
  "opaque-debug",
+]
+
+[[package]]
+name = "sparse-merkle-tree"
+version = "0.1.0-alpha3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aec320f694df5f2ff4a2fe0854d3c4a9f1da06be65954e81819b3b63877d6057"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]

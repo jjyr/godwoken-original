@@ -897,6 +897,7 @@ dependencies = [
 name = "godwoken-types"
 version = "0.1.0-pre"
 dependencies = [
+ "cfg-if",
  "molecule 0.4.0",
 ]
 
@@ -907,6 +908,7 @@ dependencies = [
  "blake2b-ref",
  "ckb-merkle-mountain-range 0.2.0",
  "libsecp256k1",
+ "sparse-merkle-tree",
 ]
 
 [[package]]
@@ -2171,6 +2173,15 @@ name = "smallvec"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ecf3b85f68e8abaa7555aa5abdb1153079387e60b718283d732f03897fcfc86"
+
+[[package]]
+name = "sparse-merkle-tree"
+version = "0.1.0-alpha3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aec320f694df5f2ff4a2fe0854d3c4a9f1da06be65954e81819b3b63877d6057"
+dependencies = [
+ "cfg-if",
+]
 
 [[package]]
 name = "stable_deref_trait"

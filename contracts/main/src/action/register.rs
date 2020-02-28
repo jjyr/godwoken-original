@@ -1,10 +1,15 @@
-use crate::{common, constants::NEW_ACCOUNT_REQUIRED_BALANCE, error::Error};
+use crate::{
+    common,
+    constants::{CKB_TOKEN_ID, NEW_ACCOUNT_REQUIRED_BALANCE},
+    error::Error,
+};
 use alloc::vec;
 use alloc::vec::Vec;
 use godwoken_types::{packed::*, prelude::*};
 use godwoken_utils::{
     hash::new_blake2b,
     mmr::{compute_account_root, compute_new_account_root},
+    smt,
 };
 
 pub struct RegisterVerifier<'a> {
@@ -27,28 +32,38 @@ impl<'a> RegisterVerifier<'a> {
     }
 
     /// verify account state
-    fn verify_account(&self, deposit_capacity: u64) -> Result<(), Error> {
-        let account = self.action.account();
-        if account.is_aggregator() {
-            common::check_aggregator(&account)?;
-        }
+    fn verify_account(
+        &self,
+        account: &AccountReader<'a>,
+        deposit_capacity: u64,
+    ) -> Result<(), Error> {
         let nonce: u32 = account.nonce().unpack();
         if nonce != 0 {
             Err(Error::InvalidAccountNonce)?;
         }
-        let balance = account.balance().unpack();
-        if balance != deposit_capacity || balance < NEW_ACCOUNT_REQUIRED_BALANCE {
-            Err(Error::InvalidAccountBalance)?;
+        // Godwoken do not supports contract yet
+        if account.script().to_opt().is_some() {
+            Err(Error::InvalidAccountScript)?;
+        }
+        if deposit_capacity < NEW_ACCOUNT_REQUIRED_BALANCE {
+            Err(Error::InvalidDepositAmount)?;
+        }
+        let calculated_state_root: [u8; 32] =
+            smt::compute_root(vec![(CKB_TOKEN_ID.into(), deposit_capacity)])
+                .expect("compute state root")
+                .into();
+        let state_root: [u8; 32] = account.state_root().unpack();
+        if calculated_state_root != state_root {
+            Err(Error::InvalidAccountStateRoot)?;
         }
         Ok(())
     }
 
-    fn verify_state_transition(&self) -> Result<(), Error> {
+    fn verify_state_transition(&self, account: &AccountReader<'a>) -> Result<(), Error> {
         if self.old_state.block_root().as_slice() != self.new_state.block_root().as_slice() {
             return Err(Error::InvalidGlobalState);
         }
 
-        let account = self.action.account();
         let new_index: u32 = account.index().unpack();
         let old_account_root = self.old_state.account_root().unpack();
         let last_index = new_index - 1;
@@ -105,9 +120,10 @@ impl<'a> RegisterVerifier<'a> {
     }
 
     pub fn verify(&self) -> Result<(), Error> {
+        let account = self.action.account();
         let deposit_capacity = deposit_capacity()?;
-        self.verify_account(deposit_capacity)?;
-        self.verify_state_transition()?;
+        self.verify_account(&account, deposit_capacity)?;
+        self.verify_state_transition(&account)?;
         Ok(())
     }
 }

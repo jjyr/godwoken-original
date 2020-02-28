@@ -14,3 +14,13 @@ pub use generated::packed;
 
 //re-exports
 pub use molecule::bytes;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "std")] {
+        use std::collections;
+        use std::vec;
+    } else {
+        use alloc::collections;
+        use alloc::vec;
+    }
+}

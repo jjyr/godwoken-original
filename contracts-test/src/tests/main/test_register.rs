@@ -2,15 +2,13 @@ use crate::tests::{
     utils::{
         constants::{AGGREGATOR_REQUIRED_BALANCE, NEW_ACCOUNT_REQUIRED_BALANCE},
         contract_state::ContractState,
-        shortcut::{default_context, default_tx_builder},
+        shortcut::{default_context, default_tx_builder, gen_accounts},
     },
     MAX_CYCLES,
 };
 use ckb_contract_tool::ckb_hash::blake2b_256;
-use godwoken_types::bytes::Bytes;
-use godwoken_types::packed::{Account, AccountScript, Action, Register, WitnessArgs};
+use godwoken_types::packed::{Account, Action, Register, WitnessArgs};
 use godwoken_types::prelude::*;
-use rand::{thread_rng, Rng};
 
 #[test]
 fn test_account_register() {
@@ -20,35 +18,16 @@ fn test_account_register() {
     let mut last_account: Option<Account> = None;
     let mut global_state = global_state;
     let mut original_amount = 0;
-    for index in 0u32..=5u32 {
-        let is_aggregator = index < 2;
-        let deposit_amount = if is_aggregator {
-            AGGREGATOR_REQUIRED_BALANCE
-        } else {
-            NEW_ACCOUNT_REQUIRED_BALANCE
-        };
+    let balances = vec![
+        AGGREGATOR_REQUIRED_BALANCE,
+        NEW_ACCOUNT_REQUIRED_BALANCE,
+        NEW_ACCOUNT_REQUIRED_BALANCE,
+        NEW_ACCOUNT_REQUIRED_BALANCE,
+        NEW_ACCOUNT_REQUIRED_BALANCE,
+    ];
+    for (i, account) in gen_accounts(0, balances.clone()).enumerate() {
+        let deposit_amount = balances[i];
         original_amount += deposit_amount;
-        let account = {
-            let mut pubkey = [0u8; 20];
-            let mut rng = thread_rng();
-            rng.fill(&mut pubkey);
-            Account::new_builder()
-                .index(index.pack())
-                .script(
-                    AccountScript::new_builder()
-                        .args(Bytes::from(pubkey.to_vec()).pack())
-                        .build(),
-                )
-                .is_ag({
-                    if is_aggregator {
-                        1.into()
-                    } else {
-                        0.into()
-                    }
-                })
-                .balance(deposit_amount.pack())
-                .build()
-        };
         let register = match last_account {
             None => {
                 // first account

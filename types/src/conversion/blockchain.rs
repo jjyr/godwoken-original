@@ -63,18 +63,3 @@ impl_conversion_for_packed_iterator_pack!(CellOutput, CellOutputVec);
 impl_conversion_for_packed_iterator_pack!(CellInput, CellInputVec);
 impl_conversion_for_packed_iterator_pack!(UncleBlock, UncleBlockVec);
 impl_conversion_for_packed_iterator_pack!(Byte32, Byte32Vec);
-
-// Godwoken types
-impl Pack<packed::Byte65> for [u8; 65] {
-    fn pack(&self) -> packed::Byte65 {
-        packed::Byte65::from_slice(&self[..]).expect("impossible: fail to pack [u8; 65]")
-    }
-}
-
-impl<'r> Unpack<[u8; 65]> for packed::Byte65Reader<'r> {
-    fn unpack(&self) -> [u8; 65] {
-        let ptr = self.as_slice().as_ptr() as *const [u8; 65];
-        unsafe { *ptr }
-    }
-}
-impl_conversion_for_entity_unpack!([u8; 65], Byte65);

@@ -1,7 +1,7 @@
-use crate::tests::utils::contract_state::ContractState;
+use crate::tests::utils::{constants::NATIVE_TOKEN_ID, contract_state::ContractState};
 /// Offchain Aggregator
 use ckb_contract_tool::{ckb_hash::blake2b_256, TxBuilder};
-use godwoken_types::{packed::*, prelude::*};
+use godwoken_types::{cache::KVMap, packed::*, prelude::*};
 use godwoken_utils::mmr::merkle_root;
 
 pub struct Aggregator {
@@ -15,6 +15,8 @@ pub struct SubmitBlockContext {
     pub prev_account_proof: Vec<[u8; 32]>,
     pub prev_global_state: GlobalState,
     pub prev_ag_account: Account,
+    pub kv: KVMap,
+    pub kv_proof: SMTProof,
 }
 
 impl SubmitBlockContext {
@@ -43,11 +45,34 @@ impl Aggregator {
 
         let prev_global_state = self.contract_state.get_global_state();
         let prev_account_root = prev_global_state.account_root().unpack();
-        let ag_account = self
-            .contract_state
-            .get_account(ag_index)
-            .expect("get aggregator account")
-            .to_owned();
+        let (ag_account, kv, kv_proof) = {
+            let (ag_account, smt) = self
+                .contract_state
+                .get_account(ag_index)
+                .expect("get aggregator account");
+            let balance: u64 = smt.get(&NATIVE_TOKEN_ID.into()).expect("get").into();
+            let kv_proof = if smt.is_empty() {
+                SMTProof::new_builder()
+                    .leaves_path(vec![Vec::new()].pack())
+                    .build()
+            } else {
+                let kv_proof = smt
+                    .merkle_proof(vec![NATIVE_TOKEN_ID.into()])
+                    .expect("merkle proof");
+                let proof: Vec<([u8; 32], u8)> = kv_proof
+                    .proof()
+                    .iter()
+                    .map(|(n, h)| ((*n).into(), *h))
+                    .collect();
+                SMTProof::new_builder()
+                    .leaves_path(kv_proof.leaves_path().to_owned().pack())
+                    .proof(proof.pack())
+                    .build()
+            };
+            let mut kv = KVMap::default();
+            kv.insert(NATIVE_TOKEN_ID, balance);
+            (ag_account.to_owned(), kv, kv_proof)
+        };
 
         // TODO make this immutable
         for tx in &self.txs_queue {
@@ -77,6 +102,8 @@ impl Aggregator {
             prev_account_proof,
             prev_global_state,
             prev_ag_account: ag_account,
+            kv,
+            kv_proof,
         }
     }
 
@@ -88,6 +115,8 @@ impl Aggregator {
             prev_account_proof,
             prev_global_state,
             prev_ag_account,
+            kv,
+            kv_proof,
         } = submit_block_context;
         let block_number: u32 = block.number().unpack();
         let (_mmr_size, prev_block_proof) =
@@ -106,6 +135,8 @@ impl Aggregator {
                         .pack(),
                 )
                 .ag_account(prev_ag_account)
+                .kv(kv.pack())
+                .kv_proof(kv_proof)
                 .account_proof(
                     prev_account_proof
                         .into_iter()
