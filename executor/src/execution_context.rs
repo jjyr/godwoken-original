@@ -1,15 +1,15 @@
 use crate::{error::Error, state::State};
 use godwoken_types::{cache::KVMap, packed::*, prelude::*};
 
-const NATIVE_TOKEN_ID: [u8; 32] = [0u8; 32];
+const CKB_TOKEN_ID: [u8; 32] = [0u8; 32];
 
 pub struct ExecutionContext<'a> {
     state: &'a mut State,
-    sender_index: u32,
+    sender_index: u64,
 }
 
 impl<'a> ExecutionContext<'a> {
-    pub fn new(state: &'a mut State, sender_index: u32) -> Self {
+    pub fn new(state: &'a mut State, sender_index: u64) -> Self {
         ExecutionContext {
             state,
             sender_index,
@@ -22,7 +22,7 @@ impl<'a> ExecutionContext<'a> {
             .ok_or(Error::MissingAccount(self.sender_index))
     }
 
-    pub fn transfer<'r>(&mut self, to_index: u32, payment: PaymentReader<'r>) -> Result<(), Error> {
+    pub fn transfer<'r>(&mut self, to_index: u64, payment: PaymentReader<'r>) -> Result<(), Error> {
         // check sender
         let (_sender, sender_kv) = self.sender()?;
         // check receiver
@@ -35,7 +35,7 @@ impl<'a> ExecutionContext<'a> {
         let (token_type, amount) = match payment.to_enum() {
             PaymentUnionReader::Uint32(amount) => {
                 let amount: u64 = Unpack::<u32>::unpack(&amount).into();
-                (NATIVE_TOKEN_ID, amount)
+                (CKB_TOKEN_ID, amount)
             }
             PaymentUnionReader::UDTPayment(udt_payment) => {
                 let udt_type: [u8; 32] = udt_payment.type_hash().unpack();

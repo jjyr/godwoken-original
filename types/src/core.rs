@@ -17,3 +17,6 @@ impl Into<packed::Byte> for ScriptHashType {
         (self as u8).into()
     }
 }
+
+pub type TokenID = [u8; 32];
+pub type Index = u64;

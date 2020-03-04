@@ -1,13 +1,15 @@
 /// common module contains serveral reusable functions
 use crate::constants::{AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
 use crate::error::Error;
+use alloc::vec::Vec;
 use ckb_contract_std::{ckb_constants::*, syscalls};
 use core::mem::size_of;
-use godwoken_types::{bytes::Bytes, packed::*, prelude::*};
+use godwoken_types::{bytes::Bytes, cache::KVMap, core::Index, packed::*, prelude::*};
+use godwoken_utils::smt::{self, Value, ValueTrait};
 
 const BUF_LEN: usize = 4096;
 
-pub fn check_aggregator<'a>(account: &AccountReader<'a>, balance: u64) -> Result<(), Error> {
+pub fn check_aggregator<'a>(account: AccountReader<'a>, balance: u64) -> Result<(), Error> {
     if balance < AGGREGATOR_REQUIRED_BALANCE {
         return Err(Error::InvalidAggregator);
     }
@@ -75,7 +77,7 @@ pub fn load_action() -> Result<Action, Error> {
 }
 
 pub fn load_global_state(source: Source) -> Result<GlobalState, Error> {
-    const GLOBAL_STATE_SIZE: usize = 64;
+    const GLOBAL_STATE_SIZE: usize = 80;
 
     let buf = syscalls::load_cell_data(GLOBAL_STATE_SIZE, 0, 0, source).expect("load global state");
     match GlobalStateReader::verify(&buf, false) {
@@ -119,4 +121,32 @@ pub fn fetch_capacities() -> CapacityChange {
     };
 
     CapacityChange { input, output }
+}
+
+/// verify account state according to merkle root
+pub fn verify_account_root<'a>(
+    index: Index,
+    account: Option<AccountReader<'a>>,
+    token_kv: KVMap,
+    leaves_path: Vec<Vec<u8>>,
+    merkle_branches: Vec<(smt::H256, u8)>,
+    account_root: &[u8; 32],
+) -> Result<(), Error> {
+    // verify account and kv
+    let mut leaves: Vec<_> = token_kv
+        .iter()
+        .map(|(k, v)| (smt::token_id_key(index, k), Value::from(*v).to_h256()))
+        .collect();
+    let value = account
+        .map(|account| Value::from(account.to_entity()))
+        .unwrap_or_else(|| Value::zero());
+    leaves.push((smt::account_index_key(index.into()), value.to_h256()));
+    let calculated_root: [u8; 32] =
+        smt::compute_root_with_proof(leaves, leaves_path, merkle_branches.clone())
+            .map_err(|_| Error::InvalidAccountMerkleProof)?
+            .into();
+    if &calculated_root != account_root {
+        return Err(Error::InvalidAccountMerkleProof);
+    }
+    Ok(())
 }

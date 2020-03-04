@@ -2,7 +2,7 @@ use crate::tests::{
     main::Error,
     utils::{
         aggregator::Aggregator,
-        constants::NATIVE_TOKEN_ID,
+        constants::CKB_TOKEN_ID,
         contract_state::ContractState,
         shortcut::{
             default_context, gen_transfer_tx, prepare_accounts, prepare_ag_account, sign_block,
@@ -25,7 +25,7 @@ fn test_submit_block() {
         account_indexes[0],
         account_indexes[1],
         1,
-        NATIVE_TOKEN_ID,
+        CKB_TOKEN_ID,
         15,
         3,
     );
@@ -57,7 +57,7 @@ fn test_submit_with_non_ag_account() {
         account_indexes[0],
         account_indexes[1],
         1,
-        NATIVE_TOKEN_ID,
+        CKB_TOKEN_ID,
         15,
         3,
     );
@@ -87,14 +87,14 @@ fn test_with_non_sufficient_balance() {
     // prepare aggregator account
     let (ag_index, privkey) = prepare_ag_account(&mut contract_state);
     // decrease balance of aggregator
-    contract_state.update_account(ag_index, NATIVE_TOKEN_ID, -1 as i128);
+    contract_state.update_account(ag_index, CKB_TOKEN_ID, -1 as i128);
     let mut aggregator = Aggregator::new(contract_state);
     // txs
     let transfer_tx = gen_transfer_tx(
         account_indexes[0],
         account_indexes[1],
         1,
-        NATIVE_TOKEN_ID,
+        CKB_TOKEN_ID,
         15,
         3,
     );
@@ -129,7 +129,7 @@ fn test_with_wrong_ag_sig() {
         account_indexes[0],
         account_indexes[1],
         1,
-        NATIVE_TOKEN_ID,
+        CKB_TOKEN_ID,
         15,
         3,
     );

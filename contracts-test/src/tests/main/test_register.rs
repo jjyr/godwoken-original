@@ -1,22 +1,23 @@
 use crate::tests::{
     utils::{
-        constants::{AGGREGATOR_REQUIRED_BALANCE, NEW_ACCOUNT_REQUIRED_BALANCE},
+        constants::{AGGREGATOR_REQUIRED_BALANCE, CKB_TOKEN_ID, NEW_ACCOUNT_REQUIRED_BALANCE},
         contract_state::ContractState,
         shortcut::{default_context, default_tx_builder, gen_accounts},
     },
     MAX_CYCLES,
 };
-use ckb_contract_tool::ckb_hash::blake2b_256;
-use godwoken_types::packed::{Account, Action, Register, WitnessArgs};
-use godwoken_types::prelude::*;
+use godwoken_types::{
+    core::Index,
+    packed::{Action, Register, SMTProof, WitnessArgs},
+    prelude::*,
+};
+use godwoken_utils::smt;
 
 #[test]
 fn test_account_register() {
     let mut context = ContractState::new();
-    let global_state = context.get_global_state();
+    let mut global_state = context.get_global_state();
     // insert few entries
-    let mut last_account: Option<Account> = None;
-    let mut global_state = global_state;
     let mut original_amount = 0;
     let balances = vec![
         AGGREGATOR_REQUIRED_BALANCE,
@@ -25,31 +26,31 @@ fn test_account_register() {
         NEW_ACCOUNT_REQUIRED_BALANCE,
         NEW_ACCOUNT_REQUIRED_BALANCE,
     ];
-    for (i, account) in gen_accounts(0, balances.clone()).enumerate() {
+    for (i, account) in gen_accounts(0, balances.len()).enumerate() {
         let deposit_amount = balances[i];
         original_amount += deposit_amount;
-        let register = match last_account {
-            None => {
-                // first account
-                Register::new_builder().account(account.clone()).build()
-            }
-            Some(last_account) => {
-                let (_, proof) = context.gen_account_merkle_proof(last_account.index().unpack());
-                Register::new_builder()
-                    .account(account.clone())
-                    .last_account_hash(blake2b_256(last_account.as_slice()).pack())
-                    .proof(
-                        proof
-                            .into_iter()
-                            .map(|i| i.pack())
-                            .collect::<Vec<_>>()
-                            .pack(),
-                    )
-                    .build()
-            }
-        };
+        let index: Index = account.index().unpack();
+        let (leaves_path, merkle_branches) = context.gen_account_merkle_proof(vec![
+            smt::account_index_key(index),
+            smt::token_id_key(index, &CKB_TOKEN_ID),
+        ]);
+        let proof = SMTProof::new_builder()
+            .leaves_path(leaves_path.pack())
+            .proof(
+                merkle_branches
+                    .into_iter()
+                    .map(|(node, height)| (node.into(), height))
+                    .collect::<Vec<([u8; 32], u8)>>()
+                    .pack(),
+            )
+            .build();
+        let register = Register::new_builder()
+            .account(account.clone())
+            .proof(proof)
+            .build();
         let action = Action::new_builder().set(register).build();
         context.push_account(account.clone());
+        context.update_account(i as Index, CKB_TOKEN_ID, balances[i] as i128);
         let new_global_state = context.get_global_state();
         let witness = WitnessArgs::new_builder()
             .output_type(Some(action.as_bytes()).pack())
@@ -65,7 +66,6 @@ fn test_account_register() {
             .expect("build tx");
         let verify_result = context.verify_tx(&tx, MAX_CYCLES);
         verify_result.expect("pass verification");
-        last_account = Some(account);
         global_state = new_global_state;
     }
 }

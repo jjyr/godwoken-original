@@ -5,10 +5,10 @@ pub enum Error {
     InvalidOutputLockHash = -7,
     InvalidWitness = -11,
     IncorrectCapacity = -12,
+    InvalidAccountCount = -110,
     InvalidAccountIndex = -13,
     InvalidAccountScript = -14,
     InvalidAccountNonce = -15,
-    InvalidAccountStateRoot = -38,
     InvalidDepositAmount = -16,
     InvalidGlobalState = -17,
     InvalidAccountMerkleProof = -18,
@@ -26,5 +26,4 @@ pub enum Error {
     MissingChallengerAccount = -35,
     InvalidNewAccountRoot = -36,
     InvalidNewBlockRoot = -37,
-    InvalidKVMerkleProof = -39,
 }

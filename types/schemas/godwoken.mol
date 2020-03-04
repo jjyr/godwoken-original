@@ -12,8 +12,10 @@ array Byte65 [byte; 65];
  * Reference implementation: https://github.com/nervosnetwork/merkle-mountain-range
  */
 struct GlobalState {
-    account_root: Byte32, // H(count | merkle root of address entries)
-    block_root: Byte32, // merkle root of godwoken blocks
+    account_root: Byte32, // merkle root of accounts
+    block_root: Byte32, // merkle root of blocks
+    account_count: Uint64,
+    block_count: Uint64,
 }
 
 table AccountScript {
@@ -45,10 +47,9 @@ table SMTProof {
 }
 
 table Account {
-    index: Uint32, // address index
+    index: Uint64, // address index
     script: AccountScriptOpt, // account's code
     nonce: Uint32, // nonce
-    state_root: Byte32, // state root
     pubkey_hash: Byte20, // pubkey hash
 }
 
@@ -66,8 +67,8 @@ struct UDTPayment {
 }
 
 table Tx {
-    sender_index: Uint32,
-    to_index: Uint32,
+    sender_index: Uint64,
+    to_index: Uint64,
     nonce: Uint32, // nonce
     amount: Payment, // amount
     fee: Payment, // fee
@@ -79,12 +80,14 @@ vector TxVec <Tx>;
 
 /* Aggregated block */
 table AgBlock {
-    number: Uint32, // block number
+    number: Uint64, // block number
     tx_root: Byte32,
-    previous_account_root: Byte32, // account root before this block
-    current_account_root: Byte32, // account root after this block
+    txs_count: Uint32,
+    prev_account_root: Byte32, // account root before this block
+    account_count: Uint64,
+    account_root: Byte32, // account root after this block
     ag_sig: Byte65, // Aggregator's signature
-    ag_index: Uint32, // Aggregator's index
+    ag_index: Uint64, // Aggregator's index
 }
 
 /* contract allowed actions */
@@ -99,18 +102,14 @@ union Action {
 /* Register a new account */
 table Register {
     account: Account,
-    last_account_hash: Byte32, // used for merkle proof
-    proof: Byte32Vec, // merkle proof of old state
+    proof: SMTProof, // non inclusion merkle proof of account
 }
 
 /* Deposit coins */
 table Deposit {
-    old_account: Account, // Account contains old state.
-    old_kv: KeyValueMap,
-    kv_proof: SMTProof,
-    new_account: Account, // Account contains new state.
-    count: Uint32, // count of entries, do not includes new_account
-    proof: Byte32Vec, // merkle proof of old state
+    account: Account, // Account contains old state.
+    token_kv: KeyValueMap,
+    proof: SMTProof, // merkle proof for account
 }
 
 /* Submit aggregator block */
@@ -120,28 +119,22 @@ table SubmitBlock {
     last_block_hash: Byte32, // last blocks hash
     block_proof: Byte32Vec, // merkle proof of block_root
     ag_account: Account, // aggregator's account
-    kv: KeyValueMap, // aggregator's kv map
-    kv_proof: SMTProof, // aggregator's kv proof
-    account_proof: Byte32Vec, // merkle proof of aggregator_root
-    account_count: Uint32,
+    token_kv: KeyValueMap, // aggregator's kv map
+    account_proof: SMTProof, // merkle proof of account_root
 }
 
 
 vector AccountVec <Account>;
 vector KeyValueMapVec <KeyValueMap>;
-vector SMTProofVec <SMTProof>;
 
 /* Invalid a block */
 table InvalidBlock {
     block: AgBlock, // invalid block
     block_proof: Byte32Vec, // merkle proof of block exists
     touched_accounts: AccountVec, // touch accounts previous state
-    touched_accounts_kv: KeyValueMapVec, // kv
-    touched_accounts_kv_proof: SMTProofVec, // kv state proof
-    touched_accounts_proof: Byte32Vec, // inclusion proof of touched accounts
-    accounts_count: Uint32,
+    touched_accounts_token_kv: KeyValueMapVec, // kv
+    touched_accounts_proof: SMTProof, // inclusion proof of touched accounts
     txs: TxVec, // transactions
     txs_proof: Byte32Vec, // merkle proof txs exists
-    txs_count: Uint32,
-    challenger_index: Uint32, // reward will send to this account
+    challenger_index: Uint64, // reward will send to this account
 }

@@ -1,6 +1,6 @@
 use crate::tests::{
     utils::{
-        constants::NATIVE_TOKEN_ID,
+        constants::CKB_TOKEN_ID,
         contract_state::ContractState,
         shortcut::{default_context, default_tx_builder, gen_accounts},
     },
@@ -8,10 +8,11 @@ use crate::tests::{
 };
 use godwoken_types::{
     cache::KVMap,
+    core::Index,
     packed::{Action, Deposit, SMTProof, WitnessArgs},
     prelude::*,
 };
-use godwoken_utils::smt::SMT;
+use godwoken_utils::smt;
 
 #[test]
 fn test_deposit() {
@@ -21,61 +22,41 @@ fn test_deposit() {
     let deposit_amount = 42u64;
 
     // prepare a account
-    let account = gen_accounts(0, vec![original_amount]).next().unwrap();
+    let account = gen_accounts(0, 1).next().unwrap();
+    let index: Index = 0;
+    context.update_account(index, CKB_TOKEN_ID, original_amount as i128);
     context.push_account(account.clone());
+
+    let (leaves_path, merkle_branches) = context.gen_account_merkle_proof(vec![
+        smt::account_index_key(index),
+        smt::token_id_key(index, &CKB_TOKEN_ID),
+    ]);
+
     let global_state = context.get_global_state();
-    let mut tree = SMT::default();
-    tree.update(NATIVE_TOKEN_ID.into(), original_amount.into())
-        .expect("update");
     let mut kv = KVMap::default();
-    kv.insert(NATIVE_TOKEN_ID, original_amount);
-    let kv_proof = tree
-        .merkle_proof(vec![NATIVE_TOKEN_ID.into()])
-        .expect("gen merkle proof");
+    kv.insert(CKB_TOKEN_ID, original_amount);
 
     // deposit money
-    let new_account = {
-        tree.update(
-            NATIVE_TOKEN_ID.into(),
-            (original_amount + deposit_amount).into(),
-        )
-        .expect("update");
-        let root: [u8; 32] = (*tree.root()).into();
-        account.clone().as_builder().state_root(root.pack()).build()
-    };
-    let (_, proof) = context.gen_account_merkle_proof(account.index().unpack());
+    context.update_account(index, CKB_TOKEN_ID, deposit_amount as i128);
+    let new_global_state = context.get_global_state();
+
     let deposit = Deposit::new_builder()
-        .old_account(account)
-        .new_account(new_account.clone())
-        .old_kv(kv.pack())
-        .kv_proof(
-            SMTProof::new_builder()
-                .leaves_path(kv_proof.leaves_path().pack())
-                .proof({
-                    let proof: Vec<([u8; 32], u8)> = kv_proof
-                        .proof()
-                        .iter()
-                        .map(|(node, height)| ((*node).into(), *height))
-                        .collect();
-                    proof.pack()
-                })
-                .build(),
-        )
-        .count(1u32.pack())
+        .account(account)
+        .token_kv(kv.pack())
         .proof(
-            proof
-                .into_iter()
-                .map(|i| i.pack())
-                .collect::<Vec<_>>()
-                .pack(),
+            SMTProof::new_builder()
+                .leaves_path(leaves_path.pack())
+                .proof(
+                    merkle_branches
+                        .into_iter()
+                        .map(|(node, height)| (node.into(), height))
+                        .collect::<Vec<([u8; 32], u8)>>()
+                        .pack(),
+                )
+                .build(),
         )
         .build();
     let action = Action::new_builder().set(deposit).build();
-    let new_global_state = {
-        let mut new_context = ContractState::new();
-        new_context.push_account(new_account);
-        new_context.get_global_state()
-    };
 
     // update tx witness
     let witness = WitnessArgs::new_builder()

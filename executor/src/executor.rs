@@ -23,9 +23,9 @@ impl Executor {
         Ok(())
     }
 
-    pub fn run(&self, state: &mut State, tx: TxWithHash, ag_index: u32) -> Result<(), Error> {
-        let sender_index: u32 = tx.raw.sender_index().unpack();
-        let to_index: u32 = tx.raw.to_index().unpack();
+    pub fn run(&self, state: &mut State, tx: TxWithHash, ag_index: u64) -> Result<(), Error> {
+        let sender_index: u64 = tx.raw.sender_index().unpack();
+        let to_index: u64 = tx.raw.to_index().unpack();
         let (sender, _kv) = state
             .get_account(sender_index)
             .ok_or(Error::MissingAccount(sender_index))?;

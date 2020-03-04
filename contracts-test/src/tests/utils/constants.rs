@@ -1,3 +1,3 @@
 pub const AGGREGATOR_REQUIRED_BALANCE: u64 = 2000;
 pub const NEW_ACCOUNT_REQUIRED_BALANCE: u64 = 1000;
-pub const NATIVE_TOKEN_ID: [u8; 32] = [0u8; 32];
+pub const CKB_TOKEN_ID: [u8; 32] = [0u8; 32];

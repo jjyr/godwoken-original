@@ -3,14 +3,8 @@ use crate::{
     constants::{CKB_TOKEN_ID, NEW_ACCOUNT_REQUIRED_BALANCE},
     error::Error,
 };
-use alloc::vec;
 use alloc::vec::Vec;
-use godwoken_types::{packed::*, prelude::*};
-use godwoken_utils::{
-    hash::new_blake2b,
-    mmr::{compute_account_root, compute_new_account_root},
-    smt,
-};
+use godwoken_types::{cache::KVMap, packed::*, prelude::*};
 
 pub struct RegisterVerifier<'a> {
     action: RegisterReader<'a>,
@@ -34,7 +28,7 @@ impl<'a> RegisterVerifier<'a> {
     /// verify account state
     fn verify_account(
         &self,
-        account: &AccountReader<'a>,
+        account: AccountReader<'a>,
         deposit_capacity: u64,
     ) -> Result<(), Error> {
         let nonce: u32 = account.nonce().unpack();
@@ -48,72 +42,56 @@ impl<'a> RegisterVerifier<'a> {
         if deposit_capacity < NEW_ACCOUNT_REQUIRED_BALANCE {
             Err(Error::InvalidDepositAmount)?;
         }
-        let calculated_state_root: [u8; 32] =
-            smt::compute_root(vec![(CKB_TOKEN_ID.into(), deposit_capacity)])
-                .expect("compute state root")
-                .into();
-        let state_root: [u8; 32] = account.state_root().unpack();
-        if calculated_state_root != state_root {
-            Err(Error::InvalidAccountStateRoot)?;
-        }
         Ok(())
     }
 
-    fn verify_state_transition(&self, account: &AccountReader<'a>) -> Result<(), Error> {
-        if self.old_state.block_root().as_slice() != self.new_state.block_root().as_slice() {
-            return Err(Error::InvalidGlobalState);
+    fn verify_account_state(&self, account: AccountReader<'a>, kv: KVMap) -> Result<(), Error> {
+        let new_index: u64 = account.index().unpack();
+        let old_account_count = self.old_state.account_count().unpack();
+        if new_index != old_account_count {
+            return Err(Error::InvalidAccountIndex);
         }
 
-        let new_index: u32 = account.index().unpack();
-        let old_account_root = self.old_state.account_root().unpack();
-        let last_index = new_index - 1;
-        let last_account_hash = self.action.last_account_hash().unpack();
-        let proof_items: Vec<[u8; 32]> = self
-            .action
-            .proof()
-            .iter()
-            .map(|item| item.unpack())
+        let proof = self.action.proof();
+        let leaves_path = proof.leaves_path().unpack();
+        let merkle_branches: Vec<_> = Unpack::<Vec<([u8; 32], u8)>>::unpack(&proof.proof())
+            .into_iter()
+            .map(|(node, height)| (node.into(), height))
             .collect();
-        // verify old global state
+        // verify old state
+        let old_account_root = self.old_state.account_root().unpack();
         if new_index == 0 {
-            if old_account_root != [0u8; 32] || proof_items.len() != 0 {
+            if old_account_root != [0u8; 32] {
                 return Err(Error::InvalidAccountMerkleProof);
             }
         } else {
-            let old_entries_count = new_index;
-            let calculated_root = compute_account_root(
-                vec![(last_index as usize, last_account_hash)],
-                old_entries_count,
-                proof_items.clone(),
-            )
-            .map_err(|_| Error::InvalidAccountMerkleProof)?;
-            if old_account_root != calculated_root {
-                return Err(Error::InvalidAccountMerkleProof);
-            }
+            let mut empty_kv = KVMap::default();
+            empty_kv.insert(CKB_TOKEN_ID, 0);
+            common::verify_account_root(
+                new_index,
+                None,
+                empty_kv,
+                leaves_path.clone(),
+                merkle_branches.clone(),
+                &old_account_root,
+            )?;
         }
 
-        // verify new global state
-        let new_account_hash = {
-            let mut hasher = new_blake2b();
-            hasher.update(account.as_slice());
-            let mut hash = [0u8; 32];
-            hasher.finalize(&mut hash);
-            hash
-        };
-
-        let calculated_root = compute_new_account_root(
-            last_account_hash,
-            last_index,
-            new_account_hash,
-            new_index,
-            new_index + 1,
-            proof_items,
-        )
-        .map_err(|_| Error::InvalidAccountMerkleProof)?;
+        // verify new state
 
         let new_account_root = self.new_state.account_root().unpack();
-        if new_account_root != calculated_root {
-            return Err(Error::InvalidAccountMerkleProof);
+        common::verify_account_root(
+            new_index,
+            Some(account),
+            kv,
+            leaves_path,
+            merkle_branches,
+            &new_account_root,
+        )?;
+
+        let account_count: u64 = self.new_state.account_count().unpack();
+        if account_count != old_account_count + 1 {
+            return Err(Error::InvalidAccountCount);
         }
 
         Ok(())
@@ -122,8 +100,21 @@ impl<'a> RegisterVerifier<'a> {
     pub fn verify(&self) -> Result<(), Error> {
         let account = self.action.account();
         let deposit_capacity = deposit_capacity()?;
-        self.verify_account(&account, deposit_capacity)?;
-        self.verify_state_transition(&account)?;
+        self.verify_account(account, deposit_capacity)?;
+        let mut kv = KVMap::default();
+        kv.insert(CKB_TOKEN_ID.into(), deposit_capacity.into());
+        self.verify_account_state(account, kv)?;
+        // verify global state
+        let expected_state = self
+            .old_state
+            .to_entity()
+            .as_builder()
+            .account_root(self.new_state.account_root().to_entity())
+            .account_count(self.new_state.account_count().to_entity())
+            .build();
+        if expected_state.as_slice() != self.new_state.as_slice() {
+            return Err(Error::InvalidGlobalState);
+        }
         Ok(())
     }
 }

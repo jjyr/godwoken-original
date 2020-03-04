@@ -1,6 +1,6 @@
 use crate::{bytes::Bytes, cache::KVMap, packed, prelude::*, vec::Vec};
 
-const NATIVE_TOKEN_ID: [u8; 32] = [0u8; 32];
+const CKB_TOKEN_ID: [u8; 32] = [0u8; 32];
 
 impl Pack<packed::Byte20> for [u8; 20] {
     fn pack(&self) -> packed::Byte20 {
@@ -97,7 +97,7 @@ impl_conversion_for_vector!(Vec<u8>, TreePathVec, TreePathVecReader);
 
 impl Pack<packed::Payment> for ([u8; 32], u64) {
     fn pack(&self) -> packed::Payment {
-        let inner = if self.0 == NATIVE_TOKEN_ID {
+        let inner = if self.0 == CKB_TOKEN_ID {
             packed::PaymentUnion::Uint32((self.1 as u32).pack())
         } else {
             packed::PaymentUnion::UDTPayment(
@@ -116,7 +116,7 @@ impl<'r> Unpack<([u8; 32], u64)> for packed::PaymentReader<'r> {
         match self.to_enum() {
             packed::PaymentUnionReader::Uint32(amount) => {
                 let amount: u32 = amount.unpack();
-                (NATIVE_TOKEN_ID, amount.into())
+                (CKB_TOKEN_ID, amount.into())
             }
             packed::PaymentUnionReader::UDTPayment(udt_payment) => {
                 let udt_type: [u8; 32] = udt_payment.type_hash().unpack();

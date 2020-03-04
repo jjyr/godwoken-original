@@ -2,11 +2,11 @@ use crate::tests::{DUMMY_LOCK_HASH, MAIN_CONTRACT_HASH};
 use ckb_contract_tool::ckb_hash::{blake2b_256, new_blake2b};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
 use godwoken_types::{
-    core::ScriptHashType,
+    core::{Index, ScriptHashType, TokenID},
     packed::{Account, AgBlock, GlobalState, Script, Tx},
     prelude::*,
 };
-use godwoken_utils::smt::SMT;
+use godwoken_utils::smt::{self, Value, SMT};
 
 pub struct HashMerge;
 
@@ -25,26 +25,28 @@ impl Merge for HashMerge {
 type HashMMR = MemMMR<[u8; 32], HashMerge>;
 
 pub struct ContractState {
-    accounts: Vec<(Account, SMT)>,
-    block_root: [u8; 32],
+    account_smt: SMT,
     block_mmr: HashMMR,
     lock_data_hash: [u8; 32],
     type_data_hash: [u8; 32],
-    block_count: u32,
+    block_count: u64,
+    account_count: u64,
 }
 
 impl ContractState {
     pub fn new() -> Self {
         ContractState {
-            accounts: Vec::new(),
-            block_root: [0u8; 32],
+            account_smt: SMT::default(),
             block_mmr: Default::default(),
             lock_data_hash: *DUMMY_LOCK_HASH,
             type_data_hash: *MAIN_CONTRACT_HASH,
             block_count: 0,
+            account_count: 0,
         }
     }
 
+    /// TODO
+    /// return balance of contract
     pub fn balance(&self) -> u64 {
         0
     }
@@ -66,112 +68,104 @@ impl ContractState {
     pub fn get_global_state(&self) -> GlobalState {
         GlobalState::new_builder()
             .account_root(self.account_root().pack())
-            .block_root(self.block_root.pack())
+            .block_root(self.block_root().pack())
+            .account_count(self.account_count.pack())
+            .block_count(self.block_count.pack())
             .build()
     }
 
-    pub fn account_count(&self) -> u32 {
-        self.accounts.len() as u32
+    pub fn account_count(&self) -> u64 {
+        self.account_count
     }
 
-    pub fn block_count(&self) -> u32 {
+    pub fn block_count(&self) -> u64 {
         self.block_count
     }
 
-    pub fn get_account(&self, index: u32) -> Option<&(Account, SMT)> {
-        self.accounts.get(index as usize)
+    pub fn get_account(&self, index: Index) -> Option<Account> {
+        let key = smt::account_index_key(index);
+        self.account_smt.get(&key).map(|v| v.into()).ok()
+    }
+
+    pub fn get_account_token(&self, index: Index, token: &TokenID) -> Option<u64> {
+        let key = smt::token_id_key(index, token);
+        self.account_smt.get(&key).map(|v| v.into()).ok()
+    }
+
+    pub fn block_root(&self) -> [u8; 32] {
+        if self.block_count == 0 {
+            return [0u8; 32];
+        }
+        self.block_mmr.get_root().expect("root")
     }
 
     pub fn account_root(&self) -> [u8; 32] {
-        let mut account_root = [0u8; 32];
-        if self.accounts.is_empty() {
-            return account_root;
-        }
-        let account_mmr_root = self.build_account_mmr().get_root().expect("mmr root");
-        let entries_count: u32 = self.accounts.len() as u32;
-        let mut hasher = new_blake2b();
-        hasher.update(&entries_count.to_le_bytes());
-        hasher.update(&account_mmr_root);
-        hasher.finalize(&mut account_root);
-        account_root
-    }
-
-    fn build_account_mmr(&self) -> HashMMR {
-        let mut mmr = HashMMR::default();
-        for (account, _kv_map) in &self.accounts {
-            let account_hash = blake2b_256(account.as_slice());
-            mmr.push(account_hash).expect("mmr push");
-        }
-        mmr
+        (*self.account_smt.root()).into()
     }
 
     pub fn push_account(&mut self, account: Account) {
-        let index = Unpack::<u32>::unpack(&account.index()) as usize;
-        if index == self.accounts.len() {
-            self.accounts.push((account, SMT::default()));
-        } else {
-            self.accounts[index].0 = account;
+        let index: Index = account.index().unpack();
+        let key = smt::account_index_key(index);
+        let is_new = self.account_smt.get(&key).expect("get").is_zero();
+        self.account_smt
+            .update(key, Value::from(account))
+            .expect("update");
+        if is_new {
+            self.account_count += 1;
         }
     }
 
-    pub fn gen_account_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {
-        let proof = self
-            .build_account_mmr()
-            .gen_proof(leaf_index_to_pos(leaf_index.into()))
-            .expect("result");
-        (proof.mmr_size(), proof.proof_items().to_owned())
+    pub fn gen_account_merkle_proof(
+        &self,
+        keys: Vec<smt::H256>,
+    ) -> (Vec<Vec<u8>>, Vec<(smt::H256, u8)>) {
+        let proof = self.account_smt.merkle_proof(keys).expect("merkle_proof");
+        (proof.leaves_path().to_owned(), proof.proof().to_owned())
     }
 
-    pub fn submit_block(&mut self, block: AgBlock, count: u32) {
+    pub fn submit_block(&mut self, block: AgBlock) {
         let block_hash = blake2b_256(block.as_slice());
         self.block_mmr.push(block_hash).expect("mmr push");
-        let block_mmr_root = self.block_mmr.get_root().expect("mmr root");
-        let mut hasher = new_blake2b();
-        hasher.update(&count.to_le_bytes());
-        hasher.update(&block_mmr_root);
-        hasher.finalize(&mut self.block_root);
         self.block_count += 1;
     }
 
-    pub fn gen_block_merkle_proof(&self, leaf_index: u32) -> (u64, Vec<[u8; 32]>) {
+    pub fn gen_block_merkle_proof(&self, index: u64) -> (u64, Vec<[u8; 32]>) {
         let proof = self
             .block_mmr
-            .gen_proof(leaf_index_to_pos(leaf_index.into()))
+            .gen_proof(leaf_index_to_pos(index))
             .expect("result");
         (proof.mmr_size(), proof.proof_items().to_owned())
     }
 
-    pub fn update_account(&mut self, index: u32, token_type: [u8; 32], amount: i128) {
-        let balance: u64 = self.accounts[index as usize]
-            .1
-            .get(&token_type.into())
-            .expect("get")
-            .into();
+    pub fn update_account(&mut self, index: Index, token_type: [u8; 32], amount: i128) {
+        let token_key = smt::token_id_key(index, &token_type);
+        let balance: u64 = self.account_smt.get(&token_key).expect("get").into();
         let new_balance = (balance as i128 + amount) as u64;
-        let new_state_root: [u8; 32] = (*self.accounts[index as usize]
-            .1
-            .update(token_type.into(), new_balance.into())
-            .expect("update"))
-        .into();
-        let account = self.accounts[index as usize].0.clone();
-        let nonce: u32 = account.nonce().unpack();
-        let account = account
-            .as_builder()
-            .state_root(new_state_root.pack())
-            .nonce((nonce + 1).pack())
-            .build();
-        self.push_account(account);
+        self.account_smt
+            .update(token_key, new_balance.into())
+            .expect("update");
     }
 
-    pub fn apply_tx(&mut self, tx: &Tx, fee_to: u32) {
-        let (_tx_fee_token_type, tx_fee): ([u8; 32], u64) = tx.fee().unpack();
+    pub fn apply_tx(&mut self, tx: &Tx, fee_to: Index) {
+        let (fee_token_type, tx_fee): ([u8; 32], u64) = tx.fee().unpack();
         let (token_type, amount): ([u8; 32], u64) = tx.amount().unpack();
 
-        let sender_index: u32 = tx.sender_index().unpack();
-        let to_index: u32 = tx.to_index().unpack();
+        let sender_index: Index = tx.sender_index().unpack();
+        let to_index: Index = tx.to_index().unpack();
 
         self.update_account(sender_index, token_type, -((amount + tx_fee) as i128));
         self.update_account(to_index, token_type, amount as i128);
-        self.update_account(fee_to, token_type, tx_fee as i128);
+        self.update_account(fee_to, fee_token_type, tx_fee as i128);
+
+        // increase account's nonce
+        let sender_key = smt::account_index_key(sender_index);
+        let sender: Account = self.account_smt.get(&sender_key).expect("get").into();
+        let nonce: u32 = sender.nonce().unpack();
+        self.account_smt
+            .update(
+                sender_key,
+                sender.as_builder().nonce((nonce + 1).pack()).build().into(),
+            )
+            .expect("update");
     }
 }

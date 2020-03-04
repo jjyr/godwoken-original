@@ -1,12 +1,15 @@
 use crate::tests::utils::{
-    constants::{AGGREGATOR_REQUIRED_BALANCE, NATIVE_TOKEN_ID},
+    constants::{AGGREGATOR_REQUIRED_BALANCE, CKB_TOKEN_ID},
     contract_state::ContractState,
 };
 use crate::tests::{DUMMY_LOCK_BIN, DUMMY_LOCK_HASH, MAIN_CONTRACT_BIN, MAIN_CONTRACT_HASH};
 use ckb_contract_tool::{Context, TxBuilder};
 use godwoken_types::prelude::*;
-use godwoken_types::{core::ScriptHashType, packed::*};
-use godwoken_utils::{hash::new_blake2b, smt::SMT};
+use godwoken_types::{
+    core::{Index, ScriptHashType},
+    packed::*,
+};
+use godwoken_utils::hash::new_blake2b;
 use rand::{thread_rng, Rng};
 
 pub fn default_tx_builder() -> TxBuilder {
@@ -51,41 +54,33 @@ pub fn sign_block(privkey: &secp256k1::SecretKey, block: &AgBlock) -> [u8; 65] {
     sig
 }
 
-pub fn gen_accounts(start_i: u32, balances: Vec<u64>) -> impl Iterator<Item = Account> {
-    (start_i..start_i + balances.len() as u32)
-        .zip(balances.into_iter())
-        .map(|(i, balance)| {
-            let mut pubkey = [0u8; 20];
-            let mut rng = thread_rng();
-            rng.fill(&mut pubkey);
-            let mut smt = SMT::default();
-            let root: [u8; 32] = (*smt
-                .update(NATIVE_TOKEN_ID.into(), balance.into())
-                .expect("update"))
-            .into();
-            Account::new_builder()
-                .index(i.pack())
-                .state_root(root.pack())
-                .pubkey_hash(pubkey.pack())
-                .build()
-        })
+pub fn gen_accounts(start_i: Index, count: usize) -> impl Iterator<Item = Account> {
+    (start_i..start_i + count as Index).map(|i| {
+        let mut pubkey = [0u8; 20];
+        let mut rng = thread_rng();
+        rng.fill(&mut pubkey);
+        Account::new_builder()
+            .index(i.pack())
+            .pubkey_hash(pubkey.pack())
+            .build()
+    })
 }
 
-pub fn prepare_accounts(contract_state: &mut ContractState, balances: Vec<u64>) -> Vec<u32> {
+pub fn prepare_accounts(contract_state: &mut ContractState, balances: Vec<u64>) -> Vec<Index> {
     let i = contract_state.account_count();
-    let indexes: Vec<u32> = (i..(i + balances.len() as u32)).collect();
+    let indexes: Vec<Index> = (i..(i + balances.len() as Index)).collect();
     for ((i, account), balance) in indexes
         .iter()
-        .zip(gen_accounts(i, balances.clone()))
+        .zip(gen_accounts(i, balances.len()))
         .zip(balances.into_iter())
     {
         contract_state.push_account(account);
-        contract_state.update_account(*i, NATIVE_TOKEN_ID, balance as i128);
+        contract_state.update_account(*i, CKB_TOKEN_ID, balance as i128);
     }
     indexes
 }
 
-pub fn prepare_ag_account(contract_state: &mut ContractState) -> (u32, secp256k1::SecretKey) {
+pub fn prepare_ag_account(contract_state: &mut ContractState) -> (Index, secp256k1::SecretKey) {
     let ag_index = contract_state.account_count();
     let (privkey, pubkey) = {
         let mut rng = thread_rng();
@@ -106,17 +101,13 @@ pub fn prepare_ag_account(contract_state: &mut ContractState) -> (u32, secp256k1
         .pubkey_hash(pubkey_hash.pack())
         .build();
     contract_state.push_account(account_ag);
-    contract_state.update_account(
-        ag_index,
-        NATIVE_TOKEN_ID,
-        AGGREGATOR_REQUIRED_BALANCE as i128,
-    );
+    contract_state.update_account(ag_index, CKB_TOKEN_ID, AGGREGATOR_REQUIRED_BALANCE as i128);
     (ag_index, privkey)
 }
 
 pub fn gen_transfer_tx(
-    sender: u32,
-    to: u32,
+    sender: Index,
+    to: Index,
     nonce: u32,
     token_id: [u8; 32],
     amount: u32,
