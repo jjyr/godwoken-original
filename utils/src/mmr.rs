@@ -7,6 +7,7 @@ use ckb_merkle_mountain_range::{
 
 pub use ckb_merkle_mountain_range::Error;
 
+pub type HashMMR = MemMMR<[u8; 32], HashMerge>;
 pub struct HashMerge;
 
 impl Merge for HashMerge {

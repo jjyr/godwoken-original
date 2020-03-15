@@ -1,11 +1,14 @@
 [package]
-name = "godwoken-main"
+name = "godwoken-challenge"
 version = "0.1.0"
 authors = ["jjy <jjyruby@gmail.com>"]
 edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 godwoken-types = { path = "../../types", default-features = false }
 godwoken-utils = { path = "../../utils", default-features = false }
 godwoken-executor = { path = "../../executor", default-features = false }
-ckb-contract-std = "0.1.2"
+ckb-contract-std = { git = "https://github.com/jjyr/ckb-contract-std", branch = "master" }
+

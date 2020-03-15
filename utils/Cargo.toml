@@ -10,5 +10,5 @@ edition = "2018"
 blake2b-ref = { version = "0.1", default-feature = false }
 libsecp256k1 = { version = "0.3", default-features = false }
 ckb-merkle-mountain-range = { version = "0.2.0", default-features = false }
-sparse-merkle-tree = { git = "https://github.com/jjyr/sparse-merkle-tree.git", branch = "master", default-features = false }
+sparse-merkle-tree = { version = "0.1.1", default-features = false }
 godwoken-types = { path = "../types", default-features = false }

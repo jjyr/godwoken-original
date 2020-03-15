@@ -8187,3 +8187,1522 @@ impl molecule::prelude::Builder for InvalidBlockBuilder {
         InvalidBlock::new_unchecked(inner.into())
     }
 }
+#[derive(Clone)]
+pub struct ChallengeArgs(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for ChallengeArgs {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for ChallengeArgs {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for ChallengeArgs {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "main_type_hash", self.main_type_hash())?;
+        write!(
+            f,
+            ", {}: {}",
+            "withdraw_lock_hash",
+            self.withdraw_lock_hash()
+        )?;
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for ChallengeArgs {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+        ];
+        ChallengeArgs::new_unchecked(v.into())
+    }
+}
+impl ChallengeArgs {
+    pub const TOTAL_SIZE: usize = 64;
+    pub const FIELD_SIZE: [usize; 2] = [32, 32];
+    pub const FIELD_COUNT: usize = 2;
+    pub fn main_type_hash(&self) -> Byte32 {
+        Byte32::new_unchecked(self.0.slice(0, 32))
+    }
+    pub fn withdraw_lock_hash(&self) -> Byte32 {
+        Byte32::new_unchecked(self.0.slice(32, 64))
+    }
+    pub fn as_reader<'r>(&'r self) -> ChallengeArgsReader<'r> {
+        ChallengeArgsReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for ChallengeArgs {
+    type Builder = ChallengeArgsBuilder;
+    const NAME: &'static str = "ChallengeArgs";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        ChallengeArgs(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeArgsReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeArgsReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .main_type_hash(self.main_type_hash())
+            .withdraw_lock_hash(self.withdraw_lock_hash())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct ChallengeArgsReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for ChallengeArgsReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for ChallengeArgsReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for ChallengeArgsReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "main_type_hash", self.main_type_hash())?;
+        write!(
+            f,
+            ", {}: {}",
+            "withdraw_lock_hash",
+            self.withdraw_lock_hash()
+        )?;
+        write!(f, " }}")
+    }
+}
+impl<'r> ChallengeArgsReader<'r> {
+    pub const TOTAL_SIZE: usize = 64;
+    pub const FIELD_SIZE: [usize; 2] = [32, 32];
+    pub const FIELD_COUNT: usize = 2;
+    pub fn main_type_hash(&self) -> Byte32Reader<'r> {
+        Byte32Reader::new_unchecked(&self.as_slice()[0..32])
+    }
+    pub fn withdraw_lock_hash(&self) -> Byte32Reader<'r> {
+        Byte32Reader::new_unchecked(&self.as_slice()[32..64])
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for ChallengeArgsReader<'r> {
+    type Entity = ChallengeArgs;
+    const NAME: &'static str = "ChallengeArgsReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        ChallengeArgsReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], _compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len != Self::TOTAL_SIZE {
+            return ve!(Self, TotalSizeNotMatch, Self::TOTAL_SIZE, slice_len);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct ChallengeArgsBuilder {
+    pub(crate) main_type_hash: Byte32,
+    pub(crate) withdraw_lock_hash: Byte32,
+}
+impl ChallengeArgsBuilder {
+    pub const TOTAL_SIZE: usize = 64;
+    pub const FIELD_SIZE: [usize; 2] = [32, 32];
+    pub const FIELD_COUNT: usize = 2;
+    pub fn main_type_hash(mut self, v: Byte32) -> Self {
+        self.main_type_hash = v;
+        self
+    }
+    pub fn withdraw_lock_hash(mut self, v: Byte32) -> Self {
+        self.withdraw_lock_hash = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for ChallengeArgsBuilder {
+    type Entity = ChallengeArgs;
+    const NAME: &'static str = "ChallengeArgsBuilder";
+    fn expected_length(&self) -> usize {
+        Self::TOTAL_SIZE
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        writer.write_all(self.main_type_hash.as_slice())?;
+        writer.write_all(self.withdraw_lock_hash.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        ChallengeArgs::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct ChallengeContext(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for ChallengeContext {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for ChallengeContext {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for ChallengeContext {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "block", self.block())?;
+        write!(f, ", {}: {}", "txs", self.txs())?;
+        write!(f, ", {}: {}", "challenger_index", self.challenger_index())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for ChallengeContext {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            253, 0, 0, 0, 16, 0, 0, 0, 241, 0, 0, 0, 245, 0, 0, 0, 225, 0, 0, 0, 36, 0, 0, 0, 44,
+            0, 0, 0, 76, 0, 0, 0, 80, 0, 0, 0, 112, 0, 0, 0, 120, 0, 0, 0, 152, 0, 0, 0, 217, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        ChallengeContext::new_unchecked(v.into())
+    }
+}
+impl ChallengeContext {
+    pub const FIELD_COUNT: usize = 3;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn block(&self) -> AgBlock {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[0][..]) as usize;
+        let end = molecule::unpack_number(&offsets[1][..]) as usize;
+        AgBlock::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn txs(&self) -> TxVec {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[1][..]) as usize;
+        let end = molecule::unpack_number(&offsets[2][..]) as usize;
+        TxVec::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn challenger_index(&self) -> Uint64 {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[2][..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&offsets[3][..]) as usize;
+            Uint64::new_unchecked(self.0.slice(start, end))
+        } else {
+            Uint64::new_unchecked(self.0.slice_from(start))
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> ChallengeContextReader<'r> {
+        ChallengeContextReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for ChallengeContext {
+    type Builder = ChallengeContextBuilder;
+    const NAME: &'static str = "ChallengeContext";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        ChallengeContext(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeContextReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeContextReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .block(self.block())
+            .txs(self.txs())
+            .challenger_index(self.challenger_index())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct ChallengeContextReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for ChallengeContextReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for ChallengeContextReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for ChallengeContextReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "block", self.block())?;
+        write!(f, ", {}: {}", "txs", self.txs())?;
+        write!(f, ", {}: {}", "challenger_index", self.challenger_index())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> ChallengeContextReader<'r> {
+    pub const FIELD_COUNT: usize = 3;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn block(&self) -> AgBlockReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[0][..]) as usize;
+        let end = molecule::unpack_number(&offsets[1][..]) as usize;
+        AgBlockReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn txs(&self) -> TxVecReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[1][..]) as usize;
+        let end = molecule::unpack_number(&offsets[2][..]) as usize;
+        TxVecReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn challenger_index(&self) -> Uint64Reader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[2][..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&offsets[3][..]) as usize;
+            Uint64Reader::new_unchecked(&self.as_slice()[start..end])
+        } else {
+            Uint64Reader::new_unchecked(&self.as_slice()[start..])
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for ChallengeContextReader<'r> {
+    type Entity = ChallengeContext;
+    const NAME: &'static str = "ChallengeContextReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        ChallengeContextReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len == molecule::NUMBER_SIZE && Self::FIELD_COUNT == 0 {
+            return Ok(());
+        }
+        if slice_len < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE * 2, slice_len);
+        }
+        let offset_first = molecule::unpack_number(&slice[molecule::NUMBER_SIZE..]) as usize;
+        if offset_first % 4 != 0 || offset_first < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        let field_count = offset_first / 4 - 1;
+        if field_count < Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        } else if !compatible && field_count > Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        };
+        let header_size = molecule::NUMBER_SIZE * (field_count + 1);
+        if slice_len < header_size {
+            return ve!(Self, HeaderIsBroken, header_size, slice_len);
+        }
+        let ptr = molecule::unpack_number_vec(&slice[molecule::NUMBER_SIZE..]);
+        let mut offsets: Vec<usize> = ptr[..field_count]
+            .iter()
+            .map(|x| molecule::unpack_number(&x[..]) as usize)
+            .collect();
+        offsets.push(total_size);
+        if offsets.windows(2).any(|i| i[0] > i[1]) {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        AgBlockReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        TxVecReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct ChallengeContextBuilder {
+    pub(crate) block: AgBlock,
+    pub(crate) txs: TxVec,
+    pub(crate) challenger_index: Uint64,
+}
+impl ChallengeContextBuilder {
+    pub const FIELD_COUNT: usize = 3;
+    pub fn block(mut self, v: AgBlock) -> Self {
+        self.block = v;
+        self
+    }
+    pub fn txs(mut self, v: TxVec) -> Self {
+        self.txs = v;
+        self
+    }
+    pub fn challenger_index(mut self, v: Uint64) -> Self {
+        self.challenger_index = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for ChallengeContextBuilder {
+    type Entity = ChallengeContext;
+    const NAME: &'static str = "ChallengeContextBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
+            + self.block.as_slice().len()
+            + self.txs.as_slice().len()
+            + self.challenger_index.as_slice().len()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
+        let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
+        offsets.push(total_size);
+        total_size += self.block.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.txs.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.challenger_index.as_slice().len();
+        writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
+        for offset in offsets.into_iter() {
+            writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
+        }
+        writer.write_all(self.block.as_slice())?;
+        writer.write_all(self.txs.as_slice())?;
+        writer.write_all(self.challenger_index.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        ChallengeContext::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct ChallengeProof(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for ChallengeProof {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for ChallengeProof {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for ChallengeProof {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "txs_proof", self.txs_proof())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for ChallengeProof {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![12, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0];
+        ChallengeProof::new_unchecked(v.into())
+    }
+}
+impl ChallengeProof {
+    pub const FIELD_COUNT: usize = 1;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn txs_proof(&self) -> Byte32Vec {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[0][..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&offsets[1][..]) as usize;
+            Byte32Vec::new_unchecked(self.0.slice(start, end))
+        } else {
+            Byte32Vec::new_unchecked(self.0.slice_from(start))
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> ChallengeProofReader<'r> {
+        ChallengeProofReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for ChallengeProof {
+    type Builder = ChallengeProofBuilder;
+    const NAME: &'static str = "ChallengeProof";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        ChallengeProof(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeProofReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeProofReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().txs_proof(self.txs_proof())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct ChallengeProofReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for ChallengeProofReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for ChallengeProofReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for ChallengeProofReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "txs_proof", self.txs_proof())?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> ChallengeProofReader<'r> {
+    pub const FIELD_COUNT: usize = 1;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn txs_proof(&self) -> Byte32VecReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[0][..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&offsets[1][..]) as usize;
+            Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
+        } else {
+            Byte32VecReader::new_unchecked(&self.as_slice()[start..])
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for ChallengeProofReader<'r> {
+    type Entity = ChallengeProof;
+    const NAME: &'static str = "ChallengeProofReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        ChallengeProofReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len == molecule::NUMBER_SIZE && Self::FIELD_COUNT == 0 {
+            return Ok(());
+        }
+        if slice_len < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE * 2, slice_len);
+        }
+        let offset_first = molecule::unpack_number(&slice[molecule::NUMBER_SIZE..]) as usize;
+        if offset_first % 4 != 0 || offset_first < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        let field_count = offset_first / 4 - 1;
+        if field_count < Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        } else if !compatible && field_count > Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        };
+        let header_size = molecule::NUMBER_SIZE * (field_count + 1);
+        if slice_len < header_size {
+            return ve!(Self, HeaderIsBroken, header_size, slice_len);
+        }
+        let ptr = molecule::unpack_number_vec(&slice[molecule::NUMBER_SIZE..]);
+        let mut offsets: Vec<usize> = ptr[..field_count]
+            .iter()
+            .map(|x| molecule::unpack_number(&x[..]) as usize)
+            .collect();
+        offsets.push(total_size);
+        if offsets.windows(2).any(|i| i[0] > i[1]) {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        Byte32VecReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct ChallengeProofBuilder {
+    pub(crate) txs_proof: Byte32Vec,
+}
+impl ChallengeProofBuilder {
+    pub const FIELD_COUNT: usize = 1;
+    pub fn txs_proof(mut self, v: Byte32Vec) -> Self {
+        self.txs_proof = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for ChallengeProofBuilder {
+    type Entity = ChallengeProof;
+    const NAME: &'static str = "ChallengeProofBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1) + self.txs_proof.as_slice().len()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
+        let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
+        offsets.push(total_size);
+        total_size += self.txs_proof.as_slice().len();
+        writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
+        for offset in offsets.into_iter() {
+            writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
+        }
+        writer.write_all(self.txs_proof.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        ChallengeProof::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct ChallengeRespond(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for ChallengeRespond {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for ChallengeRespond {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for ChallengeRespond {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}(", Self::NAME)?;
+        self.to_enum().display_inner(f)?;
+        write!(f, ")")
+    }
+}
+impl ::core::default::Default for ChallengeRespond {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![0, 0, 0, 0, 4, 0, 0, 0];
+        ChallengeRespond::new_unchecked(v.into())
+    }
+}
+impl ChallengeRespond {
+    pub const ITEM_COUNT: usize = 2;
+    pub fn item_id(&self) -> molecule::Number {
+        molecule::unpack_number(self.as_slice())
+    }
+    pub fn to_enum(&self) -> ChallengeRespondUnion {
+        let inner = self.0.slice_from(molecule::NUMBER_SIZE);
+        match self.item_id() {
+            0 => WithdrawChallenge::new_unchecked(inner).into(),
+            1 => InvalidChallenge::new_unchecked(inner).into(),
+            _ => panic!("{}: invalid data", Self::NAME),
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> ChallengeRespondReader<'r> {
+        ChallengeRespondReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for ChallengeRespond {
+    type Builder = ChallengeRespondBuilder;
+    const NAME: &'static str = "ChallengeRespond";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        ChallengeRespond(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeRespondReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        ChallengeRespondReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_enum())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct ChallengeRespondReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for ChallengeRespondReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for ChallengeRespondReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for ChallengeRespondReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}(", Self::NAME)?;
+        self.to_enum().display_inner(f)?;
+        write!(f, ")")
+    }
+}
+impl<'r> ChallengeRespondReader<'r> {
+    pub const ITEM_COUNT: usize = 2;
+    pub fn item_id(&self) -> molecule::Number {
+        molecule::unpack_number(self.as_slice())
+    }
+    pub fn to_enum(&self) -> ChallengeRespondUnionReader<'r> {
+        let inner = &self.as_slice()[molecule::NUMBER_SIZE..];
+        match self.item_id() {
+            0 => WithdrawChallengeReader::new_unchecked(inner).into(),
+            1 => InvalidChallengeReader::new_unchecked(inner).into(),
+            _ => panic!("{}: invalid data", Self::NAME),
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for ChallengeRespondReader<'r> {
+    type Entity = ChallengeRespond;
+    const NAME: &'static str = "ChallengeRespondReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        ChallengeRespondReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let item_id = molecule::unpack_number(slice);
+        let inner_slice = &slice[molecule::NUMBER_SIZE..];
+        match item_id {
+            0 => WithdrawChallengeReader::verify(inner_slice, compatible),
+            1 => InvalidChallengeReader::verify(inner_slice, compatible),
+            _ => ve!(Self, UnknownItem, Self::ITEM_COUNT, item_id),
+        }?;
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct ChallengeRespondBuilder(pub(crate) ChallengeRespondUnion);
+impl ChallengeRespondBuilder {
+    pub const ITEM_COUNT: usize = 2;
+    pub fn set<I>(mut self, v: I) -> Self
+    where
+        I: ::core::convert::Into<ChallengeRespondUnion>,
+    {
+        self.0 = v.into();
+        self
+    }
+}
+impl molecule::prelude::Builder for ChallengeRespondBuilder {
+    type Entity = ChallengeRespond;
+    const NAME: &'static str = "ChallengeRespondBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE + self.0.as_slice().len()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        writer.write_all(&molecule::pack_number(self.0.item_id()))?;
+        writer.write_all(self.0.as_slice())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        ChallengeRespond::new_unchecked(inner.into())
+    }
+}
+#[derive(Debug, Clone)]
+pub enum ChallengeRespondUnion {
+    WithdrawChallenge(WithdrawChallenge),
+    InvalidChallenge(InvalidChallenge),
+}
+#[derive(Debug, Clone, Copy)]
+pub enum ChallengeRespondUnionReader<'r> {
+    WithdrawChallenge(WithdrawChallengeReader<'r>),
+    InvalidChallenge(InvalidChallengeReader<'r>),
+}
+impl ::core::default::Default for ChallengeRespondUnion {
+    fn default() -> Self {
+        ChallengeRespondUnion::WithdrawChallenge(::core::default::Default::default())
+    }
+}
+impl ::core::fmt::Display for ChallengeRespondUnion {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(ref item) => {
+                write!(f, "{}::{}({})", Self::NAME, WithdrawChallenge::NAME, item)
+            }
+            ChallengeRespondUnion::InvalidChallenge(ref item) => {
+                write!(f, "{}::{}({})", Self::NAME, InvalidChallenge::NAME, item)
+            }
+        }
+    }
+}
+impl<'r> ::core::fmt::Display for ChallengeRespondUnionReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        match self {
+            ChallengeRespondUnionReader::WithdrawChallenge(ref item) => {
+                write!(f, "{}::{}({})", Self::NAME, WithdrawChallenge::NAME, item)
+            }
+            ChallengeRespondUnionReader::InvalidChallenge(ref item) => {
+                write!(f, "{}::{}({})", Self::NAME, InvalidChallenge::NAME, item)
+            }
+        }
+    }
+}
+impl ChallengeRespondUnion {
+    pub(crate) fn display_inner(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(ref item) => write!(f, "{}", item),
+            ChallengeRespondUnion::InvalidChallenge(ref item) => write!(f, "{}", item),
+        }
+    }
+}
+impl<'r> ChallengeRespondUnionReader<'r> {
+    pub(crate) fn display_inner(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        match self {
+            ChallengeRespondUnionReader::WithdrawChallenge(ref item) => write!(f, "{}", item),
+            ChallengeRespondUnionReader::InvalidChallenge(ref item) => write!(f, "{}", item),
+        }
+    }
+}
+impl ::core::convert::From<WithdrawChallenge> for ChallengeRespondUnion {
+    fn from(item: WithdrawChallenge) -> Self {
+        ChallengeRespondUnion::WithdrawChallenge(item)
+    }
+}
+impl ::core::convert::From<InvalidChallenge> for ChallengeRespondUnion {
+    fn from(item: InvalidChallenge) -> Self {
+        ChallengeRespondUnion::InvalidChallenge(item)
+    }
+}
+impl<'r> ::core::convert::From<WithdrawChallengeReader<'r>> for ChallengeRespondUnionReader<'r> {
+    fn from(item: WithdrawChallengeReader<'r>) -> Self {
+        ChallengeRespondUnionReader::WithdrawChallenge(item)
+    }
+}
+impl<'r> ::core::convert::From<InvalidChallengeReader<'r>> for ChallengeRespondUnionReader<'r> {
+    fn from(item: InvalidChallengeReader<'r>) -> Self {
+        ChallengeRespondUnionReader::InvalidChallenge(item)
+    }
+}
+impl ChallengeRespondUnion {
+    pub const NAME: &'static str = "ChallengeRespondUnion";
+    pub fn as_bytes(&self) -> molecule::bytes::Bytes {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(item) => item.as_bytes(),
+            ChallengeRespondUnion::InvalidChallenge(item) => item.as_bytes(),
+        }
+    }
+    pub fn as_slice(&self) -> &[u8] {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(item) => item.as_slice(),
+            ChallengeRespondUnion::InvalidChallenge(item) => item.as_slice(),
+        }
+    }
+    pub fn item_id(&self) -> molecule::Number {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(_) => 0,
+            ChallengeRespondUnion::InvalidChallenge(_) => 1,
+        }
+    }
+    pub fn item_name(&self) -> &str {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(_) => "WithdrawChallenge",
+            ChallengeRespondUnion::InvalidChallenge(_) => "InvalidChallenge",
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> ChallengeRespondUnionReader<'r> {
+        match self {
+            ChallengeRespondUnion::WithdrawChallenge(item) => item.as_reader().into(),
+            ChallengeRespondUnion::InvalidChallenge(item) => item.as_reader().into(),
+        }
+    }
+}
+impl<'r> ChallengeRespondUnionReader<'r> {
+    pub const NAME: &'r str = "ChallengeRespondUnionReader";
+    pub fn as_slice(&self) -> &'r [u8] {
+        match self {
+            ChallengeRespondUnionReader::WithdrawChallenge(item) => item.as_slice(),
+            ChallengeRespondUnionReader::InvalidChallenge(item) => item.as_slice(),
+        }
+    }
+    pub fn item_id(&self) -> molecule::Number {
+        match self {
+            ChallengeRespondUnionReader::WithdrawChallenge(_) => 0,
+            ChallengeRespondUnionReader::InvalidChallenge(_) => 1,
+        }
+    }
+    pub fn item_name(&self) -> &str {
+        match self {
+            ChallengeRespondUnionReader::WithdrawChallenge(_) => "WithdrawChallenge",
+            ChallengeRespondUnionReader::InvalidChallenge(_) => "InvalidChallenge",
+        }
+    }
+}
+#[derive(Clone)]
+pub struct WithdrawChallenge(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for WithdrawChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for WithdrawChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for WithdrawChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ".. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for WithdrawChallenge {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![4, 0, 0, 0];
+        WithdrawChallenge::new_unchecked(v.into())
+    }
+}
+impl WithdrawChallenge {
+    pub const FIELD_COUNT: usize = 0;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn as_reader<'r>(&'r self) -> WithdrawChallengeReader<'r> {
+        WithdrawChallengeReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for WithdrawChallenge {
+    type Builder = WithdrawChallengeBuilder;
+    const NAME: &'static str = "WithdrawChallenge";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        WithdrawChallenge(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        WithdrawChallengeReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        WithdrawChallengeReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+    }
+}
+#[derive(Clone, Copy)]
+pub struct WithdrawChallengeReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for WithdrawChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for WithdrawChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for WithdrawChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ".. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> WithdrawChallengeReader<'r> {
+    pub const FIELD_COUNT: usize = 0;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for WithdrawChallengeReader<'r> {
+    type Entity = WithdrawChallenge;
+    const NAME: &'static str = "WithdrawChallengeReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        WithdrawChallengeReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len > molecule::NUMBER_SIZE && !compatible {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, !0);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct WithdrawChallengeBuilder {}
+impl WithdrawChallengeBuilder {
+    pub const FIELD_COUNT: usize = 0;
+}
+impl molecule::prelude::Builder for WithdrawChallengeBuilder {
+    type Entity = WithdrawChallenge;
+    const NAME: &'static str = "WithdrawChallengeBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        writer.write_all(&molecule::pack_number(
+            molecule::NUMBER_SIZE as molecule::Number,
+        ))?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        WithdrawChallenge::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct InvalidChallenge(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for InvalidChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for InvalidChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for InvalidChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "touched_accounts", self.touched_accounts())?;
+        write!(
+            f,
+            ", {}: {}",
+            "touched_accounts_token_kv",
+            self.touched_accounts_token_kv()
+        )?;
+        write!(
+            f,
+            ", {}: {}",
+            "touched_accounts_proof",
+            self.touched_accounts_proof()
+        )?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for InvalidChallenge {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![
+            44, 0, 0, 0, 16, 0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 20, 0, 0,
+            0, 12, 0, 0, 0, 16, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        InvalidChallenge::new_unchecked(v.into())
+    }
+}
+impl InvalidChallenge {
+    pub const FIELD_COUNT: usize = 3;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn touched_accounts(&self) -> AccountVec {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[0][..]) as usize;
+        let end = molecule::unpack_number(&offsets[1][..]) as usize;
+        AccountVec::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn touched_accounts_token_kv(&self) -> KeyValueMapVec {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[1][..]) as usize;
+        let end = molecule::unpack_number(&offsets[2][..]) as usize;
+        KeyValueMapVec::new_unchecked(self.0.slice(start, end))
+    }
+    pub fn touched_accounts_proof(&self) -> SMTProof {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[2][..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&offsets[3][..]) as usize;
+            SMTProof::new_unchecked(self.0.slice(start, end))
+        } else {
+            SMTProof::new_unchecked(self.0.slice_from(start))
+        }
+    }
+    pub fn as_reader<'r>(&'r self) -> InvalidChallengeReader<'r> {
+        InvalidChallengeReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for InvalidChallenge {
+    type Builder = InvalidChallengeBuilder;
+    const NAME: &'static str = "InvalidChallenge";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        InvalidChallenge(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        InvalidChallengeReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        InvalidChallengeReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+            .touched_accounts(self.touched_accounts())
+            .touched_accounts_token_kv(self.touched_accounts_token_kv())
+            .touched_accounts_proof(self.touched_accounts_proof())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct InvalidChallengeReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for InvalidChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for InvalidChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for InvalidChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        write!(f, "{}: {}", "touched_accounts", self.touched_accounts())?;
+        write!(
+            f,
+            ", {}: {}",
+            "touched_accounts_token_kv",
+            self.touched_accounts_token_kv()
+        )?;
+        write!(
+            f,
+            ", {}: {}",
+            "touched_accounts_proof",
+            self.touched_accounts_proof()
+        )?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ", .. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> InvalidChallengeReader<'r> {
+    pub const FIELD_COUNT: usize = 3;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn touched_accounts(&self) -> AccountVecReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[0][..]) as usize;
+        let end = molecule::unpack_number(&offsets[1][..]) as usize;
+        AccountVecReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn touched_accounts_token_kv(&self) -> KeyValueMapVecReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[1][..]) as usize;
+        let end = molecule::unpack_number(&offsets[2][..]) as usize;
+        KeyValueMapVecReader::new_unchecked(&self.as_slice()[start..end])
+    }
+    pub fn touched_accounts_proof(&self) -> SMTProofReader<'r> {
+        let offsets = self.field_offsets();
+        let start = molecule::unpack_number(&offsets[2][..]) as usize;
+        if self.has_extra_fields() {
+            let end = molecule::unpack_number(&offsets[3][..]) as usize;
+            SMTProofReader::new_unchecked(&self.as_slice()[start..end])
+        } else {
+            SMTProofReader::new_unchecked(&self.as_slice()[start..])
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for InvalidChallengeReader<'r> {
+    type Entity = InvalidChallenge;
+    const NAME: &'static str = "InvalidChallengeReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        InvalidChallengeReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len == molecule::NUMBER_SIZE && Self::FIELD_COUNT == 0 {
+            return Ok(());
+        }
+        if slice_len < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE * 2, slice_len);
+        }
+        let offset_first = molecule::unpack_number(&slice[molecule::NUMBER_SIZE..]) as usize;
+        if offset_first % 4 != 0 || offset_first < molecule::NUMBER_SIZE * 2 {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        let field_count = offset_first / 4 - 1;
+        if field_count < Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        } else if !compatible && field_count > Self::FIELD_COUNT {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, field_count);
+        };
+        let header_size = molecule::NUMBER_SIZE * (field_count + 1);
+        if slice_len < header_size {
+            return ve!(Self, HeaderIsBroken, header_size, slice_len);
+        }
+        let ptr = molecule::unpack_number_vec(&slice[molecule::NUMBER_SIZE..]);
+        let mut offsets: Vec<usize> = ptr[..field_count]
+            .iter()
+            .map(|x| molecule::unpack_number(&x[..]) as usize)
+            .collect();
+        offsets.push(total_size);
+        if offsets.windows(2).any(|i| i[0] > i[1]) {
+            return ve!(Self, OffsetsNotMatch);
+        }
+        AccountVecReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        KeyValueMapVecReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        SMTProofReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct InvalidChallengeBuilder {
+    pub(crate) touched_accounts: AccountVec,
+    pub(crate) touched_accounts_token_kv: KeyValueMapVec,
+    pub(crate) touched_accounts_proof: SMTProof,
+}
+impl InvalidChallengeBuilder {
+    pub const FIELD_COUNT: usize = 3;
+    pub fn touched_accounts(mut self, v: AccountVec) -> Self {
+        self.touched_accounts = v;
+        self
+    }
+    pub fn touched_accounts_token_kv(mut self, v: KeyValueMapVec) -> Self {
+        self.touched_accounts_token_kv = v;
+        self
+    }
+    pub fn touched_accounts_proof(mut self, v: SMTProof) -> Self {
+        self.touched_accounts_proof = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for InvalidChallengeBuilder {
+    type Entity = InvalidChallenge;
+    const NAME: &'static str = "InvalidChallengeBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
+            + self.touched_accounts.as_slice().len()
+            + self.touched_accounts_token_kv.as_slice().len()
+            + self.touched_accounts_proof.as_slice().len()
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
+        let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
+        offsets.push(total_size);
+        total_size += self.touched_accounts.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.touched_accounts_token_kv.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.touched_accounts_proof.as_slice().len();
+        writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
+        for offset in offsets.into_iter() {
+            writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
+        }
+        writer.write_all(self.touched_accounts.as_slice())?;
+        writer.write_all(self.touched_accounts_token_kv.as_slice())?;
+        writer.write_all(self.touched_accounts_proof.as_slice())?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        InvalidChallenge::new_unchecked(inner.into())
+    }
+}

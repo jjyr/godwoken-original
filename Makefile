@@ -28,7 +28,7 @@ install-tools:
 ##@ Development
 CONTRACTS := contracts
 TESTS := contracts-test
-CARGO_PROJS := ${CONTRACTS}/main ${CONTRACTS}/dummy-lock ${TESTS}
+CARGO_PROJS := ${CONTRACTS}/main ${CONTRACTS}/challenge ${CONTRACTS}/dummy-lock ${TESTS}
 
 .PHONY: integration
 integration: contracts-via-docker check-fmt clippy test

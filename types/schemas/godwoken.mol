@@ -138,3 +138,34 @@ table InvalidBlock {
     txs_proof: Byte32Vec, // merkle proof txs exists
     challenger_index: Uint64, // reward will send to this account
 }
+
+/* Challenge contract */
+struct ChallengeArgs {
+    main_type_hash: Byte32, // main contract's type_hash
+    withdraw_lock_hash: Byte32,
+}
+
+table ChallengeContext {
+    block: AgBlock, // invalid block
+    txs: TxVec, // transactions
+    challenger_index: Uint64, // reward will send to this account
+}
+
+table ChallengeProof {
+    txs_proof: Byte32Vec, // merkle proof txs exists
+}
+
+union ChallengeRespond {
+    WithdrawChallenge,
+    InvalidChallenge,
+}
+
+/* withdraw challenge request */
+table WithdrawChallenge{}
+
+/* invalid the challenge cell and get bond */
+table InvalidChallenge {
+    touched_accounts: AccountVec, // touch accounts previous state
+    touched_accounts_token_kv: KeyValueMapVec, // kv
+    touched_accounts_proof: SMTProof, // inclusion proof of touched accounts
+}
