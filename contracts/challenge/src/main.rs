@@ -92,15 +92,19 @@ fn load_challenge_args() -> Result<ChallengeArgs, Error> {
 fn verify_withdraw_challenge<'a>(args: ChallengeArgsReader<'a>) -> Result<(), Error> {
     const SINCE_LEN: usize = 8;
     // verify withdraw time
-    let buf = syscalls::load_cell_by_field(SINCE_LEN, 0, 0, Source::GroupInput, InputField::Since)
+    let buf = syscalls::load_input_by_field(SINCE_LEN, 0, 0, Source::GroupInput, InputField::Since)
         .map_err(|_| Error::InvalidSince)?;
-    let withdraw_since = since::Since(u64::from_le_bytes(buf));
+    let withdraw_since = {
+        let mut raw_since = [0u8; 8];
+        raw_since.copy_from_slice(&buf);
+        since::Since::new(u64::from_le_bytes(raw_since))
+    };
     if !withdraw_since.is_relative() {
         return Err(Error::InvalidSince);
     }
     let withdraw_epoch = withdraw_since
-        .extract_lock_type()
-        .epoch()
+        .extract_lock_value()
+        .and_then(|value| value.epoch())
         .ok_or(Error::InvalidSince)?;
     if withdraw_epoch.number() < WITHDRAW_WAIT_EPOCHS {
         return Err(Error::InvalidSince);

@@ -1,7 +1,7 @@
 # Rust compile
 RUST_TARGET := riscv64imac-unknown-none-elf
 RUSTFLAGS := "-C link-arg=-s"
-CARGO_PROJS := main dummy-lock challenge
+CONTRACTS := main dummy-lock challenge
 
 # CKB binary patcher 
 install-binary-patcher:
@@ -18,8 +18,10 @@ build-image:
 DUMMY_LOCK := dummy-lock/target/${RUST_TARGET}/release/dummy-lock
 MAIN := main/target/${RUST_TARGET}/release/godwoken-main
 CHALLENGE := challenge/target/${RUST_TARGET}/release/godwoken-challenge
+
+CONTRACTS_BIN := ${DUMMY_LOCK} ${MAIN} ${CHALLENGE}
 # deps
-contracts: ${MAIN} ${DUMMY_LOCK} ${CHALLENGE}
+contracts: ${CONTRACTS_BIN}
 	cp $^ binaries/
 
 contracts-via-docker:
@@ -42,11 +44,11 @@ ${CHALLENGE}:
 
 clean-cargo:
 	CURRENT_DIR=`pwd`; \
-	for proj in ${CARGO_PROJS} ; do \
+	for proj in ${CONTRACTS} ; do \
         cd $$CURRENT_DIR/$$proj && cargo clean ; \
     done
 
 clean: clean-cargo
 	rm binaries/* || true
 
-.PHONY: clean ${DUMMY_LOCK} ${MAIN}
+.PHONY: clean ${CONTRACTS_BIN}
