@@ -96,7 +96,7 @@ union Action {
     Register,
     Deposit,
     SubmitBlock,
-    InvalidBlock,
+    RevertBlock,
 }
 
 /* Register a new account */
@@ -127,16 +127,15 @@ table SubmitBlock {
 vector AccountVec <Account>;
 vector KeyValueMapVec <KeyValueMap>;
 
-/* Invalid a block */
-table InvalidBlock {
-    block: AgBlock, // invalid block
+/* Revert a block */
+table RevertBlock {
+    challenge_cell_data_hash: Byte32, // data_hash of challenge cell
     block_proof: Byte32Vec, // merkle proof of block exists
-    touched_accounts: AccountVec, // touch accounts previous state
-    touched_accounts_token_kv: KeyValueMapVec, // kv
-    touched_accounts_proof: SMTProof, // inclusion proof of touched accounts
-    txs: TxVec, // transactions
-    txs_proof: Byte32Vec, // merkle proof txs exists
-    challenger_index: Uint64, // reward will send to this account
+    ag_account: Account,
+    challenger_account: Account,
+    aggregator_token_kv: KeyValueMap, // kv
+    challenger_token_kv: KeyValueMap, // kv
+    accounts_proof: SMTProof, // merkle proof (before this block)
 }
 
 /* Challenge contract */
@@ -155,16 +154,20 @@ table ChallengeProof {
     txs_proof: Byte32Vec, // merkle proof txs exists
 }
 
-union ChallengeRespond {
+union ChallengeUnlock {
     WithdrawChallenge,
+    RevertBlockWithChallenge,
     InvalidChallenge,
 }
 
 /* withdraw challenge request */
 table WithdrawChallenge{}
 
+/* use challenge cell as proof in main contract */
+table RevertBlockWithChallenge{}
+
 /* invalid the challenge cell and get bond */
-table InvalidChallenge {
+table InvalidChallenge{
     touched_accounts: AccountVec, // touch accounts previous state
     touched_accounts_token_kv: KeyValueMapVec, // kv
     touched_accounts_proof: SMTProof, // inclusion proof of touched accounts

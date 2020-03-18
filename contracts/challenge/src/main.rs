@@ -36,6 +36,7 @@ enum Error {
     NoUnlockCell = -2,
     InvalidMerkleProof = -3,
     InvalidSince = -4,
+    InvalidProveChallege = -5,
 }
 
 #[no_mangle]
@@ -60,16 +61,19 @@ fn contract_entry() -> Result<(), Error> {
 
     // destroy the challenge cell
     let buf = syscalls::load_witness(BUF_LEN, 0, 0, Source::GroupInput).expect("load witness");
-    let respond = match ChallengeRespondReader::verify(&buf, false) {
-        Ok(()) => ChallengeRespond::new_unchecked(buf.into()),
+    let respond = match ChallengeUnlockReader::verify(&buf, false) {
+        Ok(()) => ChallengeUnlock::new_unchecked(buf.into()),
         Err(_) => return Err(Error::InvalidEncoding),
     };
     match respond.as_reader().to_enum() {
-        ChallengeRespondUnionReader::WithdrawChallenge(_withdraw) => {
-            verify_withdraw_challenge(args.as_reader())
+        ChallengeUnlockUnionReader::WithdrawChallenge(_withdraw) => {
+            check_withdraw_challenge(args.as_reader())
         }
-        ChallengeRespondUnionReader::InvalidChallenge(invalid_challenge) => {
-            verify_invalid_challenge(invalid_challenge)
+        ChallengeUnlockUnionReader::RevertBlockWithChallenge(_prove) => {
+            check_revert_block(args.as_reader())
+        }
+        ChallengeUnlockUnionReader::InvalidChallenge(invalid_challenge) => {
+            check_invalid_challenge(invalid_challenge)
         }
     }
 }
@@ -89,7 +93,51 @@ fn load_challenge_args() -> Result<ChallengeArgs, Error> {
     Ok(args)
 }
 
-fn verify_withdraw_challenge<'a>(args: ChallengeArgsReader<'a>) -> Result<(), Error> {
+/// Unlock challenge cell by use it in main contract revert block transaction
+/// anyone can unlock by this path, but only the challenger in the ChallengeContext can get reward.
+/// 
+/// For simplify, this cell does not destroyed by the revert block transaction,
+/// owner needs to send another withdraw tx.
+fn check_revert_block<'a>(args: ChallengeArgsReader<'a>) -> Result<(), Error> {
+    // ensure main contract exists
+    let main_type_hash = args.main_type_hash();
+    find_hash_from_inputs(main_type_hash.as_slice(), CellField::TypeHash)?;
+    // ensure challenge cell is not destroyed by current tx
+    let cell = syscalls::load_cell(BUF_LEN, 0, 0, Source::GroupInput).expect("load challenge cell");
+    let cell_data_hash =
+        syscalls::load_cell_by_field(HASH_LEN, 0, 0, Source::GroupInput, CellField::DataHash)
+            .expect("load data hash");
+    match syscalls::load_cell_by_field(HASH_LEN, 0, 1, Source::GroupInput, CellField::DataHash) {
+        Ok(_) => {
+            // unlock only one cell in prove challenge
+            return Err(Error::InvalidEncoding);
+        }
+        Err(SysError::IndexOutOfBound) => {}
+        Err(err) => panic!("syscall err {:?}", err),
+    }
+    // find identify cell in outputs
+    for i in 0.. {
+        match syscalls::load_cell_by_field(HASH_LEN, 0, i, Source::Output, CellField::DataHash) {
+            Ok(data_hash) => {
+                if data_hash != cell_data_hash {
+                    continue;
+                }
+                let output_cell =
+                    syscalls::load_cell(BUF_LEN, 0, i, Source::Output).expect("load cell");
+                if output_cell == cell {
+                    // has a identity output cell
+                    return Ok(());
+                }
+            }
+            Err(SysError::IndexOutOfBound) => break,
+            Err(err) => panic!("syscall err {:?}", err),
+        }
+    }
+    Err(Error::InvalidProveChallege)
+}
+
+/// Unlock this challenge cell by provide signature
+fn check_withdraw_challenge<'a>(args: ChallengeArgsReader<'a>) -> Result<(), Error> {
     const SINCE_LEN: usize = 8;
     // verify withdraw time
     let buf = syscalls::load_input_by_field(SINCE_LEN, 0, 0, Source::GroupInput, InputField::Since)
@@ -111,29 +159,28 @@ fn verify_withdraw_challenge<'a>(args: ChallengeArgsReader<'a>) -> Result<(), Er
     }
     // verify inputs include withdraw lock hash
     let withdraw_lock_hash = args.withdraw_lock_hash();
+    find_hash_from_inputs(withdraw_lock_hash.as_slice(), CellField::LockHash)?;
+    return Err(Error::NoUnlockCell);
+}
+
+fn find_hash_from_inputs(lock_hash: &[u8], field: CellField) -> Result<usize, Error> {
     for i in 0.. {
-        let buf = match syscalls::load_cell_by_field(
-            HASH_LEN,
-            0,
-            i,
-            Source::GroupInput,
-            CellField::LockHash,
-        ) {
+        let buf = match syscalls::load_cell_by_field(HASH_LEN, 0, i, Source::GroupInput, field) {
             Ok(buf) => buf,
             Err(SysError::ItemMissing) => continue,
             Err(SysError::IndexOutOfBound) => break,
             Err(err) => panic!("syscall error: {:?}", err),
         };
-        if withdraw_lock_hash.as_slice() == &buf[..] {
-            return Ok(());
+        if lock_hash == &buf[..] {
+            return Ok(i);
         }
     }
     return Err(Error::NoUnlockCell);
 }
 
-fn verify_invalid_challenge<'a>(
-    invalid_challenge: InvalidChallengeReader<'a>,
-) -> Result<(), Error> {
+/// Unlock this challenge cell by provide invalid proof
+/// anyone can unlock challenge cell by this path
+fn check_invalid_challenge<'a>(invalid_challenge: InvalidChallengeReader<'a>) -> Result<(), Error> {
     // load challenge context
     let buf = syscalls::load_cell_data(BUF_LEN, 0, 0, Source::GroupInput).expect("load data");
     let context = match ChallengeContextReader::verify(&buf, false) {

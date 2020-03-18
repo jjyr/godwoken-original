@@ -1,8 +1,12 @@
 #[derive(Debug)]
 #[repr(i8)]
 pub enum Error {
+    InvalidSince = -5,
     InvalidOutputTypeHash = -6,
     InvalidOutputLockHash = -7,
+    InvalidAggregatorIndex = -8,
+    InvalidChallengerIndex = -9,
+    InvalidChallengeContext = -10,
     InvalidWitness = -11,
     IncorrectCapacity = -12,
     InvalidAccountCount = -110,
@@ -18,12 +22,9 @@ pub enum Error {
     InvalidAccountRoot = -22,
     InvalidSignature = -23,
     IncorrectAgIndex = -27,
-    IncorrectInvalidTxsSize = -30,
-    InvalidTxMerkleProof = -31,
-    TryRevertValidBlock = -32,
-    TryRevertPenalizedBlock = -33,
-    MissingAgAccount = -34,
-    MissingChallengerAccount = -35,
+    TryRevertRevertedBlock = -33,
     InvalidNewAccountRoot = -36,
     InvalidNewBlockRoot = -37,
+    InvalidScript = -38,
+    InvalidChallengeCell = -39,
 }

@@ -5757,7 +5757,7 @@ impl Action {
             0 => Register::new_unchecked(inner).into(),
             1 => Deposit::new_unchecked(inner).into(),
             2 => SubmitBlock::new_unchecked(inner).into(),
-            3 => InvalidBlock::new_unchecked(inner).into(),
+            3 => RevertBlock::new_unchecked(inner).into(),
             _ => panic!("{}: invalid data", Self::NAME),
         }
     }
@@ -5824,7 +5824,7 @@ impl<'r> ActionReader<'r> {
             0 => RegisterReader::new_unchecked(inner).into(),
             1 => DepositReader::new_unchecked(inner).into(),
             2 => SubmitBlockReader::new_unchecked(inner).into(),
-            3 => InvalidBlockReader::new_unchecked(inner).into(),
+            3 => RevertBlockReader::new_unchecked(inner).into(),
             _ => panic!("{}: invalid data", Self::NAME),
         }
     }
@@ -5853,7 +5853,7 @@ impl<'r> molecule::prelude::Reader<'r> for ActionReader<'r> {
             0 => RegisterReader::verify(inner_slice, compatible),
             1 => DepositReader::verify(inner_slice, compatible),
             2 => SubmitBlockReader::verify(inner_slice, compatible),
-            3 => InvalidBlockReader::verify(inner_slice, compatible),
+            3 => RevertBlockReader::verify(inner_slice, compatible),
             _ => ve!(Self, UnknownItem, Self::ITEM_COUNT, item_id),
         }?;
         Ok(())
@@ -5893,14 +5893,14 @@ pub enum ActionUnion {
     Register(Register),
     Deposit(Deposit),
     SubmitBlock(SubmitBlock),
-    InvalidBlock(InvalidBlock),
+    RevertBlock(RevertBlock),
 }
 #[derive(Debug, Clone, Copy)]
 pub enum ActionUnionReader<'r> {
     Register(RegisterReader<'r>),
     Deposit(DepositReader<'r>),
     SubmitBlock(SubmitBlockReader<'r>),
-    InvalidBlock(InvalidBlockReader<'r>),
+    RevertBlock(RevertBlockReader<'r>),
 }
 impl ::core::default::Default for ActionUnion {
     fn default() -> Self {
@@ -5919,8 +5919,8 @@ impl ::core::fmt::Display for ActionUnion {
             ActionUnion::SubmitBlock(ref item) => {
                 write!(f, "{}::{}({})", Self::NAME, SubmitBlock::NAME, item)
             }
-            ActionUnion::InvalidBlock(ref item) => {
-                write!(f, "{}::{}({})", Self::NAME, InvalidBlock::NAME, item)
+            ActionUnion::RevertBlock(ref item) => {
+                write!(f, "{}::{}({})", Self::NAME, RevertBlock::NAME, item)
             }
         }
     }
@@ -5937,8 +5937,8 @@ impl<'r> ::core::fmt::Display for ActionUnionReader<'r> {
             ActionUnionReader::SubmitBlock(ref item) => {
                 write!(f, "{}::{}({})", Self::NAME, SubmitBlock::NAME, item)
             }
-            ActionUnionReader::InvalidBlock(ref item) => {
-                write!(f, "{}::{}({})", Self::NAME, InvalidBlock::NAME, item)
+            ActionUnionReader::RevertBlock(ref item) => {
+                write!(f, "{}::{}({})", Self::NAME, RevertBlock::NAME, item)
             }
         }
     }
@@ -5949,7 +5949,7 @@ impl ActionUnion {
             ActionUnion::Register(ref item) => write!(f, "{}", item),
             ActionUnion::Deposit(ref item) => write!(f, "{}", item),
             ActionUnion::SubmitBlock(ref item) => write!(f, "{}", item),
-            ActionUnion::InvalidBlock(ref item) => write!(f, "{}", item),
+            ActionUnion::RevertBlock(ref item) => write!(f, "{}", item),
         }
     }
 }
@@ -5959,7 +5959,7 @@ impl<'r> ActionUnionReader<'r> {
             ActionUnionReader::Register(ref item) => write!(f, "{}", item),
             ActionUnionReader::Deposit(ref item) => write!(f, "{}", item),
             ActionUnionReader::SubmitBlock(ref item) => write!(f, "{}", item),
-            ActionUnionReader::InvalidBlock(ref item) => write!(f, "{}", item),
+            ActionUnionReader::RevertBlock(ref item) => write!(f, "{}", item),
         }
     }
 }
@@ -5978,9 +5978,9 @@ impl ::core::convert::From<SubmitBlock> for ActionUnion {
         ActionUnion::SubmitBlock(item)
     }
 }
-impl ::core::convert::From<InvalidBlock> for ActionUnion {
-    fn from(item: InvalidBlock) -> Self {
-        ActionUnion::InvalidBlock(item)
+impl ::core::convert::From<RevertBlock> for ActionUnion {
+    fn from(item: RevertBlock) -> Self {
+        ActionUnion::RevertBlock(item)
     }
 }
 impl<'r> ::core::convert::From<RegisterReader<'r>> for ActionUnionReader<'r> {
@@ -5998,9 +5998,9 @@ impl<'r> ::core::convert::From<SubmitBlockReader<'r>> for ActionUnionReader<'r> 
         ActionUnionReader::SubmitBlock(item)
     }
 }
-impl<'r> ::core::convert::From<InvalidBlockReader<'r>> for ActionUnionReader<'r> {
-    fn from(item: InvalidBlockReader<'r>) -> Self {
-        ActionUnionReader::InvalidBlock(item)
+impl<'r> ::core::convert::From<RevertBlockReader<'r>> for ActionUnionReader<'r> {
+    fn from(item: RevertBlockReader<'r>) -> Self {
+        ActionUnionReader::RevertBlock(item)
     }
 }
 impl ActionUnion {
@@ -6010,7 +6010,7 @@ impl ActionUnion {
             ActionUnion::Register(item) => item.as_bytes(),
             ActionUnion::Deposit(item) => item.as_bytes(),
             ActionUnion::SubmitBlock(item) => item.as_bytes(),
-            ActionUnion::InvalidBlock(item) => item.as_bytes(),
+            ActionUnion::RevertBlock(item) => item.as_bytes(),
         }
     }
     pub fn as_slice(&self) -> &[u8] {
@@ -6018,7 +6018,7 @@ impl ActionUnion {
             ActionUnion::Register(item) => item.as_slice(),
             ActionUnion::Deposit(item) => item.as_slice(),
             ActionUnion::SubmitBlock(item) => item.as_slice(),
-            ActionUnion::InvalidBlock(item) => item.as_slice(),
+            ActionUnion::RevertBlock(item) => item.as_slice(),
         }
     }
     pub fn item_id(&self) -> molecule::Number {
@@ -6026,7 +6026,7 @@ impl ActionUnion {
             ActionUnion::Register(_) => 0,
             ActionUnion::Deposit(_) => 1,
             ActionUnion::SubmitBlock(_) => 2,
-            ActionUnion::InvalidBlock(_) => 3,
+            ActionUnion::RevertBlock(_) => 3,
         }
     }
     pub fn item_name(&self) -> &str {
@@ -6034,7 +6034,7 @@ impl ActionUnion {
             ActionUnion::Register(_) => "Register",
             ActionUnion::Deposit(_) => "Deposit",
             ActionUnion::SubmitBlock(_) => "SubmitBlock",
-            ActionUnion::InvalidBlock(_) => "InvalidBlock",
+            ActionUnion::RevertBlock(_) => "RevertBlock",
         }
     }
     pub fn as_reader<'r>(&'r self) -> ActionUnionReader<'r> {
@@ -6042,7 +6042,7 @@ impl ActionUnion {
             ActionUnion::Register(item) => item.as_reader().into(),
             ActionUnion::Deposit(item) => item.as_reader().into(),
             ActionUnion::SubmitBlock(item) => item.as_reader().into(),
-            ActionUnion::InvalidBlock(item) => item.as_reader().into(),
+            ActionUnion::RevertBlock(item) => item.as_reader().into(),
         }
     }
 }
@@ -6053,7 +6053,7 @@ impl<'r> ActionUnionReader<'r> {
             ActionUnionReader::Register(item) => item.as_slice(),
             ActionUnionReader::Deposit(item) => item.as_slice(),
             ActionUnionReader::SubmitBlock(item) => item.as_slice(),
-            ActionUnionReader::InvalidBlock(item) => item.as_slice(),
+            ActionUnionReader::RevertBlock(item) => item.as_slice(),
         }
     }
     pub fn item_id(&self) -> molecule::Number {
@@ -6061,7 +6061,7 @@ impl<'r> ActionUnionReader<'r> {
             ActionUnionReader::Register(_) => 0,
             ActionUnionReader::Deposit(_) => 1,
             ActionUnionReader::SubmitBlock(_) => 2,
-            ActionUnionReader::InvalidBlock(_) => 3,
+            ActionUnionReader::RevertBlock(_) => 3,
         }
     }
     pub fn item_name(&self) -> &str {
@@ -6069,7 +6069,7 @@ impl<'r> ActionUnionReader<'r> {
             ActionUnionReader::Register(_) => "Register",
             ActionUnionReader::Deposit(_) => "Deposit",
             ActionUnionReader::SubmitBlock(_) => "SubmitBlock",
-            ActionUnionReader::InvalidBlock(_) => "InvalidBlock",
+            ActionUnionReader::RevertBlock(_) => "RevertBlock",
         }
     }
 }
@@ -7736,8 +7736,8 @@ impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for KeyValueMapVecReaderIterato
     }
 }
 #[derive(Clone)]
-pub struct InvalidBlock(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for InvalidBlock {
+pub struct RevertBlock(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for RevertBlock {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -7746,32 +7746,41 @@ impl ::core::fmt::LowerHex for InvalidBlock {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for InvalidBlock {
+impl ::core::fmt::Debug for RevertBlock {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for InvalidBlock {
+impl ::core::fmt::Display for RevertBlock {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "block", self.block())?;
+        write!(
+            f,
+            "{}: {}",
+            "challenge_cell_data_hash",
+            self.challenge_cell_data_hash()
+        )?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(f, ", {}: {}", "touched_accounts", self.touched_accounts())?;
+        write!(f, ", {}: {}", "ag_account", self.ag_account())?;
         write!(
             f,
             ", {}: {}",
-            "touched_accounts_token_kv",
-            self.touched_accounts_token_kv()
+            "challenger_account",
+            self.challenger_account()
         )?;
         write!(
             f,
             ", {}: {}",
-            "touched_accounts_proof",
-            self.touched_accounts_proof()
+            "aggregator_token_kv",
+            self.aggregator_token_kv()
         )?;
-        write!(f, ", {}: {}", "txs", self.txs())?;
-        write!(f, ", {}: {}", "txs_proof", self.txs_proof())?;
-        write!(f, ", {}: {}", "challenger_index", self.challenger_index())?;
+        write!(
+            f,
+            ", {}: {}",
+            "challenger_token_kv",
+            self.challenger_token_kv()
+        )?;
+        write!(f, ", {}: {}", "accounts_proof", self.accounts_proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -7779,26 +7788,23 @@ impl ::core::fmt::Display for InvalidBlock {
         write!(f, " }}")
     }
 }
-impl ::core::default::Default for InvalidBlock {
+impl ::core::default::Default for RevertBlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            53, 1, 0, 0, 36, 0, 0, 0, 5, 1, 0, 0, 9, 1, 0, 0, 13, 1, 0, 0, 17, 1, 0, 0, 37, 1, 0,
-            0, 41, 1, 0, 0, 45, 1, 0, 0, 225, 0, 0, 0, 36, 0, 0, 0, 44, 0, 0, 0, 76, 0, 0, 0, 80,
-            0, 0, 0, 112, 0, 0, 0, 120, 0, 0, 0, 152, 0, 0, 0, 217, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            200, 0, 0, 0, 32, 0, 0, 0, 64, 0, 0, 0, 68, 0, 0, 0, 120, 0, 0, 0, 172, 0, 0, 0, 176,
+            0, 0, 0, 180, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 52, 0, 0, 0, 20, 0, 0, 0, 28, 0, 0, 0, 28,
+            0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 52, 0, 0, 0, 20, 0, 0, 0, 28, 0, 0, 0, 28, 0, 0, 0, 32,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 20, 0, 0, 0, 12, 0, 0, 0,
-            16, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 12, 0, 0, 0, 16, 0, 0, 0, 4, 0,
+            0, 0, 0, 0, 0, 0,
         ];
-        InvalidBlock::new_unchecked(v.into())
+        RevertBlock::new_unchecked(v.into())
     }
 }
-impl InvalidBlock {
-    pub const FIELD_COUNT: usize = 8;
+impl RevertBlock {
+    pub const FIELD_COUNT: usize = 7;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -7818,11 +7824,11 @@ impl InvalidBlock {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn block(&self) -> AgBlock {
+    pub fn challenge_cell_data_hash(&self) -> Byte32 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        AgBlock::new_unchecked(self.0.slice(start, end))
+        Byte32::new_unchecked(self.0.slice(start, end))
     }
     pub fn block_proof(&self) -> Byte32Vec {
         let offsets = self.field_offsets();
@@ -7830,55 +7836,49 @@ impl InvalidBlock {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32Vec::new_unchecked(self.0.slice(start, end))
     }
-    pub fn touched_accounts(&self) -> AccountVec {
+    pub fn ag_account(&self) -> Account {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        AccountVec::new_unchecked(self.0.slice(start, end))
+        Account::new_unchecked(self.0.slice(start, end))
     }
-    pub fn touched_accounts_token_kv(&self) -> KeyValueMapVec {
+    pub fn challenger_account(&self) -> Account {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
-        KeyValueMapVec::new_unchecked(self.0.slice(start, end))
+        Account::new_unchecked(self.0.slice(start, end))
     }
-    pub fn touched_accounts_proof(&self) -> SMTProof {
+    pub fn aggregator_token_kv(&self) -> KeyValueMap {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[4][..]) as usize;
         let end = molecule::unpack_number(&offsets[5][..]) as usize;
-        SMTProof::new_unchecked(self.0.slice(start, end))
+        KeyValueMap::new_unchecked(self.0.slice(start, end))
     }
-    pub fn txs(&self) -> TxVec {
+    pub fn challenger_token_kv(&self) -> KeyValueMap {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[5][..]) as usize;
         let end = molecule::unpack_number(&offsets[6][..]) as usize;
-        TxVec::new_unchecked(self.0.slice(start, end))
+        KeyValueMap::new_unchecked(self.0.slice(start, end))
     }
-    pub fn txs_proof(&self) -> Byte32Vec {
+    pub fn accounts_proof(&self) -> SMTProof {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[6][..]) as usize;
-        let end = molecule::unpack_number(&offsets[7][..]) as usize;
-        Byte32Vec::new_unchecked(self.0.slice(start, end))
-    }
-    pub fn challenger_index(&self) -> Uint64 {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[7][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[8][..]) as usize;
-            Uint64::new_unchecked(self.0.slice(start, end))
+            let end = molecule::unpack_number(&offsets[7][..]) as usize;
+            SMTProof::new_unchecked(self.0.slice(start, end))
         } else {
-            Uint64::new_unchecked(self.0.slice_from(start))
+            SMTProof::new_unchecked(self.0.slice_from(start))
         }
     }
-    pub fn as_reader<'r>(&'r self) -> InvalidBlockReader<'r> {
-        InvalidBlockReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> RevertBlockReader<'r> {
+        RevertBlockReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for InvalidBlock {
-    type Builder = InvalidBlockBuilder;
-    const NAME: &'static str = "InvalidBlock";
+impl molecule::prelude::Entity for RevertBlock {
+    type Builder = RevertBlockBuilder;
+    const NAME: &'static str = "RevertBlock";
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        InvalidBlock(data)
+        RevertBlock(data)
     }
     fn as_bytes(&self) -> molecule::bytes::Bytes {
         self.0.clone()
@@ -7887,29 +7887,28 @@ impl molecule::prelude::Entity for InvalidBlock {
         &self.0[..]
     }
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        InvalidBlockReader::from_slice(slice).map(|reader| reader.to_entity())
+        RevertBlockReader::from_slice(slice).map(|reader| reader.to_entity())
     }
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        InvalidBlockReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        RevertBlockReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
     fn new_builder() -> Self::Builder {
         ::core::default::Default::default()
     }
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
-            .block(self.block())
+            .challenge_cell_data_hash(self.challenge_cell_data_hash())
             .block_proof(self.block_proof())
-            .touched_accounts(self.touched_accounts())
-            .touched_accounts_token_kv(self.touched_accounts_token_kv())
-            .touched_accounts_proof(self.touched_accounts_proof())
-            .txs(self.txs())
-            .txs_proof(self.txs_proof())
-            .challenger_index(self.challenger_index())
+            .ag_account(self.ag_account())
+            .challenger_account(self.challenger_account())
+            .aggregator_token_kv(self.aggregator_token_kv())
+            .challenger_token_kv(self.challenger_token_kv())
+            .accounts_proof(self.accounts_proof())
     }
 }
 #[derive(Clone, Copy)]
-pub struct InvalidBlockReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for InvalidBlockReader<'r> {
+pub struct RevertBlockReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for RevertBlockReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -7918,32 +7917,41 @@ impl<'r> ::core::fmt::LowerHex for InvalidBlockReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for InvalidBlockReader<'r> {
+impl<'r> ::core::fmt::Debug for RevertBlockReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for InvalidBlockReader<'r> {
+impl<'r> ::core::fmt::Display for RevertBlockReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
-        write!(f, "{}: {}", "block", self.block())?;
+        write!(
+            f,
+            "{}: {}",
+            "challenge_cell_data_hash",
+            self.challenge_cell_data_hash()
+        )?;
         write!(f, ", {}: {}", "block_proof", self.block_proof())?;
-        write!(f, ", {}: {}", "touched_accounts", self.touched_accounts())?;
+        write!(f, ", {}: {}", "ag_account", self.ag_account())?;
         write!(
             f,
             ", {}: {}",
-            "touched_accounts_token_kv",
-            self.touched_accounts_token_kv()
+            "challenger_account",
+            self.challenger_account()
         )?;
         write!(
             f,
             ", {}: {}",
-            "touched_accounts_proof",
-            self.touched_accounts_proof()
+            "aggregator_token_kv",
+            self.aggregator_token_kv()
         )?;
-        write!(f, ", {}: {}", "txs", self.txs())?;
-        write!(f, ", {}: {}", "txs_proof", self.txs_proof())?;
-        write!(f, ", {}: {}", "challenger_index", self.challenger_index())?;
+        write!(
+            f,
+            ", {}: {}",
+            "challenger_token_kv",
+            self.challenger_token_kv()
+        )?;
+        write!(f, ", {}: {}", "accounts_proof", self.accounts_proof())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -7951,8 +7959,8 @@ impl<'r> ::core::fmt::Display for InvalidBlockReader<'r> {
         write!(f, " }}")
     }
 }
-impl<'r> InvalidBlockReader<'r> {
-    pub const FIELD_COUNT: usize = 8;
+impl<'r> RevertBlockReader<'r> {
+    pub const FIELD_COUNT: usize = 7;
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
     }
@@ -7972,11 +7980,11 @@ impl<'r> InvalidBlockReader<'r> {
     pub fn has_extra_fields(&self) -> bool {
         Self::FIELD_COUNT != self.field_count()
     }
-    pub fn block(&self) -> AgBlockReader<'r> {
+    pub fn challenge_cell_data_hash(&self) -> Byte32Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[0][..]) as usize;
         let end = molecule::unpack_number(&offsets[1][..]) as usize;
-        AgBlockReader::new_unchecked(&self.as_slice()[start..end])
+        Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
     pub fn block_proof(&self) -> Byte32VecReader<'r> {
         let offsets = self.field_offsets();
@@ -7984,55 +7992,49 @@ impl<'r> InvalidBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[2][..]) as usize;
         Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn touched_accounts(&self) -> AccountVecReader<'r> {
+    pub fn ag_account(&self) -> AccountReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[2][..]) as usize;
         let end = molecule::unpack_number(&offsets[3][..]) as usize;
-        AccountVecReader::new_unchecked(&self.as_slice()[start..end])
+        AccountReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn touched_accounts_token_kv(&self) -> KeyValueMapVecReader<'r> {
+    pub fn challenger_account(&self) -> AccountReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[3][..]) as usize;
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
-        KeyValueMapVecReader::new_unchecked(&self.as_slice()[start..end])
+        AccountReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn touched_accounts_proof(&self) -> SMTProofReader<'r> {
+    pub fn aggregator_token_kv(&self) -> KeyValueMapReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[4][..]) as usize;
         let end = molecule::unpack_number(&offsets[5][..]) as usize;
-        SMTProofReader::new_unchecked(&self.as_slice()[start..end])
+        KeyValueMapReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn txs(&self) -> TxVecReader<'r> {
+    pub fn challenger_token_kv(&self) -> KeyValueMapReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[5][..]) as usize;
         let end = molecule::unpack_number(&offsets[6][..]) as usize;
-        TxVecReader::new_unchecked(&self.as_slice()[start..end])
+        KeyValueMapReader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn txs_proof(&self) -> Byte32VecReader<'r> {
+    pub fn accounts_proof(&self) -> SMTProofReader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[6][..]) as usize;
-        let end = molecule::unpack_number(&offsets[7][..]) as usize;
-        Byte32VecReader::new_unchecked(&self.as_slice()[start..end])
-    }
-    pub fn challenger_index(&self) -> Uint64Reader<'r> {
-        let offsets = self.field_offsets();
-        let start = molecule::unpack_number(&offsets[7][..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&offsets[8][..]) as usize;
-            Uint64Reader::new_unchecked(&self.as_slice()[start..end])
+            let end = molecule::unpack_number(&offsets[7][..]) as usize;
+            SMTProofReader::new_unchecked(&self.as_slice()[start..end])
         } else {
-            Uint64Reader::new_unchecked(&self.as_slice()[start..])
+            SMTProofReader::new_unchecked(&self.as_slice()[start..])
         }
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for InvalidBlockReader<'r> {
-    type Entity = InvalidBlock;
-    const NAME: &'static str = "InvalidBlockReader";
+impl<'r> molecule::prelude::Reader<'r> for RevertBlockReader<'r> {
+    type Entity = RevertBlock;
+    const NAME: &'static str = "RevertBlockReader";
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().into())
     }
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        InvalidBlockReader(slice)
+        RevertBlockReader(slice)
     }
     fn as_slice(&self) -> &'r [u8] {
         self.0
@@ -8076,115 +8078,105 @@ impl<'r> molecule::prelude::Reader<'r> for InvalidBlockReader<'r> {
         if offsets.windows(2).any(|i| i[0] > i[1]) {
             return ve!(Self, OffsetsNotMatch);
         }
-        AgBlockReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
+        Byte32Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         Byte32VecReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        AccountVecReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        KeyValueMapVecReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        SMTProofReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
-        TxVecReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
-        Byte32VecReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
+        AccountReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        AccountReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        KeyValueMapReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        KeyValueMapReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        SMTProofReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
-pub struct InvalidBlockBuilder {
-    pub(crate) block: AgBlock,
+pub struct RevertBlockBuilder {
+    pub(crate) challenge_cell_data_hash: Byte32,
     pub(crate) block_proof: Byte32Vec,
-    pub(crate) touched_accounts: AccountVec,
-    pub(crate) touched_accounts_token_kv: KeyValueMapVec,
-    pub(crate) touched_accounts_proof: SMTProof,
-    pub(crate) txs: TxVec,
-    pub(crate) txs_proof: Byte32Vec,
-    pub(crate) challenger_index: Uint64,
+    pub(crate) ag_account: Account,
+    pub(crate) challenger_account: Account,
+    pub(crate) aggregator_token_kv: KeyValueMap,
+    pub(crate) challenger_token_kv: KeyValueMap,
+    pub(crate) accounts_proof: SMTProof,
 }
-impl InvalidBlockBuilder {
-    pub const FIELD_COUNT: usize = 8;
-    pub fn block(mut self, v: AgBlock) -> Self {
-        self.block = v;
+impl RevertBlockBuilder {
+    pub const FIELD_COUNT: usize = 7;
+    pub fn challenge_cell_data_hash(mut self, v: Byte32) -> Self {
+        self.challenge_cell_data_hash = v;
         self
     }
     pub fn block_proof(mut self, v: Byte32Vec) -> Self {
         self.block_proof = v;
         self
     }
-    pub fn touched_accounts(mut self, v: AccountVec) -> Self {
-        self.touched_accounts = v;
+    pub fn ag_account(mut self, v: Account) -> Self {
+        self.ag_account = v;
         self
     }
-    pub fn touched_accounts_token_kv(mut self, v: KeyValueMapVec) -> Self {
-        self.touched_accounts_token_kv = v;
+    pub fn challenger_account(mut self, v: Account) -> Self {
+        self.challenger_account = v;
         self
     }
-    pub fn touched_accounts_proof(mut self, v: SMTProof) -> Self {
-        self.touched_accounts_proof = v;
+    pub fn aggregator_token_kv(mut self, v: KeyValueMap) -> Self {
+        self.aggregator_token_kv = v;
         self
     }
-    pub fn txs(mut self, v: TxVec) -> Self {
-        self.txs = v;
+    pub fn challenger_token_kv(mut self, v: KeyValueMap) -> Self {
+        self.challenger_token_kv = v;
         self
     }
-    pub fn txs_proof(mut self, v: Byte32Vec) -> Self {
-        self.txs_proof = v;
-        self
-    }
-    pub fn challenger_index(mut self, v: Uint64) -> Self {
-        self.challenger_index = v;
+    pub fn accounts_proof(mut self, v: SMTProof) -> Self {
+        self.accounts_proof = v;
         self
     }
 }
-impl molecule::prelude::Builder for InvalidBlockBuilder {
-    type Entity = InvalidBlock;
-    const NAME: &'static str = "InvalidBlockBuilder";
+impl molecule::prelude::Builder for RevertBlockBuilder {
+    type Entity = RevertBlock;
+    const NAME: &'static str = "RevertBlockBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
-            + self.block.as_slice().len()
+            + self.challenge_cell_data_hash.as_slice().len()
             + self.block_proof.as_slice().len()
-            + self.touched_accounts.as_slice().len()
-            + self.touched_accounts_token_kv.as_slice().len()
-            + self.touched_accounts_proof.as_slice().len()
-            + self.txs.as_slice().len()
-            + self.txs_proof.as_slice().len()
-            + self.challenger_index.as_slice().len()
+            + self.ag_account.as_slice().len()
+            + self.challenger_account.as_slice().len()
+            + self.aggregator_token_kv.as_slice().len()
+            + self.challenger_token_kv.as_slice().len()
+            + self.accounts_proof.as_slice().len()
     }
     fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
         let mut total_size = molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1);
         let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
         offsets.push(total_size);
-        total_size += self.block.as_slice().len();
+        total_size += self.challenge_cell_data_hash.as_slice().len();
         offsets.push(total_size);
         total_size += self.block_proof.as_slice().len();
         offsets.push(total_size);
-        total_size += self.touched_accounts.as_slice().len();
+        total_size += self.ag_account.as_slice().len();
         offsets.push(total_size);
-        total_size += self.touched_accounts_token_kv.as_slice().len();
+        total_size += self.challenger_account.as_slice().len();
         offsets.push(total_size);
-        total_size += self.touched_accounts_proof.as_slice().len();
+        total_size += self.aggregator_token_kv.as_slice().len();
         offsets.push(total_size);
-        total_size += self.txs.as_slice().len();
+        total_size += self.challenger_token_kv.as_slice().len();
         offsets.push(total_size);
-        total_size += self.txs_proof.as_slice().len();
-        offsets.push(total_size);
-        total_size += self.challenger_index.as_slice().len();
+        total_size += self.accounts_proof.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
-        writer.write_all(self.block.as_slice())?;
+        writer.write_all(self.challenge_cell_data_hash.as_slice())?;
         writer.write_all(self.block_proof.as_slice())?;
-        writer.write_all(self.touched_accounts.as_slice())?;
-        writer.write_all(self.touched_accounts_token_kv.as_slice())?;
-        writer.write_all(self.touched_accounts_proof.as_slice())?;
-        writer.write_all(self.txs.as_slice())?;
-        writer.write_all(self.txs_proof.as_slice())?;
-        writer.write_all(self.challenger_index.as_slice())?;
+        writer.write_all(self.ag_account.as_slice())?;
+        writer.write_all(self.challenger_account.as_slice())?;
+        writer.write_all(self.aggregator_token_kv.as_slice())?;
+        writer.write_all(self.challenger_token_kv.as_slice())?;
+        writer.write_all(self.accounts_proof.as_slice())?;
         Ok(())
     }
     fn build(&self) -> Self::Entity {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        InvalidBlock::new_unchecked(inner.into())
+        RevertBlock::new_unchecked(inner.into())
     }
 }
 #[derive(Clone)]
@@ -8913,8 +8905,8 @@ impl molecule::prelude::Builder for ChallengeProofBuilder {
     }
 }
 #[derive(Clone)]
-pub struct ChallengeRespond(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for ChallengeRespond {
+pub struct ChallengeUnlock(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for ChallengeUnlock {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -8923,46 +8915,47 @@ impl ::core::fmt::LowerHex for ChallengeRespond {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for ChallengeRespond {
+impl ::core::fmt::Debug for ChallengeUnlock {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for ChallengeRespond {
+impl ::core::fmt::Display for ChallengeUnlock {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}(", Self::NAME)?;
         self.to_enum().display_inner(f)?;
         write!(f, ")")
     }
 }
-impl ::core::default::Default for ChallengeRespond {
+impl ::core::default::Default for ChallengeUnlock {
     fn default() -> Self {
         let v: Vec<u8> = vec![0, 0, 0, 0, 4, 0, 0, 0];
-        ChallengeRespond::new_unchecked(v.into())
+        ChallengeUnlock::new_unchecked(v.into())
     }
 }
-impl ChallengeRespond {
-    pub const ITEM_COUNT: usize = 2;
+impl ChallengeUnlock {
+    pub const ITEM_COUNT: usize = 3;
     pub fn item_id(&self) -> molecule::Number {
         molecule::unpack_number(self.as_slice())
     }
-    pub fn to_enum(&self) -> ChallengeRespondUnion {
+    pub fn to_enum(&self) -> ChallengeUnlockUnion {
         let inner = self.0.slice_from(molecule::NUMBER_SIZE);
         match self.item_id() {
             0 => WithdrawChallenge::new_unchecked(inner).into(),
-            1 => InvalidChallenge::new_unchecked(inner).into(),
+            1 => RevertBlockWithChallenge::new_unchecked(inner).into(),
+            2 => InvalidChallenge::new_unchecked(inner).into(),
             _ => panic!("{}: invalid data", Self::NAME),
         }
     }
-    pub fn as_reader<'r>(&'r self) -> ChallengeRespondReader<'r> {
-        ChallengeRespondReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> ChallengeUnlockReader<'r> {
+        ChallengeUnlockReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for ChallengeRespond {
-    type Builder = ChallengeRespondBuilder;
-    const NAME: &'static str = "ChallengeRespond";
+impl molecule::prelude::Entity for ChallengeUnlock {
+    type Builder = ChallengeUnlockBuilder;
+    const NAME: &'static str = "ChallengeUnlock";
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        ChallengeRespond(data)
+        ChallengeUnlock(data)
     }
     fn as_bytes(&self) -> molecule::bytes::Bytes {
         self.0.clone()
@@ -8971,10 +8964,10 @@ impl molecule::prelude::Entity for ChallengeRespond {
         &self.0[..]
     }
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        ChallengeRespondReader::from_slice(slice).map(|reader| reader.to_entity())
+        ChallengeUnlockReader::from_slice(slice).map(|reader| reader.to_entity())
     }
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        ChallengeRespondReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        ChallengeUnlockReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
     fn new_builder() -> Self::Builder {
         ::core::default::Default::default()
@@ -8984,8 +8977,8 @@ impl molecule::prelude::Entity for ChallengeRespond {
     }
 }
 #[derive(Clone, Copy)]
-pub struct ChallengeRespondReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for ChallengeRespondReader<'r> {
+pub struct ChallengeUnlockReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for ChallengeUnlockReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -8994,40 +8987,41 @@ impl<'r> ::core::fmt::LowerHex for ChallengeRespondReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for ChallengeRespondReader<'r> {
+impl<'r> ::core::fmt::Debug for ChallengeUnlockReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for ChallengeRespondReader<'r> {
+impl<'r> ::core::fmt::Display for ChallengeUnlockReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}(", Self::NAME)?;
         self.to_enum().display_inner(f)?;
         write!(f, ")")
     }
 }
-impl<'r> ChallengeRespondReader<'r> {
-    pub const ITEM_COUNT: usize = 2;
+impl<'r> ChallengeUnlockReader<'r> {
+    pub const ITEM_COUNT: usize = 3;
     pub fn item_id(&self) -> molecule::Number {
         molecule::unpack_number(self.as_slice())
     }
-    pub fn to_enum(&self) -> ChallengeRespondUnionReader<'r> {
+    pub fn to_enum(&self) -> ChallengeUnlockUnionReader<'r> {
         let inner = &self.as_slice()[molecule::NUMBER_SIZE..];
         match self.item_id() {
             0 => WithdrawChallengeReader::new_unchecked(inner).into(),
-            1 => InvalidChallengeReader::new_unchecked(inner).into(),
+            1 => RevertBlockWithChallengeReader::new_unchecked(inner).into(),
+            2 => InvalidChallengeReader::new_unchecked(inner).into(),
             _ => panic!("{}: invalid data", Self::NAME),
         }
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for ChallengeRespondReader<'r> {
-    type Entity = ChallengeRespond;
-    const NAME: &'static str = "ChallengeRespondReader";
+impl<'r> molecule::prelude::Reader<'r> for ChallengeUnlockReader<'r> {
+    type Entity = ChallengeUnlock;
+    const NAME: &'static str = "ChallengeUnlockReader";
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().into())
     }
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        ChallengeRespondReader(slice)
+        ChallengeUnlockReader(slice)
     }
     fn as_slice(&self) -> &'r [u8] {
         self.0
@@ -9042,27 +9036,28 @@ impl<'r> molecule::prelude::Reader<'r> for ChallengeRespondReader<'r> {
         let inner_slice = &slice[molecule::NUMBER_SIZE..];
         match item_id {
             0 => WithdrawChallengeReader::verify(inner_slice, compatible),
-            1 => InvalidChallengeReader::verify(inner_slice, compatible),
+            1 => RevertBlockWithChallengeReader::verify(inner_slice, compatible),
+            2 => InvalidChallengeReader::verify(inner_slice, compatible),
             _ => ve!(Self, UnknownItem, Self::ITEM_COUNT, item_id),
         }?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
-pub struct ChallengeRespondBuilder(pub(crate) ChallengeRespondUnion);
-impl ChallengeRespondBuilder {
-    pub const ITEM_COUNT: usize = 2;
+pub struct ChallengeUnlockBuilder(pub(crate) ChallengeUnlockUnion);
+impl ChallengeUnlockBuilder {
+    pub const ITEM_COUNT: usize = 3;
     pub fn set<I>(mut self, v: I) -> Self
     where
-        I: ::core::convert::Into<ChallengeRespondUnion>,
+        I: ::core::convert::Into<ChallengeUnlockUnion>,
     {
         self.0 = v.into();
         self
     }
 }
-impl molecule::prelude::Builder for ChallengeRespondBuilder {
-    type Entity = ChallengeRespond;
-    const NAME: &'static str = "ChallengeRespondBuilder";
+impl molecule::prelude::Builder for ChallengeUnlockBuilder {
+    type Entity = ChallengeUnlock;
+    const NAME: &'static str = "ChallengeUnlockBuilder";
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE + self.0.as_slice().len()
     }
@@ -9074,135 +9069,173 @@ impl molecule::prelude::Builder for ChallengeRespondBuilder {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        ChallengeRespond::new_unchecked(inner.into())
+        ChallengeUnlock::new_unchecked(inner.into())
     }
 }
 #[derive(Debug, Clone)]
-pub enum ChallengeRespondUnion {
+pub enum ChallengeUnlockUnion {
     WithdrawChallenge(WithdrawChallenge),
+    RevertBlockWithChallenge(RevertBlockWithChallenge),
     InvalidChallenge(InvalidChallenge),
 }
 #[derive(Debug, Clone, Copy)]
-pub enum ChallengeRespondUnionReader<'r> {
+pub enum ChallengeUnlockUnionReader<'r> {
     WithdrawChallenge(WithdrawChallengeReader<'r>),
+    RevertBlockWithChallenge(RevertBlockWithChallengeReader<'r>),
     InvalidChallenge(InvalidChallengeReader<'r>),
 }
-impl ::core::default::Default for ChallengeRespondUnion {
+impl ::core::default::Default for ChallengeUnlockUnion {
     fn default() -> Self {
-        ChallengeRespondUnion::WithdrawChallenge(::core::default::Default::default())
+        ChallengeUnlockUnion::WithdrawChallenge(::core::default::Default::default())
     }
 }
-impl ::core::fmt::Display for ChallengeRespondUnion {
+impl ::core::fmt::Display for ChallengeUnlockUnion {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(ref item) => {
+            ChallengeUnlockUnion::WithdrawChallenge(ref item) => {
                 write!(f, "{}::{}({})", Self::NAME, WithdrawChallenge::NAME, item)
             }
-            ChallengeRespondUnion::InvalidChallenge(ref item) => {
+            ChallengeUnlockUnion::RevertBlockWithChallenge(ref item) => write!(
+                f,
+                "{}::{}({})",
+                Self::NAME,
+                RevertBlockWithChallenge::NAME,
+                item
+            ),
+            ChallengeUnlockUnion::InvalidChallenge(ref item) => {
                 write!(f, "{}::{}({})", Self::NAME, InvalidChallenge::NAME, item)
             }
         }
     }
 }
-impl<'r> ::core::fmt::Display for ChallengeRespondUnionReader<'r> {
+impl<'r> ::core::fmt::Display for ChallengeUnlockUnionReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
-            ChallengeRespondUnionReader::WithdrawChallenge(ref item) => {
+            ChallengeUnlockUnionReader::WithdrawChallenge(ref item) => {
                 write!(f, "{}::{}({})", Self::NAME, WithdrawChallenge::NAME, item)
             }
-            ChallengeRespondUnionReader::InvalidChallenge(ref item) => {
+            ChallengeUnlockUnionReader::RevertBlockWithChallenge(ref item) => write!(
+                f,
+                "{}::{}({})",
+                Self::NAME,
+                RevertBlockWithChallenge::NAME,
+                item
+            ),
+            ChallengeUnlockUnionReader::InvalidChallenge(ref item) => {
                 write!(f, "{}::{}({})", Self::NAME, InvalidChallenge::NAME, item)
             }
         }
     }
 }
-impl ChallengeRespondUnion {
+impl ChallengeUnlockUnion {
     pub(crate) fn display_inner(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(ref item) => write!(f, "{}", item),
-            ChallengeRespondUnion::InvalidChallenge(ref item) => write!(f, "{}", item),
+            ChallengeUnlockUnion::WithdrawChallenge(ref item) => write!(f, "{}", item),
+            ChallengeUnlockUnion::RevertBlockWithChallenge(ref item) => write!(f, "{}", item),
+            ChallengeUnlockUnion::InvalidChallenge(ref item) => write!(f, "{}", item),
         }
     }
 }
-impl<'r> ChallengeRespondUnionReader<'r> {
+impl<'r> ChallengeUnlockUnionReader<'r> {
     pub(crate) fn display_inner(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
-            ChallengeRespondUnionReader::WithdrawChallenge(ref item) => write!(f, "{}", item),
-            ChallengeRespondUnionReader::InvalidChallenge(ref item) => write!(f, "{}", item),
+            ChallengeUnlockUnionReader::WithdrawChallenge(ref item) => write!(f, "{}", item),
+            ChallengeUnlockUnionReader::RevertBlockWithChallenge(ref item) => write!(f, "{}", item),
+            ChallengeUnlockUnionReader::InvalidChallenge(ref item) => write!(f, "{}", item),
         }
     }
 }
-impl ::core::convert::From<WithdrawChallenge> for ChallengeRespondUnion {
+impl ::core::convert::From<WithdrawChallenge> for ChallengeUnlockUnion {
     fn from(item: WithdrawChallenge) -> Self {
-        ChallengeRespondUnion::WithdrawChallenge(item)
+        ChallengeUnlockUnion::WithdrawChallenge(item)
     }
 }
-impl ::core::convert::From<InvalidChallenge> for ChallengeRespondUnion {
+impl ::core::convert::From<RevertBlockWithChallenge> for ChallengeUnlockUnion {
+    fn from(item: RevertBlockWithChallenge) -> Self {
+        ChallengeUnlockUnion::RevertBlockWithChallenge(item)
+    }
+}
+impl ::core::convert::From<InvalidChallenge> for ChallengeUnlockUnion {
     fn from(item: InvalidChallenge) -> Self {
-        ChallengeRespondUnion::InvalidChallenge(item)
+        ChallengeUnlockUnion::InvalidChallenge(item)
     }
 }
-impl<'r> ::core::convert::From<WithdrawChallengeReader<'r>> for ChallengeRespondUnionReader<'r> {
+impl<'r> ::core::convert::From<WithdrawChallengeReader<'r>> for ChallengeUnlockUnionReader<'r> {
     fn from(item: WithdrawChallengeReader<'r>) -> Self {
-        ChallengeRespondUnionReader::WithdrawChallenge(item)
+        ChallengeUnlockUnionReader::WithdrawChallenge(item)
     }
 }
-impl<'r> ::core::convert::From<InvalidChallengeReader<'r>> for ChallengeRespondUnionReader<'r> {
+impl<'r> ::core::convert::From<RevertBlockWithChallengeReader<'r>>
+    for ChallengeUnlockUnionReader<'r>
+{
+    fn from(item: RevertBlockWithChallengeReader<'r>) -> Self {
+        ChallengeUnlockUnionReader::RevertBlockWithChallenge(item)
+    }
+}
+impl<'r> ::core::convert::From<InvalidChallengeReader<'r>> for ChallengeUnlockUnionReader<'r> {
     fn from(item: InvalidChallengeReader<'r>) -> Self {
-        ChallengeRespondUnionReader::InvalidChallenge(item)
+        ChallengeUnlockUnionReader::InvalidChallenge(item)
     }
 }
-impl ChallengeRespondUnion {
-    pub const NAME: &'static str = "ChallengeRespondUnion";
+impl ChallengeUnlockUnion {
+    pub const NAME: &'static str = "ChallengeUnlockUnion";
     pub fn as_bytes(&self) -> molecule::bytes::Bytes {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(item) => item.as_bytes(),
-            ChallengeRespondUnion::InvalidChallenge(item) => item.as_bytes(),
+            ChallengeUnlockUnion::WithdrawChallenge(item) => item.as_bytes(),
+            ChallengeUnlockUnion::RevertBlockWithChallenge(item) => item.as_bytes(),
+            ChallengeUnlockUnion::InvalidChallenge(item) => item.as_bytes(),
         }
     }
     pub fn as_slice(&self) -> &[u8] {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(item) => item.as_slice(),
-            ChallengeRespondUnion::InvalidChallenge(item) => item.as_slice(),
+            ChallengeUnlockUnion::WithdrawChallenge(item) => item.as_slice(),
+            ChallengeUnlockUnion::RevertBlockWithChallenge(item) => item.as_slice(),
+            ChallengeUnlockUnion::InvalidChallenge(item) => item.as_slice(),
         }
     }
     pub fn item_id(&self) -> molecule::Number {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(_) => 0,
-            ChallengeRespondUnion::InvalidChallenge(_) => 1,
+            ChallengeUnlockUnion::WithdrawChallenge(_) => 0,
+            ChallengeUnlockUnion::RevertBlockWithChallenge(_) => 1,
+            ChallengeUnlockUnion::InvalidChallenge(_) => 2,
         }
     }
     pub fn item_name(&self) -> &str {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(_) => "WithdrawChallenge",
-            ChallengeRespondUnion::InvalidChallenge(_) => "InvalidChallenge",
+            ChallengeUnlockUnion::WithdrawChallenge(_) => "WithdrawChallenge",
+            ChallengeUnlockUnion::RevertBlockWithChallenge(_) => "RevertBlockWithChallenge",
+            ChallengeUnlockUnion::InvalidChallenge(_) => "InvalidChallenge",
         }
     }
-    pub fn as_reader<'r>(&'r self) -> ChallengeRespondUnionReader<'r> {
+    pub fn as_reader<'r>(&'r self) -> ChallengeUnlockUnionReader<'r> {
         match self {
-            ChallengeRespondUnion::WithdrawChallenge(item) => item.as_reader().into(),
-            ChallengeRespondUnion::InvalidChallenge(item) => item.as_reader().into(),
+            ChallengeUnlockUnion::WithdrawChallenge(item) => item.as_reader().into(),
+            ChallengeUnlockUnion::RevertBlockWithChallenge(item) => item.as_reader().into(),
+            ChallengeUnlockUnion::InvalidChallenge(item) => item.as_reader().into(),
         }
     }
 }
-impl<'r> ChallengeRespondUnionReader<'r> {
-    pub const NAME: &'r str = "ChallengeRespondUnionReader";
+impl<'r> ChallengeUnlockUnionReader<'r> {
+    pub const NAME: &'r str = "ChallengeUnlockUnionReader";
     pub fn as_slice(&self) -> &'r [u8] {
         match self {
-            ChallengeRespondUnionReader::WithdrawChallenge(item) => item.as_slice(),
-            ChallengeRespondUnionReader::InvalidChallenge(item) => item.as_slice(),
+            ChallengeUnlockUnionReader::WithdrawChallenge(item) => item.as_slice(),
+            ChallengeUnlockUnionReader::RevertBlockWithChallenge(item) => item.as_slice(),
+            ChallengeUnlockUnionReader::InvalidChallenge(item) => item.as_slice(),
         }
     }
     pub fn item_id(&self) -> molecule::Number {
         match self {
-            ChallengeRespondUnionReader::WithdrawChallenge(_) => 0,
-            ChallengeRespondUnionReader::InvalidChallenge(_) => 1,
+            ChallengeUnlockUnionReader::WithdrawChallenge(_) => 0,
+            ChallengeUnlockUnionReader::RevertBlockWithChallenge(_) => 1,
+            ChallengeUnlockUnionReader::InvalidChallenge(_) => 2,
         }
     }
     pub fn item_name(&self) -> &str {
         match self {
-            ChallengeRespondUnionReader::WithdrawChallenge(_) => "WithdrawChallenge",
-            ChallengeRespondUnionReader::InvalidChallenge(_) => "InvalidChallenge",
+            ChallengeUnlockUnionReader::WithdrawChallenge(_) => "WithdrawChallenge",
+            ChallengeUnlockUnionReader::RevertBlockWithChallenge(_) => "RevertBlockWithChallenge",
+            ChallengeUnlockUnionReader::InvalidChallenge(_) => "InvalidChallenge",
         }
     }
 }
@@ -9386,6 +9419,189 @@ impl molecule::prelude::Builder for WithdrawChallengeBuilder {
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
         WithdrawChallenge::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct RevertBlockWithChallenge(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for RevertBlockWithChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for RevertBlockWithChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for RevertBlockWithChallenge {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ".. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl ::core::default::Default for RevertBlockWithChallenge {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![4, 0, 0, 0];
+        RevertBlockWithChallenge::new_unchecked(v.into())
+    }
+}
+impl RevertBlockWithChallenge {
+    pub const FIELD_COUNT: usize = 0;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+    pub fn as_reader<'r>(&'r self) -> RevertBlockWithChallengeReader<'r> {
+        RevertBlockWithChallengeReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for RevertBlockWithChallenge {
+    type Builder = RevertBlockWithChallengeBuilder;
+    const NAME: &'static str = "RevertBlockWithChallenge";
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        RevertBlockWithChallenge(data)
+    }
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        RevertBlockWithChallengeReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        RevertBlockWithChallengeReader::from_compatible_slice(slice)
+            .map(|reader| reader.to_entity())
+    }
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder()
+    }
+}
+#[derive(Clone, Copy)]
+pub struct RevertBlockWithChallengeReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for RevertBlockWithChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for RevertBlockWithChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for RevertBlockWithChallengeReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} {{ ", Self::NAME)?;
+        let extra_count = self.count_extra_fields();
+        if extra_count != 0 {
+            write!(f, ".. ({} fields)", extra_count)?;
+        }
+        write!(f, " }}")
+    }
+}
+impl<'r> RevertBlockWithChallengeReader<'r> {
+    pub const FIELD_COUNT: usize = 0;
+    pub fn total_size(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+    pub fn field_count(&self) -> usize {
+        if self.total_size() == molecule::NUMBER_SIZE {
+            0
+        } else {
+            (molecule::unpack_number(&self.as_slice()[molecule::NUMBER_SIZE..]) as usize / 4) - 1
+        }
+    }
+    pub fn field_offsets(&self) -> &[[u8; 4]] {
+        molecule::unpack_number_vec(&self.as_slice()[molecule::NUMBER_SIZE..])
+    }
+    pub fn count_extra_fields(&self) -> usize {
+        self.field_count() - Self::FIELD_COUNT
+    }
+    pub fn has_extra_fields(&self) -> bool {
+        Self::FIELD_COUNT != self.field_count()
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for RevertBlockWithChallengeReader<'r> {
+    type Entity = RevertBlockWithChallenge;
+    const NAME: &'static str = "RevertBlockWithChallengeReader";
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().into())
+    }
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        RevertBlockWithChallengeReader(slice)
+    }
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let total_size = molecule::unpack_number(slice) as usize;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        if slice_len > molecule::NUMBER_SIZE && !compatible {
+            return ve!(Self, FieldCountNotMatch, Self::FIELD_COUNT, !0);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct RevertBlockWithChallengeBuilder {}
+impl RevertBlockWithChallengeBuilder {
+    pub const FIELD_COUNT: usize = 0;
+}
+impl molecule::prelude::Builder for RevertBlockWithChallengeBuilder {
+    type Entity = RevertBlockWithChallenge;
+    const NAME: &'static str = "RevertBlockWithChallengeBuilder";
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE
+    }
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        writer.write_all(&molecule::pack_number(
+            molecule::NUMBER_SIZE as molecule::Number,
+        ))?;
+        Ok(())
+    }
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        RevertBlockWithChallenge::new_unchecked(inner.into())
     }
 }
 #[derive(Clone)]

@@ -1,6 +1,6 @@
 mod test_deposit;
-mod test_invalid_block;
 mod test_register;
+mod test_revert_block;
 mod test_submit_block;
 
 #[derive(Debug)]

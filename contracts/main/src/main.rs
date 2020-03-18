@@ -83,11 +83,11 @@ fn contract_entry() -> Result<(), Error> {
             )
             .verify()?;
         }
-        ActionUnionReader::InvalidBlock(invalid_block) => {
-            crate::action::invalid_block::InvalidBlockVerifier::new(
+        ActionUnionReader::RevertBlock(revert_block) => {
+            crate::action::revert_block::RevertBlockVerifier::new(
                 old_global_state.as_reader(),
                 new_global_state.as_reader(),
-                invalid_block,
+                revert_block,
             )
             .verify()?;
         }

@@ -1,7 +1,7 @@
 use crate::{core::Index, packed::*, prelude::*};
 
 impl AgBlock {
-    pub fn new_penalized_block(
+    pub fn new_reverted_block(
         invalid_block: AgBlockReader<'_>,
         account_root: [u8; 32],
         account_count: u64,
@@ -23,7 +23,7 @@ impl AgBlock {
 }
 
 impl<'a> AgBlockReader<'a> {
-    pub fn is_penalized_block(&self) -> bool {
+    pub fn is_reverted_block(&self) -> bool {
         self.tx_root().raw_data() == &[0u8; 32][..] && self.ag_sig().raw_data() == &[0u8; 65][..]
     }
 }
