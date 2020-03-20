@@ -149,7 +149,7 @@ struct GlobalState {
 }
 ```
 
-We use [mountain merkle range](MMR for short) to calculate the block root; use [sparse merkle tree](SMT for short) to calculate the account root.
+We use [merkle mountain range](MMR for short) to calculate the block root; use [sparse merkle tree](SMT for short) to calculate the account root.
 
 Both accumulators allow efficiently accumulate new elements; it's suitable for our use case: continuously produces new blocks and new accounts.
 
