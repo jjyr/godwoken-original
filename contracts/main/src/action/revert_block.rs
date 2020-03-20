@@ -152,7 +152,6 @@ impl<'a> RevertBlockVerifier<'a> {
         let new_block = AgBlock::new_reverted_block(
             block,
             reverted_account_root,
-            self.new_state.account_count().unpack(),
             chal_index,
         );
         let block_number: u64 = block.number().unpack();
@@ -169,8 +168,16 @@ impl<'a> RevertBlockVerifier<'a> {
             block_proof,
         )
         .map_err(|_| Error::InvalidBlockMerkleProof)?;
-        if self.new_state.block_root().raw_data() != block_root {
-            return Err(Error::InvalidNewBlockRoot);
+        // verify global state
+        let expected_state = self
+            .old_state
+            .to_entity()
+            .as_builder()
+            .account_root(reverted_account_root.pack())
+            .block_root(block_root.pack())
+            .build();
+        if expected_state.as_slice() != self.new_state.as_slice() {
+            return Err(Error::InvalidGlobalState);
         }
         Ok(())
     }

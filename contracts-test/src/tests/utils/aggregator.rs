@@ -46,7 +46,7 @@ impl Aggregator {
 
         let prev_global_state = self.contract_state.get_global_state();
         let prev_account_root = prev_global_state.account_root().unpack();
-        let account_count: u64 = prev_global_state.account_count().unpack();
+        let prev_account_count: u64 = prev_global_state.account_count().unpack();
         let (ag_account, kv) = {
             let ag_account = self
                 .contract_state
@@ -83,8 +83,8 @@ impl Aggregator {
             .txs_count((txs_count as u32).pack())
             .ag_index(ag_index.pack())
             .prev_account_root(prev_account_root.pack())
+            .prev_account_count(prev_account_count.pack())
             .account_root(new_account_root.pack())
-            .account_count(account_count.pack())
             .build();
         let account_proof = SMTProof::new_builder()
             .leaves_path(leaves_path.pack())

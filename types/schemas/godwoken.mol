@@ -84,7 +84,7 @@ table AgBlock {
     tx_root: Byte32,
     txs_count: Uint32,
     prev_account_root: Byte32, // account root before this block
-    account_count: Uint64,
+    prev_account_count: Uint64,
     account_root: Byte32, // account root after this block
     ag_sig: Byte65, // Aggregator's signature
     ag_index: Uint64, // Aggregator's index

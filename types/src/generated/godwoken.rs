@@ -5306,7 +5306,12 @@ impl ::core::fmt::Display for AgBlock {
         write!(f, ", {}: {}", "tx_root", self.tx_root())?;
         write!(f, ", {}: {}", "txs_count", self.txs_count())?;
         write!(f, ", {}: {}", "prev_account_root", self.prev_account_root())?;
-        write!(f, ", {}: {}", "account_count", self.account_count())?;
+        write!(
+            f,
+            ", {}: {}",
+            "prev_account_count",
+            self.prev_account_count()
+        )?;
         write!(f, ", {}: {}", "account_root", self.account_root())?;
         write!(f, ", {}: {}", "ag_sig", self.ag_sig())?;
         write!(f, ", {}: {}", "ag_index", self.ag_index())?;
@@ -5377,7 +5382,7 @@ impl AgBlock {
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
         Byte32::new_unchecked(self.0.slice(start, end))
     }
-    pub fn account_count(&self) -> Uint64 {
+    pub fn prev_account_count(&self) -> Uint64 {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[4][..]) as usize;
         let end = molecule::unpack_number(&offsets[5][..]) as usize;
@@ -5436,7 +5441,7 @@ impl molecule::prelude::Entity for AgBlock {
             .tx_root(self.tx_root())
             .txs_count(self.txs_count())
             .prev_account_root(self.prev_account_root())
-            .account_count(self.account_count())
+            .prev_account_count(self.prev_account_count())
             .account_root(self.account_root())
             .ag_sig(self.ag_sig())
             .ag_index(self.ag_index())
@@ -5465,7 +5470,12 @@ impl<'r> ::core::fmt::Display for AgBlockReader<'r> {
         write!(f, ", {}: {}", "tx_root", self.tx_root())?;
         write!(f, ", {}: {}", "txs_count", self.txs_count())?;
         write!(f, ", {}: {}", "prev_account_root", self.prev_account_root())?;
-        write!(f, ", {}: {}", "account_count", self.account_count())?;
+        write!(
+            f,
+            ", {}: {}",
+            "prev_account_count",
+            self.prev_account_count()
+        )?;
         write!(f, ", {}: {}", "account_root", self.account_root())?;
         write!(f, ", {}: {}", "ag_sig", self.ag_sig())?;
         write!(f, ", {}: {}", "ag_index", self.ag_index())?;
@@ -5521,7 +5531,7 @@ impl<'r> AgBlockReader<'r> {
         let end = molecule::unpack_number(&offsets[4][..]) as usize;
         Byte32Reader::new_unchecked(&self.as_slice()[start..end])
     }
-    pub fn account_count(&self) -> Uint64Reader<'r> {
+    pub fn prev_account_count(&self) -> Uint64Reader<'r> {
         let offsets = self.field_offsets();
         let start = molecule::unpack_number(&offsets[4][..]) as usize;
         let end = molecule::unpack_number(&offsets[5][..]) as usize;
@@ -5618,7 +5628,7 @@ pub struct AgBlockBuilder {
     pub(crate) tx_root: Byte32,
     pub(crate) txs_count: Uint32,
     pub(crate) prev_account_root: Byte32,
-    pub(crate) account_count: Uint64,
+    pub(crate) prev_account_count: Uint64,
     pub(crate) account_root: Byte32,
     pub(crate) ag_sig: Byte65,
     pub(crate) ag_index: Uint64,
@@ -5641,8 +5651,8 @@ impl AgBlockBuilder {
         self.prev_account_root = v;
         self
     }
-    pub fn account_count(mut self, v: Uint64) -> Self {
-        self.account_count = v;
+    pub fn prev_account_count(mut self, v: Uint64) -> Self {
+        self.prev_account_count = v;
         self
     }
     pub fn account_root(mut self, v: Byte32) -> Self {
@@ -5667,7 +5677,7 @@ impl molecule::prelude::Builder for AgBlockBuilder {
             + self.tx_root.as_slice().len()
             + self.txs_count.as_slice().len()
             + self.prev_account_root.as_slice().len()
-            + self.account_count.as_slice().len()
+            + self.prev_account_count.as_slice().len()
             + self.account_root.as_slice().len()
             + self.ag_sig.as_slice().len()
             + self.ag_index.as_slice().len()
@@ -5684,7 +5694,7 @@ impl molecule::prelude::Builder for AgBlockBuilder {
         offsets.push(total_size);
         total_size += self.prev_account_root.as_slice().len();
         offsets.push(total_size);
-        total_size += self.account_count.as_slice().len();
+        total_size += self.prev_account_count.as_slice().len();
         offsets.push(total_size);
         total_size += self.account_root.as_slice().len();
         offsets.push(total_size);
@@ -5699,7 +5709,7 @@ impl molecule::prelude::Builder for AgBlockBuilder {
         writer.write_all(self.tx_root.as_slice())?;
         writer.write_all(self.txs_count.as_slice())?;
         writer.write_all(self.prev_account_root.as_slice())?;
-        writer.write_all(self.account_count.as_slice())?;
+        writer.write_all(self.prev_account_count.as_slice())?;
         writer.write_all(self.account_root.as_slice())?;
         writer.write_all(self.ag_sig.as_slice())?;
         writer.write_all(self.ag_index.as_slice())?;

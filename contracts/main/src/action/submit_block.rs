@@ -94,7 +94,7 @@ impl<'a> SubmitBlockVerifier<'a> {
         if block_ag_index != ag_index {
             return Err(Error::IncorrectAgIndex);
         }
-        if block.account_count().as_slice() != self.old_state.account_count().as_slice() {
+        if block.prev_account_count().as_slice() != self.old_state.account_count().as_slice() {
             return Err(Error::InvalidAccountCount);
         }
         // verify block state

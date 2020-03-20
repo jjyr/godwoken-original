@@ -24,7 +24,6 @@ pub enum Error {
     IncorrectAgIndex = -27,
     TryRevertRevertedBlock = -33,
     InvalidNewAccountRoot = -36,
-    InvalidNewBlockRoot = -37,
     InvalidScript = -38,
     InvalidChallengeCell = -39,
 }
