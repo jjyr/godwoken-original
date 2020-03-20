@@ -4,15 +4,15 @@ This document explains the design of Godwoken from a high-level overview.
 
 Godwoken is an experimental optimistic rollup implementation to provide a generalized account-based programming layer upon Nervos CKB.
 
-> Many people reference rollup as layer-1.5, layer-2, or even layer-1(by trust-level). This document references the optimistic rollup as layer-1.5 to distinguish it with layer-1.
+> Some people refer to Rollup as layer-1.5; some people think it's layer-2, or even layer-1(by trust-level). This document refers to Rollup as layer-1.5 to distinguish it with the layer-1 CKB.
 
-> Since we are still WIP, this document may not accurately reflect every detail in the current project. But the core idea described in this document should be stable.
+> Since we are still WIP, this document may not reflects every details in the project.
 
 We try to solve two problems: scalability and aggregation.
 
 ### Scalability
 
-Godwoken applies optimistic rollup architecture to promise scalability, the godwoken transactions designed to be light-weight than the layer-1 transaction; it takes less size and does not perform on-chain verification.
+Godwoken applies optimistic rollup architecture to promise scalability; the godwoken transactions designed to be light-weight; it takes less size and does not perform on-chain verification.
 
 ### Aggregation
 
@@ -21,13 +21,17 @@ Aggregation is hard on a UTXO-like chain, For example:
     * Voting
     * Randao
     * Decentralized Oracle
-    * ... any other contracts that need aggregated result
+    * ... any other contracts that need shared state
 
-In a UTXO-like model, it naturally depends on the off-chain actor to aggregate the result; in CKB, we can perform the voting in separate cells and use an off-chain actor to submit the final result, but unfortunately, it's hard to verify the final result in an on-chain contract.
+In a UTXO-like model, the state is naturally separated.
 
-Godwoken supports aggregation by providing an account programming layer upon cell model; Instead of verifies cells' state, a Godwoken contract verifies the state of a set of accounts that involved in the transaction.
+In CKB, users can vote in separate cells. An off-chain actor collects voting cells and calculates the result.
 
-Godwoken contract shares the same tech stack with the native CKB contract. The only difference is that Godwoken abstract state of cells into accounts, the contract only cares about accounts, and the Godwoken handle the logic to mapping the account state to layer-1 cells.
+It works fine when we only want to “see” the result. But we can’t use the voting result in another contract, for example, a voting based DAO contract. It’s hard to verify the aggregated result in an on-chain contract. Since we need to prove exists of voting cells, the transaction must refer to every voting cell; it could be costly.
+
+Godwoken solves aggregation by providing an account programming layer upon cell model.
+
+Godwoken shares the same tech stack with the native CKB contract. The only difference is that Godwoken contract is account-based; it verifies the state of account instead of the cells. The mapping relationship between account state and layer-1 cells is handled by the Godwoken main contract, which is transparent for layer-1.5 contracts.
 
 ## Architecture
 
@@ -151,7 +155,7 @@ struct GlobalState {
 
 We use [merkle mountain range](MMR for short) to calculate the block root; use [sparse merkle tree](SMT for short) to calculate the account root.
 
-Both accumulators allow efficiently accumulate new elements; it's suitable for our use case: continuously produces new blocks and new accounts.
+Both accumulators allow efficiently accumulate new elements, which suitable for our use case: continuously produces new blocks and adds new accounts.
 
 ### Supported actions
 
@@ -178,12 +182,12 @@ Godwoken contract supports several actions to update the global state:
 
 ## Challenge contract
 
-The challenge contract generates proof cell for challenge requests.
+The challenge contract verifies challenge request cells.
 
-* Anyone who has an account can generate a proof with challenge contract as cell type and deposited CKB as bond.
-* Since validators watch the chain, if the proof is invalid, they can easily invalid a challenge and get the bond.
-* After a period of time, no one invalidates the challenge proof cell, the proof becomes valid.
-* Anyone can use a valid challenge proof cell to revert blocks in the main contract. (but the reward is only sent to the account who generate the challenge proof cell)
+* Anyone who has an account can prepare a challenge request cell with challenge contract as cell type and deposited CKB as bond.
+* Since off-chain validators continuously watch the chain, if incorrect challenge request cells are generated, validates can send context data to invalidate the challenge and get the bond.
+* After some time, if no one invalidates the challenge request cell, the cell becomes valid.
+* An valid challenge request cell can revert blocks in the main contract; the challenger will get a bond from the main contract.
 
 [merkle mountain range]: https://github.com/nervosnetwork/merkle-mountain-range "merkle mountain range"
 [sparse merkle tree]: https://github.com/jjyr/sparse-merkle-tree "sparse merkle tree"
