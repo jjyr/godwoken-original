@@ -176,5 +176,14 @@ Godwoken contract supports several actions to update the global state:
 
 `withdraw`, after `WITHDRAW_WAIT` blocks of the `prepare_withdraw` action; a user can take assets from withdrawing state to layer-1.
 
+## Challenge contract
+
+The challenge contract generates proof cell for challenge requests.
+
+* Anyone who has an account can generate a proof with challenge contract as cell type and deposited CKB as bond.
+* Since validators watch the chain, if the proof is invalid, they can easily invalid a challenge and get the bond.
+* After a period of time, no one invalidates the challenge proof cell, the proof becomes valid.
+* Anyone can use a valid challenge proof cell to revert blocks in the main contract. (but the reward is only sent to the account who generate the challenge proof cell)
+
 [merkle mountain range]: https://github.com/nervosnetwork/merkle-mountain-range "merkle mountain range"
 [sparse merkle tree]: https://github.com/jjyr/sparse-merkle-tree "sparse merkle tree"
