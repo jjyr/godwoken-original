@@ -29,7 +29,7 @@ use crate::common::{check_output, load_action, load_global_state};
 use crate::constants::HASH_SIZE;
 use crate::error::Error;
 use alloc::format;
-use ckb_contract_std::{ckb_constants::*, setup, syscalls};
+use ckb_std::{ckb_constants::*, entry, default_alloc, syscalls};
 use godwoken_types::packed::*;
 
 #[no_mangle]
@@ -40,7 +40,8 @@ fn main() -> i8 {
     }
 }
 
-setup!(main);
+entry!(main);
+default_alloc!();
 
 fn contract_entry() -> Result<(), Error> {
     // try get input type_hash

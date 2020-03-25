@@ -25,20 +25,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
-name = "ckb-contract-std"
-version = "0.1.5"
-source = "git+https://github.com/jjyr/ckb-contract-std#ffcd084619f8f7c37ceabfbda62e0e4b3bd3cd59"
-dependencies = [
- "buddy-alloc",
-]
-
-[[package]]
 name = "ckb-merkle-mountain-range"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4882b6f6cbb90ffeba3b437c6fd66f344557729428626e6f796ef1c97ee5c63"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "ckb-std"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a76beb48ba06958c0d84f2f217be599a63544431c12006ca9a155ab8ca577edd"
+dependencies = [
+ "buddy-alloc",
 ]
 
 [[package]]
@@ -69,7 +70,7 @@ dependencies = [
 name = "godwoken-challenge"
 version = "0.1.0"
 dependencies = [
- "ckb-contract-std",
+ "ckb-std",
  "godwoken-executor",
  "godwoken-types",
  "godwoken-utils",

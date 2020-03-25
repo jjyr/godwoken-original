@@ -2,7 +2,7 @@
 use crate::constants::{AGGREGATOR_REQUIRED_BALANCE, HASH_SIZE};
 use crate::error::Error;
 use alloc::vec::Vec;
-use ckb_contract_std::{ckb_constants::*, syscalls};
+use ckb_std::{ckb_constants::*, syscalls};
 use core::mem::size_of;
 use godwoken_types::{bytes::Bytes, cache::KVMap, core::Index, packed::*, prelude::*};
 use godwoken_utils::smt::{self, Value, ValueTrait};

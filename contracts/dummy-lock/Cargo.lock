@@ -6,8 +6,8 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "ckb-contract-std"
-version = "0.1.2"
+name = "ckb-std"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "buddy-alloc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -17,9 +17,9 @@ dependencies = [
 name = "dummy-lock"
 version = "0.1.0"
 dependencies = [
- "ckb-contract-std 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ckb-std 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]
 "checksum buddy-alloc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "eddd1222019887eefb9b732d081d02171b4f4932e8d221b482b43f74a9ba6346"
-"checksum ckb-contract-std 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7bcb486d40a39c3021acfe17635e13e09427c50d1cb27ef5bbf5a7c9a751ac0a"
+"checksum ckb-std 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a76beb48ba06958c0d84f2f217be599a63544431c12006ca9a155ab8ca577edd"

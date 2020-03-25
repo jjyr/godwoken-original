@@ -11,7 +11,7 @@
 //! 4. after `CHALLENGE_PREPARE_TIMEOUT`, the challenge cell can revert the block that described in the ChallengeContext.
 
 use alloc::vec::Vec;
-use ckb_contract_std::{ckb_constants::*, setup, since, syscalls};
+use ckb_std::{ckb_constants::*, entry, default_alloc, since, syscalls};
 use godwoken_executor::{executor::Executor, state::State};
 use godwoken_types::{
     cache::{KVMap, TxWithHash},
@@ -47,7 +47,8 @@ fn main() -> i8 {
     }
 }
 
-setup!(main);
+entry!(main);
+default_alloc!();
 
 fn contract_entry() -> Result<(), Error> {
     let args = load_challenge_args()?;

@@ -5,7 +5,7 @@ use crate::constants::{
 use crate::error::Error;
 use alloc::vec;
 use alloc::vec::Vec;
-use ckb_contract_std::{ckb_constants::*, since, syscalls};
+use ckb_std::{ckb_constants::*, since, syscalls};
 use godwoken_types::{cache::KVMap, core::Index, packed::*, prelude::*};
 use godwoken_utils::{
     hash::new_blake2b,

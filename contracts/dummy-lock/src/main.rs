@@ -4,11 +4,12 @@
 #![feature(alloc_error_handler)]
 #![feature(panic_info_message)]
 
-use ckb_contract_std::setup;
+use ckb_std::{entry, default_alloc};
 
 #[no_mangle]
 fn main() -> i8 {
     0
 }
 
-setup!(main);
+entry!(main);
+default_alloc!();
