@@ -10,7 +10,7 @@ use crate::tests::{
     },
     MAX_CYCLES,
 };
-use ckb_contract_tool::{ckb_error::assert_error_eq, ckb_script::ScriptError};
+use ckb_tool::{ckb_error::assert_error_eq, ckb_script::ScriptError};
 
 #[test]
 fn test_submit_block() {

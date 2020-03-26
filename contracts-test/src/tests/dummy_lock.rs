@@ -1,5 +1,5 @@
 use crate::tests::{DUMMY_LOCK_BIN, DUMMY_LOCK_HASH};
-use ckb_contract_tool::{Context, TxBuilder};
+use ckb_tool::testtool::{context::Context, tx_builder::TxBuilder};
 use godwoken_types::{core::ScriptHashType, packed::*, prelude::*};
 
 #[test]

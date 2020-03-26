@@ -1,6 +1,6 @@
 use crate::tests::{DUMMY_LOCK_HASH, MAIN_CONTRACT_HASH};
-use ckb_contract_tool::ckb_hash::{blake2b_256, new_blake2b};
 use ckb_merkle_mountain_range::{leaf_index_to_pos, util::MemMMR, Merge};
+use ckb_tool::ckb_hash::{blake2b_256, new_blake2b};
 use godwoken_types::{
     core::{Index, ScriptHashType, TokenID},
     packed::{Account, AgBlock, GlobalState, Script, Tx},
@@ -132,7 +132,7 @@ impl ContractState {
     pub fn gen_block_merkle_proof(&self, index: u64) -> (u64, Vec<[u8; 32]>) {
         let proof = self
             .block_mmr
-            .gen_proof(leaf_index_to_pos(index))
+            .gen_proof(vec![leaf_index_to_pos(index)])
             .expect("result");
         (proof.mmr_size(), proof.proof_items().to_owned())
     }

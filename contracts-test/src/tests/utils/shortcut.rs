@@ -3,7 +3,7 @@ use crate::tests::utils::{
     contract_state::ContractState,
 };
 use crate::tests::{DUMMY_LOCK_BIN, DUMMY_LOCK_HASH, MAIN_CONTRACT_BIN, MAIN_CONTRACT_HASH};
-use ckb_contract_tool::{Context, TxBuilder};
+use ckb_tool::testtool::{context::Context, tx_builder::TxBuilder};
 use godwoken_types::prelude::*;
 use godwoken_types::{
     core::{Index, ScriptHashType},

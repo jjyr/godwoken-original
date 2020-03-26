@@ -1,6 +1,6 @@
 use crate::tests::utils::{constants::CKB_TOKEN_ID, contract_state::ContractState};
 /// Offchain Aggregator
-use ckb_contract_tool::{ckb_hash::blake2b_256, TxBuilder};
+use ckb_tool::{ckb_hash::blake2b_256, testtool::tx_builder::TxBuilder};
 use godwoken_types::{cache::KVMap, core::Index, packed::*, prelude::*};
 use godwoken_utils::{mmr::merkle_root, smt};
 

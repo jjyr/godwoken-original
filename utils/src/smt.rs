@@ -102,7 +102,7 @@ impl Into<u64> for Value {
 
 impl From<Account> for Value {
     fn from(v: Account) -> Self {
-        Value(v.as_bytes().into())
+        Value(v.as_bytes().to_vec())
     }
 }
 
